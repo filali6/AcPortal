@@ -1,25 +1,32 @@
 using Backend.Data;
 using Backend.Kafka;
+using Backend.Modules.Events.Services;
 using Microsoft.EntityFrameworkCore;
+using Backend.Modules.Tasks.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// BD
+// Base de données
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration
         .GetConnectionString("DefaultConnection")));
 
+// Services Kafka
 builder.Services.AddHostedService<KafkaConsumerService>();
 builder.Services.AddSingleton<KafkaProducerService>();
 
-//cntrls 
+// Services métier
+builder.Services.AddScoped<EventProcessorService>();
+
+// Controllers
 builder.Services.AddControllers();
 
-// swagger
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<TasksService>();
 
-//cors pour frontend
+// CORS pour Angular
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
@@ -32,19 +39,19 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// create db if not present 
+// Créer la base si elle n'existe pas
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
 }
 
-// // ppline
-// if (app.Environment.IsDevelopment())
-// {
-//     app.UseSwagger();
-//     app.UseSwaggerUI();
-// }
+// Pipeline
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseCors("AllowAngular");
 app.UseAuthorization();
