@@ -1,5 +1,6 @@
 using Backend.Kafka;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 
 namespace Backend.Modules.Events.Controllers;
@@ -17,15 +18,13 @@ public class EventsController : ControllerBase
         _configuration = configuration;
     }
 
-    // POST api/events/publish
     [HttpPost("publish")]
     public async Task<IActionResult> Publish([FromBody] PublishEventRequest request)
     {
         var message = JsonSerializer.Serialize(new
         {
             toolName = request.ToolName,
-            eventType = request.EventType,
-            payload = request.Payload
+            eventType = request.EventType
         });
 
         var topic = _configuration["Kafka:TopicName"];
@@ -44,10 +43,13 @@ public class EventsController : ControllerBase
     }
 }
 
- 
 public class PublishEventRequest
 {
+    [Required(ErrorMessage = "ToolName est obligatoire")]
+    [MaxLength(100, ErrorMessage = "ToolName ne peut pas dépasser 100 caractères")]
     public string ToolName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "EventType est obligatoire")]
+    [MaxLength(200, ErrorMessage = "EventType ne peut pas dépasser 200 caractères")]
     public string EventType { get; set; } = string.Empty;
-    public string Payload { get; set; } = string.Empty;
 }
