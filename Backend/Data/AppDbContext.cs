@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     // "Il existe une table AcpEvents et une table AcpTasks"
     public DbSet<AcpEvent> AcpEvents => Set<AcpEvent>();
     public DbSet<AcpTask> AcpTasks => Set<AcpTask>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
