@@ -1,5 +1,6 @@
 using Backend.Modules.Events.Models;
 using Backend.Modules.Tasks.Models;
+using Backend.Modules.Auth.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Data;
@@ -15,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<AcpEvent> AcpEvents => Set<AcpEvent>();
     public DbSet<AcpTask> AcpTasks => Set<AcpTask>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,5 +26,9 @@ public class AppDbContext : DbContext
             .HasOne<AcpEvent>()
             .WithOne()
             .HasForeignKey<AcpTask>(t => t.SourceEventId);
+            
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
     }
 }
