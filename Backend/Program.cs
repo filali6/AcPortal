@@ -2,6 +2,8 @@ using Backend.Data;
 using Backend.Kafka;
 using Backend.Modules.Auth.Services;
 using Backend.Modules.Events.Services;
+using Backend.Modules.Projects.Services;
+using Backend.Modules.Tools.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Backend.Modules.Tasks.Services;
@@ -24,6 +26,10 @@ builder.Services.AddScoped<EventProcessorService>();
 builder.Services.AddScoped<TasksService>();
 builder.Services.AddScoped<EventsService>();
 builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddScoped<ProjectsService>();
+builder.Services.AddScoped<TeamsService>();
+builder.Services.AddScoped<ToolsService>();
 
 
 builder.Services.AddControllers();
