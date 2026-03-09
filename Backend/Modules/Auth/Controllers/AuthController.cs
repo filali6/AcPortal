@@ -1,8 +1,10 @@
+using Backend.Data;
 using Backend.Modules.Auth.Models;
 using Backend.Modules.Auth.Services;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Modules.Auth.Controllers;
 
@@ -11,9 +13,11 @@ namespace Backend.Modules.Auth.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly AuthService _authService;
-    public AuthController(AuthService authService)
+    private readonly AppDbContext _db;
+    public AuthController(AuthService authService,AppDbContext db)
     {
         _authService=authService;
+        _db=db;
     }
 
     [HttpPost("register")]
@@ -52,6 +56,21 @@ public class AuthController : ControllerBase
         });
 
     }
+    [HttpGet("users")]
+    public async Task<IActionResult> GetAll()
+    {
+        var users = await _db.Users
+            .Select(u => new
+            {
+                id = u.Id,
+                fullName = u.FullName,
+                email = u.Email,
+                role = u.Role.ToString()
+            })
+            .ToListAsync();
+
+        return Ok(users);
+    }
     public class RegisterRequest
     {
         [Required(ErrorMessage ="FullName is required")]
@@ -74,4 +93,5 @@ public class AuthController : ControllerBase
        [Required(ErrorMessage ="password is required")]
        public string Password {get;set;}=string.Empty; 
     }
+    
 }
