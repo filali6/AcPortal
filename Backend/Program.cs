@@ -56,6 +56,15 @@ builder.Services.AddAuthentication(options =>
                                        Encoding.UTF8.GetBytes(secretKey))
     };
 });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 
 
@@ -72,7 +81,7 @@ using (var scope = app.Services.CreateScope())
 
 
 
-
+app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
