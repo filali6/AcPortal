@@ -1,59 +1,79 @@
 using Backend.Data;
 using Backend.Kafka;
+using Backend.Modules.Auth.Services;
 using Backend.Modules.Events.Services;
+using Backend.Modules.Projects.Services;
+using Backend.Modules.Tools.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Backend.Modules.Tasks.Services;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Base de données
+ 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration
         .GetConnectionString("DefaultConnection")));
 
-// Services Kafka
+ 
 builder.Services.AddHostedService<KafkaConsumerService>();
-builder.Services.AddSingleton<KafkaProducerService>();
+//builder.Services.AddSingleton<KafkaProducerService>();
 
-// Services métier
+builder.Services.AddHostedService<OutboxPublisherService>();
+ 
 builder.Services.AddScoped<EventProcessorService>();
-
-// Controllers
-builder.Services.AddControllers();
-
-// Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<TasksService>();
+builder.Services.AddScoped<EventsService>();
+builder.Services.AddScoped<AuthService>();
 
-// CORS pour Angular
-builder.Services.AddCors(options =>
+builder.Services.AddScoped<ProjectsService>();
+builder.Services.AddScoped<TeamsService>();
+builder.Services.AddScoped<ToolsService>();
+
+
+builder.Services.AddControllers();
+var secretKey = builder.Configuration["Jwt:SecretKey"]!;
+var issuer = builder.Configuration["Jwt:Issuer"]!;
+var audience = builder.Configuration["Jwt:Audience"]!;
+
+builder.Services.AddAuthentication(options =>
 {
-    options.AddPolicy("AllowAngular", policy =>
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        policy.WithOrigins("http://localhost:4200")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = issuer,
+        ValidAudience = audience,
+        IssuerSigningKey = new SymmetricSecurityKey(
+                                       Encoding.UTF8.GetBytes(secretKey))
+    };
 });
+
+
+
 
 var app = builder.Build();
 
-// Créer la base si elle n'existe pas
+ 
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
 }
 
-// Pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
-app.UseCors("AllowAngular");
+
+
+
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

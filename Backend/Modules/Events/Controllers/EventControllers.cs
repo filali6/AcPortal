@@ -1,45 +1,69 @@
-using Backend.Kafka;
+using Backend.Data;
+using Backend.Modules.Events.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
-
+using Backend.Modules.Events.Services;
 namespace Backend.Modules.Events.Controllers;
+
 
 [ApiController]
 [Route("api/events")]
 public class EventsController : ControllerBase
 {
-    private readonly KafkaProducerService _producer;
-    private readonly IConfiguration _configuration;
+    private readonly AppDbContext _db;
+    private readonly EventsService _eventsService;
 
-    public EventsController(KafkaProducerService producer, IConfiguration configuration)
+    public EventsController(AppDbContext db, EventsService eventsService)
     {
-        _producer = producer;
-        _configuration = configuration;
+        _db = db;
+        _eventsService=eventsService;
     }
 
     [HttpPost("publish")]
     public async Task<IActionResult> Publish([FromBody] PublishEventRequest request)
     {
-        var message = JsonSerializer.Serialize(new
+        // Au lieu de publier sur Kafka directement
+        // on écrit dans OutboxMessages en base
+        var outboxMessage = new OutboxMessage
         {
-            toolName = request.ToolName,
-            eventType = request.EventType
-        });
+            EventType = request.EventType,
+            ToolName = request.ToolName,
+            CreatedAt = DateTime.UtcNow,
+            IsProcessed = false,
+            Retries = 0
+        };
 
-        var topic = _configuration["Kafka:TopicName"];
-        await _producer.PublishAsync(topic!, message);
+        _db.OutboxMessages.Add(outboxMessage);
+        await _db.SaveChangesAsync();
 
         return Ok(new
         {
             success = true,
-            message = "Événement publié sur Kafka",
+            message = "Événement enregistré et sera publié sur Kafka",
             data = new
             {
                 toolName = request.ToolName,
                 eventType = request.EventType
             }
         });
+    }
+    // GET api/events → liste tous les événements
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var events = await _eventsService.GetAllAsync();
+        return Ok(events);
+    }
+
+    // GET api/events/{id} → détail d'un événement
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var acpEvent = await _eventsService.GetByIdAsync(id);
+        if (acpEvent == null)
+            return NotFound(new { message = "Événement introuvable" });
+
+        return Ok(acpEvent);
     }
 }
 
@@ -53,3 +77,4 @@ public class PublishEventRequest
     [MaxLength(200, ErrorMessage = "EventType ne peut pas dépasser 200 caractères")]
     public string EventType { get; set; } = string.Empty;
 }
+ 
