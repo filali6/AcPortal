@@ -149,3 +149,12 @@ C:\Users\HP\Desktop\ACPortal\Backend\bin\Debug\net10.0\Swashbuckle.AspNetCore.Sw
 C:\Users\HP\Desktop\ACPortal\Backend\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Users\HP\Desktop\ACPortal\Backend\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 C:\Users\HP\Desktop\ACPortal\Backend\obj\Debug\net10.0\Backend.sourcelink.json
+C:\Users\HP\Desktop\ACPortal\Backend\bin\Debug\net10.0\BCrypt.Net-Next.dll
+C:\Users\HP\Desktop\ACPortal\Backend\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\HP\Desktop\ACPortal\Backend\bin\Debug\net10.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\HP\Desktop\ACPortal\Backend\bin\Debug\net10.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\HP\Desktop\ACPortal\Backend\bin\Debug\net10.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\HP\Desktop\ACPortal\Backend\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\HP\Desktop\ACPortal\Backend\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\HP\Desktop\ACPortal\Backend\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\HP\Desktop\ACPortal\Backend\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
