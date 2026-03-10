@@ -1,0 +1,49 @@
+# Build folders
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider / JetBrains
+.idea/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# .NET generated files
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+
+# Environment files
+.env
+.env.*
+
+# Publish output
+publish/
+
+# Temporary files
+tmp/
+temp/
+
+# ASP.NET secrets
+secrets.json
+
+# Database local files
+*.db
+*.sqlite
