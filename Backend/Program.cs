@@ -18,6 +18,7 @@ builder.Services.AddHostedService<OutboxPublisherService>();
  
 builder.Services.AddScoped<EventProcessorService>();
 builder.Services.AddScoped<TasksService>();
+builder.Services.AddScoped<EventsService>();
 
 
 builder.Services.AddControllers();
