@@ -15,7 +15,7 @@ public class TeamsService
         _logger = logger;
     }
 
-    // Créer une équipe pour un projet
+   
     // public async Task<Team?> CreateAsync(string name, Guid projectId, Guid chefEquipeId)
     // {
     //     // Vérifier que le projet existe
@@ -74,14 +74,13 @@ public class TeamsService
         _logger.LogInformation("Equipe créée : {Name}", name);
         return team;
     }
-    // Détail d'une équipe
+ 
     public async Task<Team?> GetByIdAsync(Guid id)
     {
         return await _db.Teams.FirstOrDefaultAsync(t => t.Id == id);
     }
 
-    // Ajouter un consultant à l'équipe
-    // Ajouter plusieurs consultants en une seule fois
+ 
     public async Task<List<TeamMember>> AddMembersAsync(Guid teamId, List<Guid> consultantIds)
     {
         var team = await _db.Teams.FindAsync(teamId);
@@ -91,11 +90,11 @@ public class TeamsService
 
         foreach (var consultantId in consultantIds)
         {
-            // Vérifier que le consultant existe
+         
             var consultant = await _db.Users.FindAsync(consultantId);
             if (consultant == null) continue;
 
-            // Vérifier qu'il n'est pas déjà membre
+        
             var exists = await _db.TeamMembers.AnyAsync(tm =>
                 tm.TeamId == teamId && tm.ConsultantId == consultantId);
             if (exists) continue;
@@ -114,11 +113,40 @@ public class TeamsService
         return members;
     }
 
-    // Liste des membres d'une équipe
+ 
     public async Task<List<TeamMember>> GetMembersAsync(Guid teamId)
     {
         return await _db.TeamMembers
             .Where(tm => tm.TeamId == teamId)
             .ToListAsync();
+    }
+    public async Task<object?> GetByProjectAsync(Guid projectId)
+    {
+      
+        var team = await _db.Teams.FirstOrDefaultAsync(t => t.ProjectId == projectId);
+        if (team == null) return null;
+
+        
+        var chef = await _db.Users.FindAsync(team.ChefEquipeId);
+
+       
+        var memberIds = await _db.TeamMembers
+            .Where(tm => tm.TeamId == team.Id)
+            .Select(tm => tm.ConsultantId)
+            .ToListAsync();
+
+        var members = await _db.Users
+            .Where(u => memberIds.Contains(u.Id))
+            .Select(u => new { u.Id, u.FullName, u.Email })
+            .ToListAsync();
+
+        return new
+        {
+            teamId = team.Id,
+            teamName = team.Name,
+            chefId = chef?.Id,
+            chefName = chef?.FullName,
+            members = members
+        };
     }
 }

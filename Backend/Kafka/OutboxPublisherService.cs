@@ -1,8 +1,7 @@
 using Backend.Data;
 using Confluent.Kafka;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
-
+ 
 namespace Backend.Kafka;
 
 public class OutboxPublisherService : BackgroundService
@@ -25,13 +24,15 @@ public class OutboxPublisherService : BackgroundService
     {
         _logger.LogInformation("OutboxPublisherService démarré.");
 
-        // Configuration du Producer Kafka
         var config = new ProducerConfig
         {
-            BootstrapServers = _configuration["Kafka:BootstrapServers"]
+            BootstrapServers = _configuration["Kafka:BootstrapServers"],
+            AllowAutoCreateTopics = true
+
         };
 
-        var topic = _configuration["Kafka:TopicName"];
+ 
+        var defaultTopic = _configuration["Kafka:TopicName"];
 
         using var producer = new ProducerBuilder<string, string>(config).Build();
 
@@ -39,14 +40,13 @@ public class OutboxPublisherService : BackgroundService
         {
             try
             {
-                await ProcessOutboxMessagesAsync(producer, topic!, stoppingToken);
+                await ProcessOutboxMessagesAsync(producer, defaultTopic!, stoppingToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erreur dans OutboxPublisherService.");
             }
 
-            // Attendre 5 secondes avant de relire l'Outbox
             await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
         }
 
@@ -55,14 +55,12 @@ public class OutboxPublisherService : BackgroundService
 
     private async Task ProcessOutboxMessagesAsync(
         IProducer<string, string> producer,
-        string topic,
+        string defaultTopic,   
         CancellationToken stoppingToken)
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // 1. Chercher tous les messages non traités
-        //    orderby CreatedAt pour respecter l'ordre d'insertion
         var pendingMessages = await db.OutboxMessages
             .Where(m => !m.IsProcessed && m.Retries < 5)
             .OrderBy(m => m.CreatedAt)
@@ -78,31 +76,28 @@ public class OutboxPublisherService : BackgroundService
         {
             try
             {
-                // 2. Construire le JSON à publier sur Kafka
-                var payload = JsonSerializer.Serialize(new
-                {
-                    toolName = message.ToolName,
-                    eventType = message.EventType
-                });
+                
+                var topic = !string.IsNullOrEmpty(message.Topic)
+                ? message.Topic
+                : defaultTopic;
 
-                // 3. Publier sur Kafka
+                var payload = message.Payload;
+
                 await producer.ProduceAsync(topic, new Message<string, string>
                 {
                     Key = message.Id.ToString(),
                     Value = payload
                 }, stoppingToken);
 
-                // 4. Marquer comme traité
                 message.IsProcessed = true;
                 message.ProcessedAt = DateTime.UtcNow;
 
                 _logger.LogInformation(
-                    "Message publié sur Kafka : {ToolName} / {EventType}",
-                    message.ToolName, message.EventType);
+                    "Message publié — topic : {Topic}",
+                    topic);
             }
             catch (Exception ex)
             {
-                // 5. En cas d'échec → incrémenter le compteur de tentatives
                 message.Retries++;
                 _logger.LogError(ex,
                     "Échec publication message {Id} — tentative {Retries}/5",
@@ -110,7 +105,6 @@ public class OutboxPublisherService : BackgroundService
             }
         }
 
-        // 6. Sauvegarder tous les changements en une seule fois
         await db.SaveChangesAsync(stoppingToken);
     }
 }

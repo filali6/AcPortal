@@ -1,0 +1,172 @@
+<div class="consultant-page">
+
+    <div class="page-header">
+        <h1>Mon espace</h1>
+    </div>
+    <!-- Project Switcher -->
+    <div class="project-switcher">
+        <select class="project-select" [(ngModel)]="selectedProjectId">
+            <option value="">Tous les projets</option>
+            <option *ngFor="let p of projects" [value]="p.id">
+                {{ p.name }}{{ isChefInProject(p.id) ? ' (Chef d\'équipe)' : '' }}
+            </option>
+        </select>
+    </div>
+
+    <!-- Tableau des rôles -->
+    <!-- <div class="card">
+        <div class="card-header">
+            <h2>Mes rôles par outil</h2>
+        </div>
+        <table class="roles-table">
+            <thead>
+                <tr>
+                    <th>Outil</th>
+                    <th>Rôles assignés</th>
+                    <th>Accès</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let tool of toolRoles">
+                    <td>
+                        <span class="tool-name">{{ tool.toolName }}</span>
+                    </td>
+                    <td>
+                        <div class="roles-list" *ngIf="tool.roles.length > 0">
+                            <span class="role-badge" *ngFor="let role of tool.roles">
+                                {{ role }}
+                            </span>
+                        </div>
+                        <span class="no-role" *ngIf="tool.roles.length === 0">—</span>
+                    </td>
+                    <td>
+                        <span class="access-badge yes" *ngIf="tool.roles.length > 0">
+                            ✓ Accès
+                        </span>
+                        <span class="access-badge no" *ngIf="tool.roles.length === 0">
+                            ✗ Aucun accès
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div> -->
+
+    <!-- Barre d'actions → visible si sélection -->
+    <div class="action-bar" *ngIf="hasSelection">
+        <span class="selection-count">{{ selectedIds.size }} sélectionnée(s)</span>
+        <div class="action-btns">
+            <button class="action-btn">→ Reassign</button>
+            <button class="action-btn danger">🗑 Delete</button>
+            <button class="action-btn success" (click)="markDone()">✓ Mark Done</button>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <!-- <div class="toolbar">
+        <div class="search-box">
+            <span class="search-icon"></span>
+            <input type="text" [(ngModel)]="searchQuery" placeholder="Rechercher une tâche..." class="search-input">
+        </div>
+        <div class="filters">
+            <button class="filter-btn" *ngFor="let f of filters" [class.active]="activeFilter === f"
+                (click)="activeFilter = f">
+                {{ f }}
+            </button>
+        </div>
+        <div class="view-toggle">
+            <button class="view-btn" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">≡</button>
+            <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'">⊞</button>
+        </div>
+    </div> -->
+    <div class="toolbar">
+        <div class="search-box">
+            
+            <input type="text" [(ngModel)]="searchQuery" placeholder="Rechercher une tâche..." class="search-input">
+        </div>
+    
+        <div class="filters">
+            <button class="filter-btn" *ngFor="let f of filters" [class.active]="activeFilter === f"
+                (click)="activeFilter = f">
+                {{ f }}
+            </button>
+    
+            <select *ngIf="activeFilter === 'Stat'" class="filter-select" [(ngModel)]="filterStat">
+                <option value="">Tous</option>
+                <option value="0">En attente</option>
+                <option value="1">Bloquée</option>
+                <option value="2">Terminée</option>
+            </select>
+    
+            <select *ngIf="activeFilter === 'Tool'" class="filter-select" [(ngModel)]="filterTool">
+                <option value="">Tous</option>
+                <option *ngFor="let t of availableTools" [value]="t">{{ t }}</option>
+            </select>
+    
+            <select *ngIf="activeFilter === 'Date'" class="filter-select" [(ngModel)]="filterDate">
+                <option value="desc">Plus récent</option>
+                <option value="asc">Plus ancien</option>
+            </select>
+        </div>
+    
+         
+    </div>
+    <!-- Tasks -->
+    <div class="tasks-card">
+        <div *ngIf="loading" class="empty">Chargement...</div>
+        <div *ngIf="!loading && tasks.length === 0" class="empty">Aucune tâche assignée.</div>
+    
+        <div *ngFor="let projectId of filteredProjectIds">
+    
+            <div class="group-label">
+                {{ getProjectName(projectId) }}
+                <span *ngIf="isChefInProject(projectId)"> — Chef d'Équipe</span>
+            </div>
+    
+            <table class="tasks-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px"></th>
+                        <th>Titre</th>
+                        <th>Outil</th>
+                        <th>Statut</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let task of getTasksForProject(projectId)" [class.selected]="isSelected(task.id)"
+                        [class.blocked]="isBlocked(task)" [class.done]="task.status === 2"
+                        (click)="isBlocked(task) ? null : (isChefInProject(projectId) && task.toolName === 'portal' ? goToChefEquipe(projectId) : openTool(task))">
+    
+                        <td (click)="!isBlocked(task) && toggleSelect(task.id); $event.stopPropagation()">
+                            <div class="checkbox" [class.checked]="isSelected(task.id) || task.status === 2">
+                                <span *ngIf="isSelected(task.id) || task.status === 2">✓</span>
+                            </div>
+                        </td>
+    
+                        <td>
+                            <span class="task-title" [class.done-text]="task.status === 2">
+                                {{ task.title }}
+                            </span>
+                        </td>
+    
+                        <td>
+                            <span class="tool-badge">{{ task.toolName }}</span>
+                        </td>
+    
+                        <td>
+                            <span class="status-badge" [style.background]="getStatusColor(task.status) + '20'"
+                                [style.color]="getStatusColor(task.status)">
+                                {{ getStatusLabel(task.status) }}
+                            </span>
+                        </td>
+    
+                        <td class="text-secondary">
+                            {{ task.createdAt | date:'dd/MM/yyyy' }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
