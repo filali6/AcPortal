@@ -88,12 +88,12 @@ namespace Backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<bool>("IsProcessed")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("ProcessedAt")
                         .HasColumnType("timestamp with time zone");
@@ -101,7 +101,7 @@ namespace Backend.Migrations
                     b.Property<int>("Retries")
                         .HasColumnType("integer");
 
-                    b.Property<string>("ToolName")
+                    b.Property<string>("Topic")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -133,6 +133,40 @@ namespace Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("Backend.Modules.Projects.Models.ProjectStep", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("CanBeParallel")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DependsOnStepId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("StepName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ToolName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ProjectSteps");
                 });
 
             modelBuilder.Entity("Backend.Modules.Projects.Models.Team", b =>
@@ -201,11 +235,17 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("ProjectId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("SourceEventId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<Guid?>("StepId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Title")
                         .IsRequired()

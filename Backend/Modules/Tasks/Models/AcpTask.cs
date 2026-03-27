@@ -2,7 +2,8 @@ namespace Backend.Modules.Tasks.Models;
 
 public enum AcpTaskStatus
 {
-    Pending,     
+    Pending,  
+    Blocked,   
     Done        
 }
 
@@ -25,4 +26,9 @@ public class AcpTask
      public DateTime? UpdatedAt { get; set; }
 
      public Guid SourceEventId { get; set; }
+
+    public Guid? ProjectId { get; set; }
+    public Guid? StepId { get; set; }
+
+     
 }

@@ -15,7 +15,7 @@ public class EventsService
         _logger = logger;
     }
 
-    // GET tous les événements
+ 
     public async Task<List<AcpEvent>> GetAllAsync()
     {
         return await _db.AcpEvents
@@ -23,7 +23,7 @@ public class EventsService
             .ToListAsync();
     }
 
-    // GET un événement par ID
+ 
     public async Task<AcpEvent?> GetByIdAsync(Guid id)
     {
         return await _db.AcpEvents
