@@ -1,0 +1,19 @@
+<div class="daf-page">
+    <div class="daf-header">
+        <h1>DAF — Signature de contrat</h1>
+       
+    </div>
+
+    
+        <div *ngIf="successMessage" class="alert alert-success">
+            {{ successMessage }}
+        </div>
+        <div *ngIf="errorMessage" class="alert alert-error">
+            {{ errorMessage }}
+        </div>
+
+        <button class="btn-sign" (click)="signerContrat()" [disabled]="loading">
+            {{ loading ? 'Signature en cours...' : ' Signer le contrat' }}
+        </button>
+    
+</div>
