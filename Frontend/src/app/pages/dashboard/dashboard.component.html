@@ -1,0 +1,61 @@
+<div class="dashboard">
+
+    <!-- Tools -->
+    <div class="section">
+        <h2 class="section-title">Outils ACP</h2>
+        <div class="tools-grid">
+            <div class="tool-card" *ngFor="let tool of tools" (click)="openTool(tool.route)">
+                <div class="tool-icon" [style.background]="tool.bg">{{ tool.icon }}</div>
+                <div class="tool-info">
+                    <span class="tool-name" [style.color]="tool.color">{{ tool.name }}</span>
+                    <span class="tool-desc">{{ tool.description }}</span>
+                </div>
+                <span class="tool-arrow">→</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tâches -->
+    <div class="section">
+        <div class="section-header">
+            <h2 class="section-title">Tâches</h2>
+            <button class="btn-refresh" (click)="loadTasks()">↻ Rafraîchir</button>
+        </div>
+
+        <div *ngIf="loading" class="loading">Chargement...</div>
+
+        <div *ngIf="!loading && tasks.length === 0" class="empty">
+            Aucune tâche pour le moment.
+        </div>
+
+        <!-- Cards tâches -->
+        <div class="tasks-list" *ngIf="!loading && tasks.length > 0">
+            <div class="task-card" *ngFor="let task of tasks">
+
+                <!-- Checkbox + Titre -->
+                <div class="task-left">
+                    <div class="task-checkbox" [class.done]="task.status === 3">
+                        <span *ngIf="task.status === 3">✓</span>
+                    </div>
+                    <div class="task-info">
+                        <span class="task-title">{{ task.title }}</span>
+                        <span class="task-meta">
+                            assigné le : {{ task.createdAt | date:'dd/MM/yyyy' }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Droite -->
+                <div class="task-right">
+                    <span class="task-tool">{{ task.toolName }}</span>
+                    <span class="task-status" [style.background]="getStatusColor(task.status) + '20'"
+                        [style.color]="getStatusColor(task.status)">
+                        {{ getStatusLabel(task.status) }}
+                    </span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
