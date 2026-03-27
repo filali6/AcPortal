@@ -1,5 +1,7 @@
 using Confluent.Kafka;
 using Backend.Modules.Events.Services;
+using Backend.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Kafka;
 
@@ -26,34 +28,59 @@ public class KafkaConsumerService : BackgroundService
             BootstrapServers = _configuration["Kafka:BootstrapServers"],
             GroupId = _configuration["Kafka:GroupId"],
             AutoOffsetReset = AutoOffsetReset.Earliest,
-            EnableAutoCommit = false
+            EnableAutoCommit = false,
+            AllowAutoCreateTopics = true
         };
 
-        var topic = _configuration["Kafka:TopicName"];
-
-        _logger.LogInformation("Kafka Consumer démarré — topic : {Topic}", topic);
-
         using var consumer = new ConsumerBuilder<string, string>(config).Build();
-        consumer.Subscribe(topic);
+
+        
+        await SubscribeToProjectTopics(consumer, stoppingToken);
+
+      
+        var lastRefresh = DateTime.UtcNow;
+
+        _logger.LogInformation("Kafka Consumer démarré — écoute tous les topics project.*");
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
+                if ((DateTime.UtcNow - lastRefresh).TotalSeconds > 30)
+                {
+                    await SubscribeToProjectTopics(consumer, stoppingToken);
+                    lastRefresh = DateTime.UtcNow;
+                }
+
                 var result = consumer.Consume(TimeSpan.FromSeconds(1));
                 if (result == null) continue;
 
-                _logger.LogInformation("Message reçu depuis Kafka.");
+                var topicName = result.Topic;
+                //var projectIdStr = topicName.Replace("project.", "");
+                Guid? projectId = null;
+                if (topicName.StartsWith("project."))
+                {
+                    var projectIdStr = topicName.Replace("project.", "");
+                    projectId = Guid.TryParse(projectIdStr, out var pid) ? pid : null;
 
-                // Déléguer tout le traitement à EventProcessorService
+                }
+
+                _logger.LogInformation(
+                    "Message reçu — topic : {Topic} — projectId : {ProjectId}",
+                    topicName, projectId);
+
                 using var scope = _scopeFactory.CreateScope();
                 var processor = scope.ServiceProvider
                     .GetRequiredService<EventProcessorService>();
 
-                await processor.ProcessAsync(result.Message.Value);
+                await processor.ProcessAsync(result.Message.Value, projectId);
 
-                // Confirmer à Kafka que le message est traité
                 consumer.Commit(result);
+            }
+            catch (ConsumeException ex) when (ex.Error.Code == ErrorCode.UnknownTopicOrPart)
+            { 
+                _logger.LogWarning("Topic pas encore disponible — en attente...");
+                await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
             }
             catch (OperationCanceledException)
             {
@@ -64,8 +91,36 @@ public class KafkaConsumerService : BackgroundService
                 _logger.LogError(ex, "Erreur lors de la consommation Kafka.");
             }
         }
-
+ 
         consumer.Close();
         _logger.LogInformation("Kafka Consumer arrêté.");
+    }
+
+    
+    private async Task SubscribeToProjectTopics(
+        IConsumer<string, string> consumer,
+        CancellationToken stoppingToken)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var projectIds = await db.Projects
+            .Select(p => p.Id.ToString())
+            .ToListAsync(stoppingToken);
+
+        
+        var topics = projectIds
+            .Select(id => $"project.{id}")
+            .ToList();
+
+       
+        topics.Add("system.events");
+
+        consumer.Subscribe(topics);
+
+        _logger.LogInformation(
+            "Abonné à {Count} topics : {Topics}",
+            topics.Count,
+            string.Join(", ", topics));
     }
 }
