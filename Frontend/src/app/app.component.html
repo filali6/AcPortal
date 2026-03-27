@@ -1,30 +1,86 @@
-<!-- Layout avec sidebar -->
+<div class="toast-notif" *ngIf="toastVisible">
+     
+    <div class="toast-body">
+        <span class="toast-title">Nouvelle tâche</span>
+        <span class="toast-message">{{ toastMessage }}</span>
+    </div>
+    <button class="toast-close" (click)="closeToast()">✕</button>
+</div>
 <div *ngIf="showLayout" class="app-layout">
 
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-logo">
-            <span class="logo-icon">⬡</span>
+            
             <span class="logo-text">ACPortal</span>
         </div>
 
         <nav class="sidebar-nav">
-            <a class="nav-item" [class.active]="isActive('dashboard')" (click)="navigate('/dashboard')">
-                <span class="nav-icon">▦</span>
-                <span>Dashboard</span>
-            </a>
-            <a class="nav-item" [class.active]="isActive('tasks')" (click)="navigate('/tasks')">
-                <span class="nav-icon">≡</span>
-                <span>Tasks</span>
-            </a>
-            <a class="nav-item" [class.active]="isActive('plugins')" (click)="navigate('/plugins/axe-iam')">
-                <span class="nav-icon">⬖</span>
-                <span>Tools</span>
-            </a>
+
+            <!-- SuperAdmin -->
+            <ng-container *ngIf="isAdmin()">
+                <a class="nav-item" [class.active]="isActive('admin')" (click)="navigate('/admin')">
+                    <span class="nav-icon"></span>
+                    <span>Mon Espace </span>
+                </a>
+                <a class="nav-item" (click)="navigate('/admin', {view: 'projects'})">
+                    <span class="nav-icon"></span>
+                    <span>Projets</span>
+                </a>
+            </ng-container>
+
+            <!-- PortfolioDirector -->
+            <ng-container *ngIf="isDirector()">
+                <a class="nav-item" [class.active]="isActive('director')" (click)="navigate('/director')">
+                    <span class="nav-icon"></span>
+                    <span>Mon Espace</span>
+                </a>
+            </ng-container>
+
+            <!-- Consultant -->
+            <ng-container *ngIf="isConsultant()">
+                <a class="nav-item" [class.active]="isActive('/consultant')" (click)="navigate('/consultant')">
+                    <span class="nav-icon"></span>
+                    <span>Mon espace</span>
+                </a>
+            
+                <a class="nav-item" [class.active]="isActive('/tools')" (click)="navigate('/tools')">
+                    <span class="nav-icon"></span>
+                    <span>Tools</span>
+                </a>
+            
+                
+            
+            </ng-container>
+            <ng-container *ngIf="isDAF()">
+                <a class="nav-item" [class.active]="isActive('daf')" (click)="navigate('/daf')">
+                    <span class="nav-icon"></span>
+                    <span>Contrats</span>
+                </a>
+            </ng-container>
+            
+            <!-- Chef d'Équipe -->
+            <!-- <ng-container *ngIf="isChefEquipe()">
+                <a class="nav-item" [class.active]="isActive('chef-equipe')" (click)="navigate('/chef-equipe')">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Steps</span>
+                </a>
+            </ng-container> -->
+            
+           
+
         </nav>
+         
 
         <div class="sidebar-footer">
-            <a class="nav-item" (click)="logout()">
+            <div class="user-badge">
+                 
+                <div class="user-details">
+                    <span class="user-name">{{ userInfo?.name }}</span>
+                    <span class="user-role">{{ userRole }}</span>
+                </div>
+            </div>
+            <a class="nav-item mt-8" (click)="logout()">
                 <span class="nav-icon">⏻</span>
                 <span>Log out</span>
             </a>
@@ -33,17 +89,6 @@
 
     <!-- Main -->
     <div class="main-wrapper">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-right">
-                <div class="user-info">
-                    <div class="user-avatar">{{ userInfo?.name?.charAt(0) }}</div>
-                    <span class="user-name">{{ userInfo?.name }}</span>
-                </div>
-            </div>
-        </header>
-
-        <!-- Page content -->
         <main class="main-content">
             <router-outlet />
         </main>
@@ -51,7 +96,7 @@
 
 </div>
 
-<!-- Pas de layout → juste la page (login) -->
+<!-- Sans layout → login ou plugins -->
 <div *ngIf="!showLayout">
     <router-outlet />
 </div>

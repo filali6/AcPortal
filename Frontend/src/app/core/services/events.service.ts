@@ -16,6 +16,7 @@ export interface AcpEvent {
 export interface PublishEventRequest {
   toolName: string;
   eventType: string;
+  projectId?:string;
 }
 
 @Injectable({
@@ -28,8 +29,12 @@ export class EventsService {
   constructor(private http: HttpClient) {}
 
   // POST /api/events/publish → publier un événement
-  publish(toolName: string, eventType: string): Observable<any> {
-    const request: PublishEventRequest = { toolName, eventType };
+  // publish(toolName: string, eventType: string): Observable<any> {
+  //   const request: PublishEventRequest = { toolName, eventType };
+  //   return this.http.post(`${this.apiUrl}/events/publish`, request);
+  // }
+   publish(toolName: string, eventType: string, projectId?: string): Observable<any> {
+    const request: PublishEventRequest = { toolName, eventType, projectId };
     return this.http.post(`${this.apiUrl}/events/publish`, request);
   }
 

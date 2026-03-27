@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { EventsService } from '../../../core/services/events.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-axe-bpm',
@@ -11,24 +13,39 @@ import { EventsService } from '../../../core/services/events.service';
   templateUrl: './axe-bpm.component.html',
   styleUrl: './axe-bpm.component.scss'
 })
-export class AxeBpmComponent {
+export class AxeBpmComponent implements OnInit {
 
-   
   eventType = '';
   loading = false;
   successMessage = '';
   errorMessage = '';
+  projects: { id: string, name: string }[] = [];
+  selectedProjectId = '';
 
-   
   constructor(
     private eventsService: EventsService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {}
 
+  ngOnInit(): void {
+    this.http.get<any[]>(`${environment.apiUrl}/projects`).subscribe({
+      next: (projects) => {
+        this.projects = projects.map(p => ({ id: p.id, name: p.name }));
+      },
+      error: () => {
+        this.errorMessage = 'Impossible de charger les projets.';
+      }
+    });
+  }
+
   publishEvent(): void {
-    // Validation
     if (!this.eventType) {
-      this.errorMessage = 'please enter event type ';
+      this.errorMessage = 'Please enter event type.';
+      return;
+    }
+    if (!this.selectedProjectId) {
+      this.errorMessage = 'Please select a project.';
       return;
     }
 
@@ -36,15 +53,15 @@ export class AxeBpmComponent {
     this.successMessage = '';
     this.errorMessage = '';
 
-    // Appel POST /api/events/publish
-    this.eventsService.publish('axeBPM', this.eventType).subscribe({
+    this.eventsService.publish('axeBPM', this.eventType, this.selectedProjectId).subscribe({
       next: () => {
-        this.successMessage = `event "${this.eventType}" published successfully !`;
+        const projectName = this.projects.find(p => p.id === this.selectedProjectId)?.name || '';
+        this.successMessage = `Event "${this.eventType}" published in project "${projectName}" !`;
         this.loading = false;
         this.eventType = '';
       },
       error: () => {
-        this.errorMessage = 'error while publishing event   ';
+        this.errorMessage = 'Error while publishing event.';
         this.loading = false;
       }
     });

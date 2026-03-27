@@ -1,0 +1,138 @@
+<div class="chef-equipe-page">
+
+    <div class="page-header">
+        <h1>Chef d'Équipe — Définir les steps</h1>
+    </div>
+
+    <!-- Sélection projet -->
+    <div class="card">
+        <h2>Projet</h2>
+        <select [(ngModel)]="selectedProjectId" (change)="onProjectChange()" class="form-select">
+            <option value="">-- Sélectionner un projet --</option>
+            <option *ngFor="let project of projects" [value]="project.id">
+                {{ project.name }}
+            </option>
+        </select>
+    </div>
+
+    <!-- Formulaire nouveau step -->
+    <div class="card" *ngIf="selectedProjectId">
+        <h2>Ajouter un step</h2>
+
+        <div class="form-group">
+            <label>Nom du step</label>
+            <input type="text" [(ngModel)]="newStep.stepName" placeholder="ex: Configurer les users..."
+                class="form-select">
+        </div>
+
+        <div class="form-group">
+            <label>Outil</label>
+            <select [(ngModel)]="newStep.toolName" class="form-select">
+                <option value="">-- Sélectionner un outil --</option>
+                <option *ngFor="let tool of tools" [value]="tool">{{ tool }}</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Ordre</label>
+            <input type="number" [(ngModel)]="newStep.order" class="form-select">
+        </div>
+
+        <div class="form-group">
+            <label>Dépend de quel step ?</label>
+            <select [(ngModel)]="newStep.dependsOnStepId" class="form-select">
+                <option [ngValue]="null">-- Aucune dépendance --</option>
+                <option *ngFor="let step of steps" [ngValue]="step.id">
+                    {{ step.stepName }}
+                </option>
+                <option *ngFor="let step of pendingSteps" [ngValue]="step.stepName">
+                    {{ step.stepName }} (en attente)
+                </option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>
+                <input type="checkbox" [(ngModel)]="newStep.canBeParallel">
+                Peut se faire en parallèle
+            </label>
+        </div>
+
+        <button class="btn-add" (click)="addStep()">+ Ajouter le step</button>
+    </div>
+
+    <!-- Liste des steps ajoutés -->
+    <!-- <div class="card" *ngIf="steps.length > 0">
+        <h2>Steps à créer ({{ steps.length }})</h2>
+        <table class="steps-table">
+            <thead>
+                <tr>
+                    <th>Ordre</th>
+                    <th>Nom</th>
+                    <th>Outil</th>
+                    <th>Parallèle</th>
+                    <th>Dépendance</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let step of steps; let i = index">
+                    <td>{{ step.order }}</td>
+                    <td>{{ step.stepName }}</td>
+                    <td>{{ step.toolName }}</td>
+                    <td>{{ step.canBeParallel ? '✅' : '❌' }}</td>
+                    <td>{{ step.dependsOnStepId || '—' }}</td>
+                    <td><button class="btn-remove" (click)="removeStep(i)">🗑</button></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+        <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+
+        <button class="btn-submit" (click)="submitSteps()" [disabled]="loading">
+            {{ loading ? 'Création en cours...' : '🚀 Créer les steps et générer les tâches' }}
+        </button>
+    </div>
+
+    <div *ngIf="errorMessage && steps.length === 0" class="alert alert-error">
+        {{ errorMessage }}
+    </div> -->
+    <div class="card" *ngIf="pendingSteps.length > 0">
+    <h2>Steps à créer ({{ pendingSteps.length }})</h2>
+    <table class="steps-table">
+        <thead>
+            <tr>
+                <th>Ordre</th>
+                <th>Nom</th>
+                <th>Outil</th>
+                <th>Parallèle</th>
+                <th>Dépendance</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let step of pendingSteps; let i = index">
+                <td>{{ step.order }}</td>
+                <td>{{ step.stepName }}</td>
+                <td>{{ step.toolName }}</td>
+                <td>{{ step.canBeParallel ? 'oui' : 'non' }}</td>
+                <td>{{ step.dependsOnStepId || '—' }}</td>
+                <td><button class="btn-remove" (click)="removeStep(i)">🗑</button></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+    <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+
+    <button class="btn-submit" (click)="submitSteps()" [disabled]="loading">
+        {{ loading ? 'Création en cours...' : ' Créer les steps pour  générer les tâches' }}
+    </button>
+</div>
+
+<div *ngIf="errorMessage && pendingSteps.length === 0" class="alert alert-error">
+    {{ errorMessage }}
+</div>
+
+</div>
