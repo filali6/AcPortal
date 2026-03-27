@@ -5,7 +5,8 @@ public enum GlobalRole
     SuperAdmin,
     PortfolioDirector,
     ChefEquipe,
-    Consultant
+    Consultant,
+    DAF
 }
 
 public class User
