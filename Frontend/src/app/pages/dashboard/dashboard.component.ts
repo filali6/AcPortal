@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { TasksService,Task } from '../../core/services/tasks.service';
+import { HttpClient } from '@angular/common/http';
+import { TasksService, Task } from '../../core/services/tasks.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-dashboard',
@@ -10,12 +12,13 @@ import { TasksService,Task } from '../../core/services/tasks.service';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
-export class DashboardComponent implements OnInit{
-  tasks:Task[]=[];
-  loading=true;
+export class DashboardComponent implements OnInit {
 
-  // Les 3 tools avec leurs infos
-  tools = [
+  tasks: Task[] = [];
+  loading = true;
+
+  // Tous les outils avec leurs infos statiques
+  allTools = [
     {
       name: 'axeIAM',
       description: 'Gestion des roles et accès utilisateur',
@@ -42,25 +45,48 @@ export class DashboardComponent implements OnInit{
     }
   ];
 
+  // Outils avec rôles du consultant connecté
+  myToolRoles: { toolId: string; toolName: string; roles: string[] }[] = [];
+
+  // Cards à afficher → seulement outils avec rôle
+  get myTools() {
+    return this.allTools.filter(tool =>
+      this.myToolRoles.some(t => t.toolName === tool.name && t.roles.length > 0)
+    );
+  }
+
+  // Rôles d'un outil spécifique
+  getRoles(toolName: string): string[] {
+    return this.myToolRoles.find(t => t.toolName === toolName)?.roles || [];
+  }
+
+  private apiUrl = environment.apiUrl;
+
   constructor(
     private tasksService: TasksService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
     this.loadTasks();
+    this.loadMyRoles();
   }
 
   loadTasks(): void {
     this.loading = true;
-    this.tasksService.getAll().subscribe({
+    this.tasksService.getMyTasks().subscribe({
       next: (tasks) => {
         this.tasks = tasks;
         this.loading = false;
       },
-      error: () => {
-        this.loading = false;
-      }
+      error: () => this.loading = false
+    });
+  }
+
+  loadMyRoles(): void {
+    this.http.get<any[]>(`${this.apiUrl}/tools/my-roles`).subscribe({
+      next: (roles) => this.myToolRoles = [...roles]
     });
   }
 

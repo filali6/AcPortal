@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Modules.Auth.Controllers;
 
@@ -57,6 +58,7 @@ public class AuthController : ControllerBase
 
     }
     [HttpGet("users")]
+    [Authorize(Roles ="SuperAdmin,PortfolioDirector")]
     public async Task<IActionResult> GetAll()
     {
         var users = await _db.Users
