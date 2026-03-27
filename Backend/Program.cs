@@ -11,12 +11,13 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
- 
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration
-        .GetConnectionString("DefaultConnection")));
+        .GetConnectionString("DefaultConnection")),
+    ServiceLifetime.Transient);
 
- 
+
 builder.Services.AddHostedService<KafkaConsumerService>();
 //builder.Services.AddSingleton<KafkaProducerService>();
 
@@ -30,6 +31,9 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProjectsService>();
 builder.Services.AddScoped<TeamsService>();
 builder.Services.AddScoped<ToolsService>();
+
+builder.Services.AddSignalR();
+
 
 
 builder.Services.AddControllers();
@@ -55,6 +59,20 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(
                                        Encoding.UTF8.GetBytes(secretKey))
     };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) &&
+                path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 builder.Services.AddCors(options =>
 {
@@ -62,10 +80,15 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:4200")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
-
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 
 
 
@@ -85,5 +108,6 @@ app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<Backend.Hubs.NotificationHub>("/hubs/notifications");
 
 app.Run();

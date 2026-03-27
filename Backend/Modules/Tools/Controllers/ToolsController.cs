@@ -1,4 +1,5 @@
 using Backend.Modules.Tools.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -17,6 +18,7 @@ public class ToolsController : ControllerBase
 
     // GET api/tools
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> GetAll()
     {
         var tools = await _toolsService.GetAllToolsAsync();
@@ -25,6 +27,7 @@ public class ToolsController : ControllerBase
 
     // POST api/tools
     [HttpPost]
+    [Authorize(Roles ="SuperAdmin")]
     public async Task<IActionResult> CreateTool([FromBody] CreateToolRequest request)
     {
         var tool = await _toolsService.CreateToolAsync(
@@ -41,6 +44,7 @@ public class ToolsController : ControllerBase
 
     // POST api/tools/{id}/roles
     [HttpPost("{id:guid}/roles")]
+    [Authorize(Roles ="SuperAdmin")]
     public async Task<IActionResult> CreateRole(Guid id, [FromBody] CreateRoleRequest request)
     {
         var role = await _toolsService.CreateRoleAsync(request.Name, id);
@@ -56,6 +60,7 @@ public class ToolsController : ControllerBase
 
     // GET api/tools/{id}/roles
     [HttpGet("{id:guid}/roles")]
+    [Authorize]
     public async Task<IActionResult> GetRoles(Guid id)
     {
         var roles = await _toolsService.GetRolesByToolAsync(id);
@@ -64,6 +69,7 @@ public class ToolsController : ControllerBase
 
     // POST api/tools/assign
     [HttpPost("assign")]
+    [Authorize(Roles ="SuperAdmin")]
     public async Task<IActionResult> AssignRole([FromBody] AssignRoleRequest request)
     {
         var result = await _toolsService.AssignRoleAsync(
@@ -84,6 +90,7 @@ public class ToolsController : ControllerBase
 
     // GET api/tools/consultant/{id}
     [HttpGet("consultant/{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> GetConsultantRoles(Guid id)
     {
         var roles = await _toolsService.GetConsultantRolesAsync(id);
@@ -92,12 +99,21 @@ public class ToolsController : ControllerBase
 
     // GET api/tools/access
     [HttpGet("access")]
+    [Authorize]
     public async Task<IActionResult> CheckAccess(
         [FromQuery] Guid consultantId,
         [FromQuery] Guid toolId)
     {
         var hasAccess = await _toolsService.HasAccessAsync(consultantId, toolId);
         return Ok(new { hasAccess = hasAccess });
+    }
+    [HttpGet("my-roles")]
+    [Authorize]
+    public async Task<IActionResult> GetMyRoles()
+    {
+        var consultantId = Guid.Parse(User.FindFirst("id")!.Value);
+        var roles = await _toolsService.GetMyRolesGroupedAsync(consultantId);
+        return Ok(roles);
     }
 }
 

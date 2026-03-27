@@ -15,7 +15,7 @@ public class TasksService
         _logger = logger;
     }
 
-    // GET toutes les tâches
+ 
     public async Task<List<AcpTask>> GetAllAsync()
     {
         return await _db.AcpTasks
@@ -23,14 +23,13 @@ public class TasksService
             .ToListAsync();
     }
 
-    // GET une tâche par ID
-    public async Task<AcpTask?> GetByIdAsync(Guid id)
+      public async Task<AcpTask?> GetByIdAsync(Guid id)
     {
         return await _db.AcpTasks
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
-    // PATCH changer le statut
+   
     public async Task<AcpTask?> UpdateStatusAsync(Guid id, AcpTaskStatus newStatus)
     {
         var task = await _db.AcpTasks.FindAsync(id);
@@ -45,7 +44,7 @@ public class TasksService
         return task;
     }
 
-    // PATCH assigner à un utilisateur
+     
     public async Task<AcpTask?> AssignAsync(Guid id, string assignedTo)
     {
         var task = await _db.AcpTasks.FindAsync(id);
@@ -58,5 +57,12 @@ public class TasksService
 
         _logger.LogInformation("Tâche {Id} assignée à {User}", id, assignedTo);
         return task;
+    }
+    public async Task<List<AcpTask>> GetMyTasksAsync(string consultantName)
+    {
+        return await _db.AcpTasks
+            .Where(t => t.AssignedTo == consultantName)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
     }
 }

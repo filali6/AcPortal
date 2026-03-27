@@ -12,6 +12,8 @@ export interface Task {
   assignedTo: string;
   createdAt: string;
   sourceEventId: string;
+  projectId?:string;
+  
 }
 export interface UpdateStatusRequest {
   status: number;
@@ -47,24 +49,26 @@ export class TasksService {
   // Helper → convertit le numéro de statut en texte
   getStatusLabel(status: number): string {
     switch(status) {
-      case 0: return 'Pending';
-      case 1: return 'In Progress';
-      case 2: return 'Blocked';
-      case 3: return 'Done';
-      default: return 'Unknown';
+        case 0: return 'Pending';
+        case 1: return 'Bloquée';
+        case 2: return 'Done';
+        default: return 'Unknown';
     }
-  }
+}
+
 
   // Helper → retourne la couleur selon le statut
   getStatusColor(status: number): string {
     switch(status) {
-      case 0: return '#f59e0b'; // orange → Pending
-      case 1: return '#3b82f6'; // bleu   → In Progress
-      case 2: return '#ef4444'; // rouge  → Blocked
-      case 3: return '#10b981'; // vert   → Done
-      default: return '#6b7280';
+        case 0: return '#f59e0b'; // orange → Pending
+        case 1: return '#ef4444'; // rouge  → Bloquée
+        case 2: return '#10b981'; // vert   → Done
+        default: return '#6b7280';
     }
-  }
+}
+  getMyTasks(): Observable<Task[]> {
+  return this.http.get<Task[]>(`${this.apiUrl}/tasks/my`);
+}
 
    
 }

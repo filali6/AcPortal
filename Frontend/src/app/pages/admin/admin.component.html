@@ -1,0 +1,210 @@
+<div class="admin-page">
+
+    <div class="page-header">
+        <h1> SuperAdmin</h1>
+    </div>
+
+    
+    <ng-container *ngIf="activeView === 'tasks'">
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Mes tâches ({{ myTasks.length }})</h2>
+            </div>
+
+            <div class="action-bar" *ngIf="hasSelection">
+                <span class="selection-count">{{ selectedIds.size }} sélectionnée(s)</span>
+                <button class="action-btn success" (click)="markDone()">✓ Mark Done</button>
+            </div>
+
+            <table class="tasks-table" *ngIf="myTasks.length > 0">
+                <thead>
+                    <tr>
+                        <th style="width:40px"></th>
+                        <th>Titre</th>
+                        <th>Outil</th>
+                        <th>Statut</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let task of myTasks" [class.selected]="isSelected(task.id)"
+                        [class.done]="task.status === 2" (click)="onMyTaskClick()">
+
+                        <td (click)="toggleSelect(task.id); $event.stopPropagation()">
+                            <div class="checkbox" [class.checked]="isSelected(task.id) || task.status === 2">
+                                <span *ngIf="isSelected(task.id) || task.status === 2">✓</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="task-title" [class.done-text]="task.status === 2">
+                                {{ task.title }}
+                            </span>
+                        </td>
+                        <td><span class="tool-badge">{{ task.toolName }}</span></td>
+                        <td>
+                            <span class="status-badge" [style.background]="getStatusColor(task.status) + '20'"
+                                [style.color]="getStatusColor(task.status)">
+                                {{ getStatusLabel(task.status) }}
+                            </span>
+                        </td>
+                        <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="empty" *ngIf="myTasks.length === 0">Aucune tâche assignée.</div>
+        </div>
+
+    </ng-container>
+
+    <!-- ============================================================ -->
+    <!-- VUE 2 : Formulaire créer un projet                           -->
+    <!-- ============================================================ -->
+    <ng-container *ngIf="activeView === 'create-project'">
+
+        <div class="card">
+            <div class="card-header">
+                <button class="btn-back" (click)="goToTasks()">← Retour</button>
+                <h2>Créer un projet</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nom du projet</label>
+                        <input type="text" [(ngModel)]="projectName" placeholder="ex: Migration ACP" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" [(ngModel)]="projectDescription" placeholder="Description du projet"
+                            class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Portfolio Director</label>
+                        <select [(ngModel)]="selectedDirectorId" class="form-input">
+                            <option value="">-- Sélectionner --</option>
+                            <option *ngFor="let d of directors" [value]="d.id">
+                                {{ d.fullName }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+                <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+
+                <button class="btn-primary" (click)="createProject()" [disabled]="loading">
+                    {{ loading ? 'Création...' : 'Créer le projet' }}
+                </button>
+            </div>
+        </div>
+
+    </ng-container>
+
+    <!-- ============================================================ -->
+    <!-- VUE 3 : Projets                                              -->
+    <!-- ============================================================ -->
+    <ng-container *ngIf="activeView === 'projects'">
+
+        <!-- Liste des projets -->
+        <ng-container *ngIf="!selectedProjectDetail">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Projets ({{ projects.length }})</h2>
+                </div>
+                <div class="projects-list" *ngIf="projects.length > 0">
+                    <div class="project-item clickable-row" *ngFor="let project of projects"
+                        (click)="selectProject(project)">
+                        <div class="project-info">
+                            <span class="project-name">{{ project.name }}</span>
+                            <span class="project-desc">{{ project.description }}</span>
+                        </div>
+                        <div class="project-director">
+                            <span class="label">Director</span>
+                            <span class="value">{{ getDirectorName(project.portfolioDirectorId) }}</span>
+                        </div>
+                        <span class="project-date">{{ project.createdAt | date:'dd/MM/yyyy' }}</span>
+                        <span class="chevron">›</span>
+                    </div>
+                </div>
+                <div class="empty" *ngIf="projects.length === 0">Aucun projet.</div>
+            </div>
+        </ng-container>
+
+        <!-- Détail d'un projet -->
+        <ng-container *ngIf="selectedProjectDetail">
+
+            <div class="card">
+                <div class="card-header">
+                    <button class="btn-back" (click)="backToProjects()">← Projets</button>
+                    <h2>{{ selectedProjectDetail.name }}</h2>
+                </div>
+            </div>
+
+            <!-- Équipes + membres -->
+            <div class="card" *ngIf="projectTeams.length > 0">
+                <div class="card-header">
+                    <h2>Équipes</h2>
+                </div>
+                <div class="teams-list">
+                    <div class="team-block" *ngFor="let team of projectTeams">
+                        <div class="team-header">
+                            <span class="team-name">{{ team.name }}</span>
+                            <span class="chef-badge" *ngIf="team.chefEquipe">
+                                Chef : {{ team.chefEquipe.fullName || team.chefEquipe.email }}
+                            </span>
+                        </div>
+                        <div class="members-list" *ngIf="team.members?.length > 0">
+                            <span class="member-badge" *ngFor="let m of team.members">
+                                {{ m.fullName || m.email }}
+                            </span>
+                        </div>
+                        <div class="empty" *ngIf="!team.members || team.members.length === 0">
+                            Aucun membre
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card" *ngIf="projectTeams.length === 0">
+                <div class="empty">Aucune équipe pour ce projet.</div>
+            </div>
+
+            <!-- Tâches du projet -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Tâches</h2>
+                </div>
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Outil</th>
+                            <th>Statut</th>
+                            <th>Assigné à</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <ng-container *ngFor="let task of tasks">
+                            <tr *ngIf="task.projectId === selectedProjectDetail.id">
+                                <td class="task-title">{{ task.title }}</td>
+                                <td><span class="tool-badge">{{ task.toolName }}</span></td>
+                                <td>
+                                    <span class="status-badge" [style.background]="getStatusColor(task.status) + '20'"
+                                        [style.color]="getStatusColor(task.status)">
+                                        {{ getStatusLabel(task.status) }}
+                                    </span>
+                                </td>
+                                <td class="text-secondary">{{ task.assignedTo || '—' }}</td>
+                                <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                            </tr>
+                        </ng-container>
+                    </tbody>
+                </table>
+            </div>
+
+        </ng-container>
+
+    </ng-container>
+
+</div>

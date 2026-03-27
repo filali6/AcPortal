@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable,tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { NotificationService } from './notification.service';
 
 interface LoginResponse{
   message:string;
@@ -14,17 +15,25 @@ interface LoginResponse{
 export class AuthService {
   private apiUrl=environment.apiUrl;
 
-  constructor(private http:HttpClient,private router:Router) {}
+  constructor(private http:HttpClient,
+    private router:Router,
+    private notificationService: NotificationService
+  ) {}
   login(email:string,password:string):Observable<LoginResponse>{
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`,{
       email,password
     }).pipe(tap ( response=>{localStorage.setItem('token',response.token);
+      const userInfo=this.getUserInfo();
+      if(userInfo?.id){
+        this.notificationService.startConnection(userInfo.id);
+      }
 
     })
   );
   }
   logout():void{
     localStorage.removeItem('token');
+    
     this.router.navigate(['/login']);
   }
   getToken():string |null {
@@ -37,7 +46,9 @@ export class AuthService {
     const token=this.getToken();
     if (!token) return null;
     const payload = token.split('.')[1];
-    return JSON.parse(atob(payload));
+    const decoded=JSON.parse(atob(payload));
+    console.log('Token decodé :',decoded);
+    return decoded;
   }
   
 }

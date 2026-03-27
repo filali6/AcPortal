@@ -112,6 +112,38 @@ public class ToolsService
             .Where(c => c.ConsultantId == consultantId)
             .ToListAsync();
     }
+    // Retourne les rôles du consultant connecté groupés par outil
+    public async Task<List<object>> GetMyRolesGroupedAsync(Guid consultantId)
+    {
+        var allTools = await _db.AcpTools.ToListAsync();
+
+        var myRoles = await _db.ConsultantToolRoles
+            .Where(c => c.ConsultantId == consultantId)
+            .ToListAsync();
+
+        var result = new List<object>();
+
+        foreach (var tool in allTools)
+        {
+            var rolesForTool = myRoles.Where(r => r.ToolId == tool.Id).ToList();
+
+            var roleNames = new List<string>();
+            foreach (var r in rolesForTool)
+            {
+                var role = await _db.ToolRoles.FindAsync(r.ToolRoleId);
+                if (role != null) roleNames.Add(role.Name);
+            }
+
+            result.Add(new
+            {
+                toolId = tool.Id,
+                toolName = tool.Name,
+                roles = roleNames
+            });
+        }
+
+        return result;
+    }
 
     // Vérifier si un consultant a accès à un outil
     public async Task<bool> HasAccessAsync(Guid consultantId, Guid toolId)
