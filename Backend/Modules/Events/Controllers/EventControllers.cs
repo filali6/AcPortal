@@ -1,45 +1,40 @@
-using Backend.Data;
-using Backend.Modules.Events.Models;
+using Backend.Kafka;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
-using Backend.Modules.Events.Services;
-namespace Backend.Modules.Events.Controllers;
+using System.Text.Json;
 
+namespace Backend.Modules.Events.Controllers;
 
 [ApiController]
 [Route("api/events")]
 public class EventsController : ControllerBase
 {
-    private readonly AppDbContext _db;
-    private readonly EventsService _eventsService;
+    private readonly KafkaProducerService _producer;
+    private readonly IConfiguration _configuration;
 
-    public EventsController(AppDbContext db, EventsService eventsService)
+    public EventsController(KafkaProducerService producer, IConfiguration configuration)
     {
-        _db = db;
-        _eventsService=eventsService;
+        _producer = producer;
+        _configuration = configuration;
     }
 
+    // POST api/events/publish
     [HttpPost("publish")]
     public async Task<IActionResult> Publish([FromBody] PublishEventRequest request)
     {
-        // Au lieu de publier sur Kafka directement
-        // on écrit dans OutboxMessages en base
-        var outboxMessage = new OutboxMessage
+        var message = JsonSerializer.Serialize(new
         {
-            EventType = request.EventType,
-            ToolName = request.ToolName,
-            CreatedAt = DateTime.UtcNow,
-            IsProcessed = false,
-            Retries = 0
-        };
+            toolName = request.ToolName,
+            eventType = request.EventType,
+            payload = request.Payload
+        });
 
-        _db.OutboxMessages.Add(outboxMessage);
-        await _db.SaveChangesAsync();
+        var topic = _configuration["Kafka:TopicName"];
+        await _producer.PublishAsync(topic!, message);
 
         return Ok(new
         {
             success = true,
-            message = "Événement enregistré et sera publié sur Kafka",
+            message = "Événement publié sur Kafka",
             data = new
             {
                 toolName = request.ToolName,
@@ -47,34 +42,12 @@ public class EventsController : ControllerBase
             }
         });
     }
-    // GET api/events → liste tous les événements
-    [HttpGet]
-    public async Task<IActionResult> GetAll()
-    {
-        var events = await _eventsService.GetAllAsync();
-        return Ok(events);
-    }
-
-    // GET api/events/{id} → détail d'un événement
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id)
-    {
-        var acpEvent = await _eventsService.GetByIdAsync(id);
-        if (acpEvent == null)
-            return NotFound(new { message = "Événement introuvable" });
-
-        return Ok(acpEvent);
-    }
 }
 
+ 
 public class PublishEventRequest
 {
-    [Required(ErrorMessage = "ToolName est obligatoire")]
-    [MaxLength(100, ErrorMessage = "ToolName ne peut pas dépasser 100 caractères")]
     public string ToolName { get; set; } = string.Empty;
-
-    [Required(ErrorMessage = "EventType est obligatoire")]
-    [MaxLength(200, ErrorMessage = "EventType ne peut pas dépasser 200 caractères")]
     public string EventType { get; set; } = string.Empty;
+    public string Payload { get; set; } = string.Empty;
 }
- 
