@@ -1,26 +1,33 @@
-<div style="max-width: 400px; margin: 100px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px;">
+<div class="login-wrapper">
+    <div class="login-card">
 
-    <h2>ACP Portal — Login</h2>
+        <div class="brand">
+            <span class="brand-logo">ACP</span>
+            <span class="brand-sep"></span>
+            <span class="brand-sub">Portal</span>
+        </div>
 
-    <div style="margin-bottom: 12px;">
-        <label>Email</label><br>
-        <input type="email" [(ngModel)]="email" placeholder="email@acp.com"
-            style="width: 100%; padding: 8px; margin-top: 4px;">
+        <h1 class="login-title">Connexion</h1>
+        <p class="login-sub">Accédez à votre espace de travail</p>
+
+        <div class="field">
+            <label class="form-label">Email</label>
+            <input type="email" [(ngModel)]="email" placeholder="email@acp.com" class="form-input" />
+        </div>
+
+        <div class="field">
+            <label class="form-label">Mot de passe</label>
+            <input type="password" [(ngModel)]="password" placeholder="••••••••" class="form-input" />
+        </div>
+
+        <div *ngIf="errorMessage" class="alert-error">
+            {{ errorMessage }}
+        </div>
+
+        <button (click)="login()" [disabled]="loading" class="login-btn">
+            <span *ngIf="!loading">Se connecter</span>
+            <span *ngIf="loading" class="spinner"></span>
+        </button>
+
     </div>
-
-    <div style="margin-bottom: 12px;">
-        <label>Password</label><br>
-        <input type="password" [(ngModel)]="password" style="width: 100%; padding: 8px; margin-top: 4px;">
-    </div>
-
-    <div *ngIf="errorMessage" style="color: red; margin-bottom: 12px;">
-        {{ errorMessage }}
-    </div>
-
-    <button (click)="login()" [disabled]="loading"
-        style="width: 100%; padding: 10px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
-        {{ loading ? 'Connexion...' : 'Se connecter' }}
-    </button>
-
 </div>
- 
