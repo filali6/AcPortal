@@ -13,6 +13,8 @@ export interface Task {
   createdAt: string;
   sourceEventId: string;
   projectId?:string;
+  stepId?: string;
+  streamId?:string;
   
 }
 export interface UpdateStatusRequest {

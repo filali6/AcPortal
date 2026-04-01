@@ -35,19 +35,21 @@ export class LoginComponent {
         // Redirige selon le rôle
         const role = userInfo?.role;
 
-        if (role === 'SuperAdmin') {
-    this.router.navigate(['/admin']);
-    } else if (role === 'PortfolioDirector') {
-        this.router.navigate(['/director']);
-    } else if (role === 'Consultant') {
-        this.router.navigate(['/consultant']);
-    } else if (role === 'ChefEquipe') {
-        this.router.navigate(['/chef-equipe']);
-    } else if (role === 'DAF') {
-        this.router.navigate(['/daf']);
-    } else {
-        this.router.navigate(['/login']);
-    }
+          if (role === 'HeadOfCDS') {
+              this.router.navigate(['/admin']);
+          } else if (role === 'PortfolioDirector') {
+              this.router.navigate(['/director']);
+          } else if (role === 'ProjectManager') {
+              this.router.navigate(['/project-manager']);
+          } else if (role === 'BusinessTeamLead' || role === 'TechnicalTeamLead') {
+              this.router.navigate(['/team-lead']);
+          } else if (role === 'Consultant') {
+              this.router.navigate(['/consultant']);
+          } else if (role === 'DAF') {
+              this.router.navigate(['/daf']);
+          } else {
+              this.router.navigate(['/login']);
+          }
       },
       error: () => {
         this.errorMessage = 'Email ou mot de passe incorrect';
