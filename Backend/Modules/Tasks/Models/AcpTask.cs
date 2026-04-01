@@ -25,7 +25,7 @@ public class AcpTask
 
      public DateTime? UpdatedAt { get; set; }
 
-     public Guid SourceEventId { get; set; }
+     public Guid ?SourceEventId { get; set; }
 
     public Guid? ProjectId { get; set; }
     public Guid? StepId { get; set; }

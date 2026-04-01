@@ -14,4 +14,5 @@ public class StepDto
     public bool CanBeParallel { get; set; } = false;
     //public Guid? DependsOnStepId { get; set; }
     public string? DependsOnStepId { get; set; }
+    public Guid? StreamId { get; set; }
 }

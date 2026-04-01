@@ -26,6 +26,8 @@ export class ConsultantComponent implements OnInit {
   chefEquipeProjectIds: Set<string> = new Set();
   projectNames: Map<string, string> = new Map();
   activeProjectSteps: string | null = null;
+  streams: any[] = [];
+selectedStreamId = '';
 
   filterStat = '';
   filterTool = '';
@@ -68,6 +70,11 @@ export class ConsultantComponent implements OnInit {
     this.loadChefEquipeProjects();
     this.loadProjectNames();
     this.notificationService.notifications$.subscribe(() => this.loadTasks());
+    this.http.get<any[]>(`${this.apiUrl}/streams/my`).subscribe({
+  next: (s) => this.streams = s.filter(
+    (x, i, arr) => arr.findIndex(y => y.id === x.id) === i
+  )
+});
   }
 
   loadTasks(): void {
@@ -82,14 +89,22 @@ export class ConsultantComponent implements OnInit {
     });
     console.log(this.tasks);
   }
-
   loadProjects(): void {
-    this.http.get<any[]>(`${this.apiUrl}/projects`).subscribe({
-      next: (projects) => {
-        this.projects = projects.map(p => ({ id: p.id, name: p.name }));
-      }
-    });
-  }
+  this.tasksService.getMyTasks().subscribe({
+    next: (tasks) => {
+      const seen = new Set<string>();
+      tasks.forEach(t => {
+        if (t.projectId && !seen.has(t.projectId)) {
+          seen.add(t.projectId);
+          // nom depuis projectNames qui est déjà chargé
+          const name = this.projectNames.get(t.projectId) || t.projectId;
+          this.projects.push({ id: t.projectId, name });
+        }
+      });
+    }
+  });
+}
+ 
 
   // ← AJOUT : tâches filtrées par projet sélectionné
   get filteredTasks(): Task[] {
@@ -210,26 +225,31 @@ export class ConsultantComponent implements OnInit {
   //       return true;
   //   });
   // }
-  getTasksForProject(projectId: string): Task[] {
-    let tasks = this.tasks.filter(t => t.projectId === projectId);
+//   getTasksForProject(projectId: string): Task[] {
+//     let tasks = this.tasks.filter(t => t.projectId === projectId);
+//     if (this.selectedStreamId) {
+//     const stream = this.streams.find(s => s.id === this.selectedStreamId);
+//     if (stream) tasks = tasks.filter(t => t.stepId);
+//     // on garde cette logique simple pour l'instant
+//   }
 
-    if (this.activeFilter === 'Stat' && this.filterStat !== '') {
-        tasks = tasks.filter(t => t.status === +this.filterStat);
-    }
+//     if (this.activeFilter === 'Stat' && this.filterStat !== '') {
+//         tasks = tasks.filter(t => t.status === +this.filterStat);
+//     }
 
-    if (this.activeFilter === 'Tool' && this.filterTool) {
-        tasks = tasks.filter(t => t.toolName === this.filterTool);
-    }
+//     if (this.activeFilter === 'Tool' && this.filterTool) {
+//         tasks = tasks.filter(t => t.toolName === this.filterTool);
+//     }
 
-    if (this.activeFilter === 'Date') {
-        tasks = [...tasks].sort((a, b) => {
-            const diff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-            return this.filterDate === 'asc' ? diff : -diff;
-        });
-    }
+//     if (this.activeFilter === 'Date') {
+//         tasks = [...tasks].sort((a, b) => {
+//             const diff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+//             return this.filterDate === 'asc' ? diff : -diff;
+//         });
+//     }
 
-    return tasks;
-}
+//     return tasks;
+// }
 
   goToChefEquipe(projectId: string): void {
     this.router.navigate(['/chef-equipe'], { queryParams: { projectId } });
@@ -279,11 +299,44 @@ submitSteps(): void {
   });
 }
 get filteredProjectIds(): string[] {
-    if (!this.selectedProjectId) return this.projectIds;
-    return this.projectIds.filter(id => id === this.selectedProjectId);
+  let ids = this.selectedProjectId 
+    ? [this.selectedProjectId] 
+    : this.projectIds;
+  return ids;
 }
 get availableTools(): string[] {
     return [...new Set(this.tasks.map(t => t.toolName).filter(Boolean))];
+}
+get filteredStreams(): any[] {
+  if (!this.selectedProjectId) return this.streams;
+  return this.streams.filter(s => s.projectId === this.selectedProjectId);
+}
+
+// Quand on change de projet, reset le stream sélectionné
+onProjectChange(): void {
+  this.selectedStreamId = '';
+}
+
+getTasksForProject(projectId: string): Task[] {
+  let tasks = this.tasks.filter(t => t.projectId === projectId);
+
+  if (this.selectedStreamId) {
+    tasks = tasks.filter(t => t.streamId === this.selectedStreamId);
+  }
+
+  if (this.activeFilter === 'Stat' && this.filterStat !== '') {
+    tasks = tasks.filter(t => t.status === +this.filterStat);
+  }
+  if (this.activeFilter === 'Tool' && this.filterTool) {
+    tasks = tasks.filter(t => t.toolName === this.filterTool);
+  }
+  if (this.activeFilter === 'Date') {
+    tasks = [...tasks].sort((a, b) => {
+      const diff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      return this.filterDate === 'asc' ? diff : -diff;
+    });
+  }
+  return tasks;
 }
 
 

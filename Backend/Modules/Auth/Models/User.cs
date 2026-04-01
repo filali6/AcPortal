@@ -2,11 +2,14 @@ namespace Backend.Modules.Auth.Models;
 
 public enum GlobalRole
 {
-    SuperAdmin,
-    PortfolioDirector,
-    ChefEquipe,
-    Consultant,
-    DAF
+    HeadOfCDS = 0,          
+    PortfolioDirector = 1,   
+    ProjectManager = 2,     
+    BusinessTeamLead = 3,    
+    TechnicalTeamLead = 4,   
+    Consultant = 5   ,
+    DAF =6
+
 }
 
 public class User

@@ -58,7 +58,7 @@ public class AuthController : ControllerBase
 
     }
     [HttpGet("users")]
-    [Authorize(Roles ="SuperAdmin,PortfolioDirector")]
+    [Authorize(Roles ="HeadOfCDS,PortfolioDirector,ProjectManager")]
     public async Task<IActionResult> GetAll()
     {
         var users = await _db.Users
@@ -72,6 +72,44 @@ public class AuthController : ControllerBase
             .ToListAsync();
 
         return Ok(users);
+    }
+    [HttpGet("users/project-managers")]
+    [Authorize]
+    public async Task<IActionResult> GetProjectManagers()
+    {
+        var managers = await _db.Users
+            .Where(u => u.Role == GlobalRole.ProjectManager)
+            .Select(u => new
+            {
+                u.Id,
+                u.FullName,
+                u.Email,
+                ProjectCount = _db.Projects
+                    .Count(p => p.ProjectManagerId == u.Id)
+            })
+            .ToListAsync();
+        return Ok(managers);
+    }
+    // Dans AuthController — ajoute cet endpoint
+    [HttpGet("users/leads")]
+    [Authorize]
+    public async Task<IActionResult> GetLeads()
+    {
+        var leads = await _db.Users
+            .Where(u => u.Role == GlobalRole.BusinessTeamLead
+                     || u.Role == GlobalRole.TechnicalTeamLead)
+            .Select(u => new
+            {
+                id = u.Id,
+                fullName = u.FullName,
+                email = u.Email,
+                role = u.Role.ToString(),
+                StreamCount = _db.Streams
+                    .Count(s => s.BusinessTeamLeadId == u.Id
+                             || s.TechnicalTeamLeadId == u.Id)
+            })
+            .ToListAsync();
+        return Ok(leads);
     }
     public class RegisterRequest
     {

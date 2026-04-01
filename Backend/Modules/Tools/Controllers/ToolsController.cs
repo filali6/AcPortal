@@ -27,7 +27,7 @@ public class ToolsController : ControllerBase
 
     // POST api/tools
     [HttpPost]
-    [Authorize(Roles ="SuperAdmin")]
+    [Authorize(Roles ="HeadOfCDS")]
     public async Task<IActionResult> CreateTool([FromBody] CreateToolRequest request)
     {
         var tool = await _toolsService.CreateToolAsync(
@@ -44,7 +44,7 @@ public class ToolsController : ControllerBase
 
     // POST api/tools/{id}/roles
     [HttpPost("{id:guid}/roles")]
-    [Authorize(Roles ="SuperAdmin")]
+    [Authorize(Roles ="HeadOfCDS")]
     public async Task<IActionResult> CreateRole(Guid id, [FromBody] CreateRoleRequest request)
     {
         var role = await _toolsService.CreateRoleAsync(request.Name, id);
@@ -69,7 +69,7 @@ public class ToolsController : ControllerBase
 
     // POST api/tools/assign
     [HttpPost("assign")]
-    [Authorize(Roles ="SuperAdmin")]
+    [Authorize(Roles ="HeadOfCDS")]
     public async Task<IActionResult> AssignRole([FromBody] AssignRoleRequest request)
     {
         var result = await _toolsService.AssignRoleAsync(
