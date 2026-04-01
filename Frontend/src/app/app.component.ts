@@ -116,7 +116,7 @@ private toastTimeout: any;
   }
 
   isAdmin(): boolean {
-    return this.userRole === 'SuperAdmin';
+    return this.userRole === 'HeadOfCDS';
   }
 
   isDirector(): boolean {

@@ -5,13 +5,13 @@
     </div>
     <!-- Project Switcher -->
     <div class="project-switcher">
-        <select class="project-select" [(ngModel)]="selectedProjectId">
-            <option value="">Tous les projets</option>
-            <option *ngFor="let p of projects" [value]="p.id">
-                {{ p.name }}{{ isChefInProject(p.id) ? ' (Chef d\'équipe)' : '' }}
-            </option>
-        </select>
-    </div>
+  <select class="project-select" [(ngModel)]="selectedProjectId" (ngModelChange)="onProjectChange()">
+    <option value="">Tous les projets</option>
+    <option *ngFor="let p of projects" [value]="p.id">{{ p.name }}</option>
+  </select>
+
+  
+</div>
 
     <!-- Tableau des rôles -->
     <!-- <div class="card">

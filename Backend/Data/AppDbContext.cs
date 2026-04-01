@@ -23,8 +23,11 @@ public class AppDbContext : DbContext
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
+    public DbSet<Portfolio> Portfolios => Set<Portfolio>();
+    public DbSet<Backend.Modules.Projects.Models.Stream> Streams => Set<Backend.Modules.Projects.Models.Stream>();
+    public DbSet<StreamMember> StreamMembers => Set<StreamMember>();
 
- 
+
     public DbSet<AcpTool> AcpTools => Set<AcpTool>();
     public DbSet<ToolRole> ToolRoles => Set<ToolRole>();
     public DbSet<ConsultantToolRole> ConsultantToolRoles => Set<ConsultantToolRole>();

@@ -24,7 +24,7 @@ public class TeamsController : ControllerBase
 
     
     [HttpPost]
-    [Authorize(Roles = "SuperAdmin,PortfolioDirector")]
+    [Authorize(Roles = "HeadOfCDS,PortfolioDirector")]
     public async Task<IActionResult> Create([FromBody] CreateTeamRequest request)
     {
         var team = await _teamsService.CreateAsync(
@@ -63,7 +63,7 @@ public class TeamsController : ControllerBase
 
      
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = "SuperAdmin,PortfolioDirector")]
+    [Authorize(Roles = "HeadOfCDS,PortfolioDirector")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var team = await _teamsService.GetByIdAsync(id);
@@ -75,7 +75,7 @@ public class TeamsController : ControllerBase
 
     
     [HttpGet("{id:guid}/members")]
-    [Authorize(Roles = "SuperAdmin,PortfolioDirector")]
+    [Authorize(Roles = "HeadOfCDS,PortfolioDirector")]
     public async Task<IActionResult> GetMembers(Guid id)
     {
         var members = await _teamsService.GetMembersAsync(id);
@@ -84,7 +84,7 @@ public class TeamsController : ControllerBase
 
     
     [HttpPost("{id:guid}/members")]
-    [Authorize(Roles = "SuperAdmin,PortfolioDirector")]
+    [Authorize(Roles = "HeadOfCDS,PortfolioDirector")]
 
     public async Task<IActionResult> AddMembers(Guid id, [FromBody] AddMemberRequest request)
     {
@@ -100,7 +100,7 @@ public class TeamsController : ControllerBase
         });
     }
     [HttpGet("project/{projectId:guid}")]
-    [Authorize(Roles = "SuperAdmin,PortfolioDirector")]
+    [Authorize(Roles = "HeadOfCDS,PortfolioDirector")]
     public async Task<IActionResult> GetByProject(Guid projectId)
     {
         var team = await _teamsService.GetByProjectAsync(projectId);
