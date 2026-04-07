@@ -21,10 +21,10 @@ public class User
      
     public string Email { get; set; } = string.Empty;
 
-     
-    public string PasswordHash { get; set; } = string.Empty;
 
-    
+    public string KeycloakId { get; set; } = string.Empty;
+
+
     public GlobalRole Role { get; set; } = GlobalRole.Consultant;
 
     
