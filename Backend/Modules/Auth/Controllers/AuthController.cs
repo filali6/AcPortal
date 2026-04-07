@@ -1,7 +1,7 @@
 using Backend.Data;
 using Backend.Modules.Auth.Models;
 using Backend.Modules.Auth.Services;
-using Microsoft.AspNetCore.Identity.Data;
+ 
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
@@ -43,20 +43,7 @@ public class AuthController : ControllerBase
             }
         });
     }
-
-    [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
-    {
-        var token=await _authService.LoginAsync(request.Email,request.Password);
-        if (token ==null)
-            return Unauthorized(new {message="wrong email or password"}) ;
-        return Ok(new
-        {
-            message="login success",
-            token=token
-        });
-
-    }
+ 
     [HttpGet("users")]
     [Authorize(Roles ="HeadOfCDS,PortfolioDirector,ProjectManager")]
     public async Task<IActionResult> GetAll()
@@ -125,13 +112,6 @@ public class AuthController : ControllerBase
         public string Password{get;set;}=string.Empty;
         public GlobalRole Role{get;set;}=GlobalRole.Consultant;
     }
-    public class LoginRequest
-    {
-       [Required(ErrorMessage ="email is required")]
-       public string Email{get;set;}=string.Empty;
-
-       [Required(ErrorMessage ="password is required")]
-       public string Password {get;set;}=string.Empty; 
-    }
+   
     
 }
