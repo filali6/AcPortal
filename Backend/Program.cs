@@ -10,7 +10,8 @@ using Backend.Modules.Tasks.Services;
 using Microsoft.IdentityModel.Tokens;
 using Backend.Modules.Events.Handlers;
 using System.Text;
-
+using Microsoft.AspNetCore.Authentication;
+using Backend.Modules.Auth;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -41,49 +42,51 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProjectsService>();
 builder.Services.AddScoped<TeamsService>();
 builder.Services.AddScoped<ToolsService>();
+ 
+builder.Services.AddScoped<IClaimsTransformation, KeycloakRoleTransformer>();
 
 builder.Services.AddSignalR();
+builder.Services.AddHttpClient();
 
 
 
 builder.Services.AddControllers();
-var secretKey = builder.Configuration["Jwt:SecretKey"]!;
-var issuer = builder.Configuration["Jwt:Issuer"]!;
-var audience = builder.Configuration["Jwt:Audience"]!;
+var keycloakUrl=builder.Configuration["Keycloak:BaseUrl"];
+var realm=builder.Configuration["Keycloak:Realm"];
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = issuer,
-        ValidAudience = audience,
-        IssuerSigningKey = new SymmetricSecurityKey(
-                                       Encoding.UTF8.GetBytes(secretKey))
-    };
-    options.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
+        // Keycloak expose ses clés publiques ici
+        options.Authority = $"{keycloakUrl}/realms/{realm}";
+        options.Audience = builder.Configuration["Keycloak:ClientId"];
+        options.RequireHttpsMetadata = false; // dev seulement
+
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            var accessToken = context.Request.Query["access_token"];
-            var path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(accessToken) &&
-                path.StartsWithSegments("/hubs"))
+            ValidateIssuer = true,
+            ValidateAudience = false,  
+            ValidateLifetime = true,
+            RoleClaimType = "realm_access.roles"  
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
             {
-                context.Token = accessToken;
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
             }
-            return Task.CompletedTask;
-        }
-    };
-});
+        };
+    });
+
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>

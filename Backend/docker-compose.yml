@@ -34,6 +34,19 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9093
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: keycloak
+    ports:
+      - "8181:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: start-dev --import-realm
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+      - ./acp-realm.json:/opt/keycloak/data/import/acp-realm.json
 
 volumes:
   kafka-data:
+  keycloak-data:

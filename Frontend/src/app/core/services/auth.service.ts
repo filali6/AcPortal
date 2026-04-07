@@ -1,54 +1,61 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable,tap } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { KeycloakService } from 'keycloak-angular';
 import { NotificationService } from './notification.service';
 
-interface LoginResponse{
-  message:string;
-  token:string;
-}
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl=environment.apiUrl;
 
-  constructor(private http:HttpClient,
-    private router:Router,
+  constructor(
+    private keycloak: KeycloakService,
+    private router: Router,
     private notificationService: NotificationService
   ) {}
-  login(email:string,password:string):Observable<LoginResponse>{
-    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`,{
-      email,password
-    }).pipe(tap ( response=>{localStorage.setItem('token',response.token);
-      const userInfo=this.getUserInfo();
-      if(userInfo?.id){
-        this.notificationService.startConnection(userInfo.id);
-      }
 
-    })
-  );
-  }
-  logout():void{
-    localStorage.removeItem('token');
-    
-    this.router.navigate(['/login']);
-  }
-  getToken():string |null {
-    return localStorage.getItem('token');
-  }
-  isLoggedIn():boolean{
-    return this.getToken() !==null;
-  }
-  getUserInfo():any{
-    const token=this.getToken();
-    if (!token) return null;
-    const payload = token.split('.')[1];
-    const decoded=JSON.parse(atob(payload));
-    console.log('Token decodé :',decoded);
-    return decoded;
-  }
   
+  getToken(): string | null {
+    return this.keycloak.getKeycloakInstance().token ?? null;
+  }
+
+   
+  isLoggedIn(): boolean {
+    return this.keycloak.isLoggedIn();
+  }
+
+   
+  logout(): void {
+    this.keycloak.logout('http://localhost:4200/login');
+  }
+
+   
+  getUserInfo(): any {
+    const instance = this.keycloak.getKeycloakInstance();
+    const token = instance.token;
+    if (!token) return null;
+
+    const payload = token.split('.')[1];
+    const decoded = JSON.parse(atob(payload));
+    console.log('Token décodé :', decoded);
+
+    return {
+      id: decoded.sub,                          // l'ID Keycloak
+      name: decoded.name ?? decoded.preferred_username,
+      email: decoded.email,
+      role: decoded.realm_access?.roles?.find((r: string) =>
+        ['HeadOfCDS', 'PortfolioDirector', 'ProjectManager',
+         'BusinessTeamLead', 'TechnicalTeamLead', 'Consultant', 'DAF']
+        .includes(r)
+      )
+    };
+  }
+
+   
+  startNotifications(): void {
+    const userInfo = this.getUserInfo();
+    if (userInfo?.id) {
+      this.notificationService.startConnection(userInfo.id);
+    }
+  }
 }
