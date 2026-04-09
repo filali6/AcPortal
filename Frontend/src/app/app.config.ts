@@ -16,10 +16,11 @@ function initializeKeycloak(keycloak: KeycloakService) {
         clientId: 'acp-frontend'
       },
       initOptions: {
-        onLoad: 'check-sso',        // vérifie si déjà connecté
-        silentCheckSsoRedirectUri:
-          window.location.origin + '/assets/silent-check-sso.html'
-      },
+  onLoad: 'check-sso',
+  checkLoginIframe: false,  // ← ajoute juste cette ligne
+  silentCheckSsoRedirectUri:
+    window.location.origin + '/assets/silent-check-sso.html'
+},
       enableBearerInterceptor: false  // on garde notre interceptor existant
     });
 }

@@ -37,6 +37,7 @@ export class DirectorComponent implements OnInit {
   errorMessage = '';
 
   currentUserName = '';
+  currentUserId = '';
   private api = environment.apiUrl;
 
   constructor(
@@ -51,6 +52,7 @@ export class DirectorComponent implements OnInit {
   ngOnInit(): void {
     const userInfo = this.authService.getUserInfo();
     this.currentUserName = userInfo?.name || '';
+     this.currentUserId = userInfo?.id || '';
     this.loadAll();
     this.notificationService.notifications$
       .subscribe(() => this.refreshTasks());
@@ -74,9 +76,9 @@ export class DirectorComponent implements OnInit {
     this.tasksService.getAll().subscribe({
       next: (tasks) => {
         console.log('toutes les tâches:', tasks);
-        console.log('currentUserName:', this.currentUserName);
+        console.log('currentUserId:', this.currentUserId);
         this.myTasks = tasks.filter(
-          t => t.assignedTo === this.currentUserName
+          t => t.assignedTo === this.currentUserId
         );
         console.log('myTasks filtrées:', this.myTasks);
       }
@@ -86,6 +88,7 @@ export class DirectorComponent implements OnInit {
   // Clic sur une tâche → ouvre la vue assignation
   onTaskClick(task: any): void {
     if (task.status === 2) return; // tâche done → pas d'action
+    console.log('tâche sélectionnée:', task);
     this.selectedTask = task;
     this.selectedManagerId = '';
     this.successMessage = '';

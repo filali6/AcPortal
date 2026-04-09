@@ -10,23 +10,35 @@ public class KeycloakRoleTransformer : IClaimsTransformation
     {
         var identity = (ClaimsIdentity)principal.Identity!;
 
-        // Cherche le claim realm_access dans le token Keycloak
+        // Debug — voir tous les claims reçus
+        // foreach (var claim in identity.Claims)
+        // {
+        //     Console.WriteLine($"CLAIM: {claim.Type} = {claim.Value}");
+        // }
+
+        // Cherche realm_access
         var realmAccess = identity.FindFirst("realm_access")?.Value;
-        if (realmAccess is null) return Task.FromResult(principal);
+        if (realmAccess == null) return Task.FromResult(principal);
 
-        // Parse le JSON { "roles": ["Consultant", ...] }
-        var parsed = JsonDocument.Parse(realmAccess);
-        if (!parsed.RootElement.TryGetProperty("roles", out var roles))
-            return Task.FromResult(principal);
-
-        // Ajoute chaque rôle comme claim standard .NET
-        foreach (var role in roles.EnumerateArray())
+        try
         {
-            var roleName = role.GetString();
-            if (roleName is not null && !identity.HasClaim(ClaimTypes.Role, roleName))
+            var parsed = JsonDocument.Parse(realmAccess);
+            if (!parsed.RootElement.TryGetProperty("roles", out var roles))
+                return Task.FromResult(principal);
+
+            foreach (var role in roles.EnumerateArray())
             {
-                identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
+                var roleName = role.GetString();
+                if (roleName != null && !identity.HasClaim(ClaimTypes.Role, roleName))
+                {
+                    identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
+                    //Console.WriteLine($"ROLE AJOUTÉ: {roleName}");
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ERREUR TRANSFORMER: {ex.Message}");
         }
 
         return Task.FromResult(principal);

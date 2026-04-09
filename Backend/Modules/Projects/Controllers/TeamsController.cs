@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Backend.Data;
 using Backend.Modules.Events.Models;
 using Microsoft.EntityFrameworkCore;
+using Backend.Modules.Events.Services;
 
 
 namespace Backend.Modules.Projects.Controllers;
@@ -15,11 +16,13 @@ public class TeamsController : ControllerBase
 {
     private readonly TeamsService _teamsService;
     private readonly AppDbContext _db;
+    private readonly EventPublisher _eventPublisher;
 
-    public TeamsController(TeamsService teamsService, AppDbContext db)
+    public TeamsController(TeamsService teamsService, AppDbContext db,EventPublisher eventPublisher)
     {
         _teamsService = teamsService;
         _db=db;
+        _eventPublisher=eventPublisher;
     }
 
     
@@ -36,23 +39,12 @@ public class TeamsController : ControllerBase
         if (team == null)
             return BadRequest(new { message = "Projet introuvable ou équipe déjà existante" });
 
-        var payload = System.Text.Json.JsonSerializer.Serialize(new
+        await _eventPublisher.PublishAsync(new
         {
             eventType = "EquipeCréée",
             chefEquipeId = request.ChefEquipeId,
             projectId = request.ProjectId
-        });
-
-        _db.OutboxMessages.Add(new Backend.Modules.Events.Models.OutboxMessage
-        {
-            Topic = $"project.{request.ProjectId}",
-            Payload = payload,
-            CreatedAt = DateTime.UtcNow,
-            IsProcessed = false,
-            Retries = 0
-        });
-
-        await _db.SaveChangesAsync();
+        }, request.ProjectId);
 
         return Ok(new
         {
@@ -110,30 +102,8 @@ public class TeamsController : ControllerBase
 
         return Ok(team);
     }
-    [HttpGet("is-chef-equipe")]
-    [Authorize]
-    public async Task<IActionResult> IsChefEquipe()
-    {
-        var userId = Guid.Parse(User.FindFirst("id")!.Value);
-        var isChef = await _db.Teams.AnyAsync(t => t.ChefEquipeId == userId);
-        return Ok(new { isChefEquipe = isChef });
-    }
-    [HttpGet("my-chef-equipe-projects")]
-    [Authorize]
-    public async Task<IActionResult> GetMyChefEquipeProjects()
-    {
-        var userId = Guid.Parse(User.FindFirst("id")!.Value);
-
-        var projects = await _db.Teams
-            .Where(t => t.ChefEquipeId == userId)
-            .Join(_db.Projects,
-                t => t.ProjectId,
-                p => p.Id,
-                (t, p) => new { id = p.Id, name = p.Name })
-            .ToListAsync();
-
-        return Ok(projects);
-    }
+     
+     
 
 
 

@@ -1,5 +1,4 @@
 using Backend.Data;
-using Backend.Kafka;
 using Backend.Modules.Auth.Services;
 using Backend.Modules.Events.Services;
 using Backend.Modules.Projects.Services;
@@ -9,9 +8,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Backend.Modules.Tasks.Services;
 using Microsoft.IdentityModel.Tokens;
 using Backend.Modules.Events.Handlers;
-using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Backend.Modules.Auth;
+using System.Security.Claims;
+using Dapr.Messaging.PublishSubscribe.Extensions;  
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -19,14 +20,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         .GetConnectionString("DefaultConnection")),
     ServiceLifetime.Transient);
 
+builder.Services.AddDaprClient();
 
-builder.Services.AddHostedService<KafkaConsumerService>();
+// ✅ AJOUTÉ
+builder.Services.AddDaprPubSubClient();
+builder.Services.AddSingleton<StreamingSubscriptionService>();
+builder.Services.AddHostedService(sp =>
+    sp.GetRequiredService<StreamingSubscriptionService>());
 
-
-//builder.Services.AddSingleton<KafkaProducerService>();
-
-builder.Services.AddHostedService<OutboxPublisherService>();
- 
 builder.Services.AddScoped<EventProcessorService>();
 builder.Services.AddSingleton<WorkflowRulesService>();
 
@@ -42,32 +43,35 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProjectsService>();
 builder.Services.AddScoped<TeamsService>();
 builder.Services.AddScoped<ToolsService>();
- 
+
+builder.Services.AddScoped<EventPublisher>();
+
 builder.Services.AddScoped<IClaimsTransformation, KeycloakRoleTransformer>();
 
 builder.Services.AddSignalR();
 builder.Services.AddHttpClient();
 
+builder.Services.AddControllers().AddDapr().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+});
 
-
-builder.Services.AddControllers();
-var keycloakUrl=builder.Configuration["Keycloak:BaseUrl"];
-var realm=builder.Configuration["Keycloak:Realm"];
+var keycloakUrl = builder.Configuration["Keycloak:BaseUrl"];
+var realm = builder.Configuration["Keycloak:Realm"];
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        // Keycloak expose ses clés publiques ici
         options.Authority = $"{keycloakUrl}/realms/{realm}";
         options.Audience = builder.Configuration["Keycloak:ClientId"];
-        options.RequireHttpsMetadata = false; // dev seulement
+        options.RequireHttpsMetadata = false;
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidateAudience = false,  
+            ValidateAudience = false,
             ValidateLifetime = true,
-            RoleClaimType = "realm_access.roles"  
+            RoleClaimType = ClaimTypes.Role
         };
 
         options.Events = new JwtBearerEvents
@@ -86,7 +90,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
@@ -97,30 +100,29 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-    });
 
-
+builder.Services.AddDaprClient(builder =>
+{
+    builder.UseHttpEndpoint("http://localhost:3500");
+});
+builder.Services.AddDaprPubSubClient((_, clientBuilder) =>
+{
+    clientBuilder.UseGrpcEndpoint("http://localhost:50002");
+});
 
 var app = builder.Build();
 
- 
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
 }
 
-
-
-
-
 app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();
+// ❌ SUPPRIMÉ : app.UseCloudEvents();
+// ❌ SUPPRIMÉ : app.MapSubscribeHandler();
 app.MapControllers();
 app.MapHub<Backend.Hubs.NotificationHub>("/hubs/notifications");
 

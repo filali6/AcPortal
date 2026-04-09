@@ -60,7 +60,7 @@ public class CreateTasksForLeadsHandler : IActionHandler
             Title = title,
             Description = description,
             ToolName = "portal",
-            AssignedTo = user.FullName,
+            AssignedTo = user.KeycloakId,
             Status = AcpTaskStatus.Pending,
             CreatedAt = DateTime.UtcNow,
             ProjectId = projectId
@@ -70,7 +70,7 @@ public class CreateTasksForLeadsHandler : IActionHandler
         await _db.SaveChangesAsync();
 
         await _hubContext.Clients
-            .Group(user.Id.ToString())
+            .Group(user.KeycloakId)
             .SendAsync("NewNotification", new
             {
                 message = title,
