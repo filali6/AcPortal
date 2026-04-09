@@ -40,6 +40,8 @@ export class ProjectManagerComponent implements OnInit {
   errorMessage = '';
 
   currentUserName = '';
+  currentUserId = '';
+
   private api = environment.apiUrl;
 
   constructor(
@@ -55,6 +57,7 @@ export class ProjectManagerComponent implements OnInit {
   ngOnInit(): void {
     const userInfo = this.authService.getUserInfo();
     this.currentUserName = userInfo?.name || '';
+    this.currentUserId= userInfo?.id|| '';
     this.loadAll();
     this.notificationService.notifications$
       .subscribe(() => this.refreshTasks());
@@ -71,7 +74,7 @@ export class ProjectManagerComponent implements OnInit {
     this.tasksService.getAll().subscribe({
       next: (tasks) => {
         this.myTasks = tasks.filter(
-          t => t.assignedTo === this.currentUserName
+          t => t.assignedTo === this.currentUserId
         );
       }
     });

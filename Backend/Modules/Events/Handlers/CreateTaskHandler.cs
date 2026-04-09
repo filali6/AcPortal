@@ -91,7 +91,7 @@ public class CreateTaskHandler : IActionHandler
             Title = title,
             Description = description,
             ToolName = "portal",
-            AssignedTo = user.FullName,
+            AssignedTo = user.KeycloakId,
             Status = AcpTaskStatus.Pending,
             CreatedAt = DateTime.UtcNow,
             ProjectId = projectId

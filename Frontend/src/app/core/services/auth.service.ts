@@ -16,8 +16,15 @@ export class AuthService {
 
   
   getToken(): string | null {
-    return this.keycloak.getKeycloakInstance().token ?? null;
+  const instance = this.keycloak.getKeycloakInstance();
+  
+  // Force refresh si token expiré
+  if (instance.isTokenExpired(30)) {
+    this.keycloak.updateToken(30);
   }
+  
+  return instance.token ?? null;
+}
 
    
   isLoggedIn(): boolean {
