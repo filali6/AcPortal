@@ -95,7 +95,7 @@ selectedProjectDetail: any = null; // projet cliqué dans la liste
     this.tasksService.getAll().subscribe({
       next: (tasks) => {
         this.tasks = tasks;
-        this.myTasks = tasks.filter(t => t.assignedTo === this.currentUserName );
+        this.myTasks = tasks.filter(t => t.assignedTo === this.currentUserId );
       }
     });
   }
@@ -173,7 +173,7 @@ selectedProjectDetail: any = null; // projet cliqué dans la liste
     this.tasksService.getAll().subscribe({
       next: (tasks) => {
         this.tasks = tasks;
-        this.myTasks = tasks.filter(t => t.assignedTo === this.currentUserName);
+        this.myTasks = tasks.filter(t => t.assignedTo === this.currentUserId);
       }
     });
   }

@@ -9,6 +9,9 @@
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="Confluent.Kafka" Version="2.13.1" />
+    <PackageReference Include="Dapr.AspNetCore" Version="1.17.7" />
+    <PackageReference Include="Dapr.Client" Version="1.17.7" />
+    <PackageReference Include="Dapr.Messaging" Version="1.17.8" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">

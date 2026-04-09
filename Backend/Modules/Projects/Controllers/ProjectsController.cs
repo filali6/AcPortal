@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Backend.Data;
 using System.Text.Json;
-using Backend.Kafka;
+using Backend.Modules.Events.Services;
 using Backend.Modules.Events.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,11 +20,15 @@ public class ProjectsController : ControllerBase
 {
     private readonly ProjectsService _projectsService;
     private readonly AppDbContext _db;
+    private readonly EventPublisher _eventPublisher;
+    private readonly StreamingSubscriptionService _streamingService;
 
-    public ProjectsController(ProjectsService projectsService, AppDbContext db)
+    public ProjectsController(ProjectsService projectsService, AppDbContext db, EventPublisher eventPublisher, StreamingSubscriptionService streamingService)
     {
         _projectsService = projectsService;
         _db=db;
+        _eventPublisher=eventPublisher;
+        _streamingService = streamingService;
     }
 
     
@@ -58,23 +62,15 @@ public class ProjectsController : ControllerBase
             request.Description,
             request.PortfolioDirectorId
         );
-        var payload = System.Text.Json.JsonSerializer.Serialize(new
+        await _streamingService.SubscribeToProjectAsync(request.Name);
+        var safeName = request.Name.ToLower().Replace(" ", "-");
+        await _streamingService.WaitForTopicAsync($"project.{safeName}");
+        await _eventPublisher.PublishAsync(new
         {
             eventType = "ProjetCréé",
             directorId = request.PortfolioDirectorId,
             projectId = project.Id
-        });
-
-        _db.OutboxMessages.Add(new Backend.Modules.Events.Models.OutboxMessage
-        {
-            Topic = $"project.{project.Id}",
-            Payload = payload,
-            CreatedAt = DateTime.UtcNow,
-            IsProcessed = false,
-            Retries = 0
-        });
-
-        await _db.SaveChangesAsync();
+        }, project.Id,request.Name);
 
         return Ok(new
         {
@@ -95,20 +91,12 @@ public class ProjectsController : ControllerBase
         await _db.SaveChangesAsync();
 
         // publier event → tâche créée pour le Project Manager
-        var eventPayload = JsonSerializer.Serialize(new AcpEventDto
+        await _eventPublisher.PublishAsync(new
         {
-            EventType = "ProjectManagerAssigné",
-            ProjectId = id,
-            ProjectManagerId = dto.ProjectManagerId
-        });
-
-        _db.OutboxMessages.Add(new OutboxMessage
-        {
-            Topic = $"project.{id}",
-            Payload = eventPayload
-        });
-
-        await _db.SaveChangesAsync();
+            eventType = "ProjectManagerAssigné",
+            projectId = id,
+            projectManagerId = dto.ProjectManagerId
+        }, id, project.Name);
         return Ok(project);
     }
 
@@ -131,10 +119,13 @@ public class ProjectsController : ControllerBase
     [Authorize(Roles ="PortfolioDirector")]
     public async Task<IActionResult> GetMyProjects()
     {
-        var directorId=Guid.Parse(
-            User.FindFirst("id")!.Value
-        );
-        var projects = await _projectsService.GetMyProjectsAsync(directorId);
+        var keycloakId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (keycloakId == null) return Unauthorized();
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+        if (user == null) return NotFound();
+
+        var projects = await _projectsService.GetMyProjectsAsync(user.Id);
         return Ok(projects);
     }
     [HttpGet("managed")]
