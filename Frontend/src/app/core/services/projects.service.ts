@@ -7,9 +7,17 @@ export interface Project {
   id: string;
   name: string;
   description: string;
-  portfolioDirectorId: string;
+  portfolioId: string;
   projectManagerId: string;
   createdAt: string;
+}
+export interface Portfolio {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  director: { id: string; fullName: string; email: string } | null;
+  projectCount: number;
 }
 
 @Injectable({
@@ -35,26 +43,28 @@ export class ProjectsService {
   getManagedProjects(): Observable<Project[]> {
     return this.http.get<Project[]>(`${this.apiUrl}/projects/managed`);
   }
+  getAllPortfolios(): Observable<Portfolio[]> {
+    return this.http.get<Portfolio[]>(`${this.apiUrl}/portfolios`);
+  }
+
 
   // POST /api/projects → créer un projet
-  create(
-    name: string,
-    description: string,
-    portfolioDirectorId: string
-  ): Observable<any> {
-    return this.http.post(`${this.apiUrl}/projects`, {
-      name,
-      description,
-      portfolioDirectorId
-    });
+  create(name: string, description: string, portfolioId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/projects`, { name, description, portfolioId });
+  }
+getMyPortfolios(): Observable<Portfolio[]> {
+    return this.http.get<Portfolio[]>(`${this.apiUrl}/portfolios/my`);
   }
 
-  // PATCH /api/projects/{id}/assign → affecter un Director
-  assignDirector(projectId: string, directorId: string): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/projects/${projectId}/assign`, {
-      directorId
-    });
+  createPortfolio(name: string, description: string, portfolioDirectorId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/portfolios`, { name, description, portfolioDirectorId });
   }
+
+  getPortfolioDirectors(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/portfolios/directors`);
+  }
+
+  
 
   // PATCH /api/projects/{id}/assign-manager → affecter un ProjectManager
   assignManager(
