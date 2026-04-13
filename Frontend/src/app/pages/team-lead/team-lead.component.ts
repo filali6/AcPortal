@@ -96,6 +96,9 @@ export class TeamLeadComponent implements OnInit {
       this.myTasks = tasks.filter(t =>
         t.assignedTo === this.currentUserId
       );
+       console.log('myStreams:', this.myStreams);
+            console.log('myTasks:', this.myTasks);
+            console.log('first task streamId:', this.myTasks[0]?.streamId);
     }
   });
 }

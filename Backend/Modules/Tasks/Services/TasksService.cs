@@ -33,7 +33,7 @@ public class TasksService
                 t.CreatedAt,
                 t.ProjectId,
                 t.StepId,
-                StreamId = _db.ProjectSteps
+                StreamId = t.StreamId ?? _db.ProjectSteps
                     .Where(s => s.Id == t.StepId)
                     .Select(s => s.StreamId)
                     .FirstOrDefault()
@@ -92,7 +92,7 @@ public class TasksService
                 t.CreatedAt,
                 t.ProjectId,
                 t.StepId,
-                StreamId = _db.ProjectSteps
+                StreamId = t.StreamId ?? _db.ProjectSteps
                     .Where(s => s.Id == t.StepId)
                     .Select(s => s.StreamId)
                     .FirstOrDefault()

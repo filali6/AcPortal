@@ -96,10 +96,16 @@ public class StreamingSubscriptionService : IHostedService
                         if (Guid.TryParse(pid.GetString(), out var parsedId))
                             projectId = parsedId;  
                     }
+                    Guid? streamId = null;
+                    if (json.TryGetProperty("streamId", out var sid))
+                    {
+                        if (Guid.TryParse(sid.GetString(), out var parsedStreamId))
+                            streamId = parsedStreamId;
+                    }
                     using var scope = _serviceProvider.CreateScope();
                     var processor = scope.ServiceProvider
                         .GetRequiredService<EventProcessorService>();
-                    await processor.ProcessAsync(json.ToString(), projectId);
+                    await processor.ProcessAsync(json.ToString(), projectId, streamId);
 
                     return TopicResponseAction.Success;
                 }

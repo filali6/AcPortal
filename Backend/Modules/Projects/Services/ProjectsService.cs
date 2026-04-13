@@ -16,13 +16,13 @@ public class ProjectsService
     }
 
  
-    public async Task<Project> CreateAsync(string name, string description, Guid portfolioDirectorId)
+    public async Task<Project> CreateAsync(string name, string description, Guid portfolioId)
     {
         var project = new Project
         {
             Name = name,
             Description = description,
-            PortfolioDirectorId = portfolioDirectorId,
+            PortfolioId = portfolioId,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -49,23 +49,13 @@ public class ProjectsService
     }
 
     
-    public async Task<Project?> AssignDirectorAsync(Guid projectId, Guid directorId)
-    {
-        var project = await _db.Projects.FindAsync(projectId);
-        if (project == null) return null;
-
-        
-        var director = await _db.Users.FindAsync(directorId);
-        if (director == null) return null;
-
-        project.PortfolioDirectorId = directorId;
-        await _db.SaveChangesAsync();
-
-        _logger.LogInformation("Projet {Id} affecté au Director {DirectorId}", projectId, directorId);
-        return project;
-    }
+    
     public async Task<List<Project>> GetMyProjectsAsync(Guid directorId)
     {
-        return await _db.Projects.Where(p=>p.PortfolioDirectorId==directorId).OrderByDescending(p=>p.CreatedAt).ToListAsync();
+        return await _db.Projects
+            .Include(p => p.Portfolio)
+            .Where(p => p.Portfolio != null && p.Portfolio.PortfolioDirectorId == directorId)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
     }
 }

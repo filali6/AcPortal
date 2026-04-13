@@ -22,7 +22,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddDaprClient();
 
-// ✅ AJOUTÉ
 builder.Services.AddDaprPubSubClient();
 builder.Services.AddSingleton<StreamingSubscriptionService>();
 builder.Services.AddHostedService(sp =>
@@ -32,16 +31,14 @@ builder.Services.AddScoped<EventProcessorService>();
 builder.Services.AddSingleton<WorkflowRulesService>();
 
 builder.Services.AddScoped<IActionHandler, CreateTaskHandler>();
-builder.Services.AddScoped<IActionHandler, CreateTasksForLeadsHandler>();
-builder.Services.AddScoped<IActionHandler, CreateTasksFromStepsHandler>();
-builder.Services.AddScoped<IActionHandler, UnblockDependentStepsHandler>();
-
+ builder.Services.AddScoped<IActionHandler, CreateTasksFromStepsHandler>();
+ 
 builder.Services.AddScoped<TasksService>();
 builder.Services.AddScoped<EventsService>();
 builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddScoped<ProjectsService>();
-builder.Services.AddScoped<TeamsService>();
+ 
 builder.Services.AddScoped<ToolsService>();
 
 builder.Services.AddScoped<EventPublisher>();
@@ -54,6 +51,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddControllers().AddDapr().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles; // ✅
 });
 
 var keycloakUrl = builder.Configuration["Keycloak:BaseUrl"];

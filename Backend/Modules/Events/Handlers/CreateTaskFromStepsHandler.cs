@@ -104,15 +104,13 @@ public class CreateTasksFromStepsHandler : IActionHandler
         }
         else
         {
-            var team = await _db.Teams
-                .FirstOrDefaultAsync(t => t.ProjectId == projectId);
-            if (team == null) return null;
 
-            memberIds = await _db.TeamMembers
-                .Where(m => m.TeamId == team.Id
-                         && m.ConsultantId != team.ChefEquipeId)
-                .Select(m => m.ConsultantId)
-                .ToListAsync();
+
+            memberIds = await _db.StreamMembers
+         .Where(m => _db.Streams
+             .Any(s => s.ProjectId == projectId && s.Id == m.StreamId))
+         .Select(m => m.ConsultantId)
+         .ToListAsync();
         }
 
         if (!memberIds.Any()) return null;
@@ -125,7 +123,7 @@ public class CreateTasksFromStepsHandler : IActionHandler
             var consultant = await _db.Users.FindAsync(memberId);
             if (consultant == null) continue;
 
-            // ✅ Compter par KeycloakId
+            
             var count = await _db.AcpTasks
                 .CountAsync(t =>
                     t.AssignedTo == consultant.KeycloakId
@@ -135,7 +133,7 @@ public class CreateTasksFromStepsHandler : IActionHandler
             if (count < minTasks)
             {
                 minTasks = count;
-                bestKeycloakId = consultant.KeycloakId; // ✅
+                bestKeycloakId = consultant.KeycloakId; 
             }
         }
 

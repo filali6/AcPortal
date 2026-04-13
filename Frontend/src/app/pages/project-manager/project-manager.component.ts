@@ -81,7 +81,7 @@ export class ProjectManagerComponent implements OnInit {
   }
 
   loadProjects(): void {
-    this.projectsService.getManagedProjects().subscribe({
+    this.projectsService.getAll().subscribe({
       next: (p) => this.projects = p
     });
   }

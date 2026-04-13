@@ -52,25 +52,35 @@ public class ProjectsController : ControllerBase
         return Ok(project);
     }
 
-   
+
     [HttpPost]
-    [Authorize(Roles="HeadOfCDS")]
+    [Authorize(Roles = "HeadOfCDS")]
     public async Task<IActionResult> Create([FromBody] CreateProjectRequest request)
     {
+        // Vérifier que le portfolio existe et récupérer le PD
+        var portfolio = await _db.Portfolios
+            .Include(p => p.PortfolioDirector)
+            .FirstOrDefaultAsync(p => p.Id == request.PortfolioId);
+
+        if (portfolio == null)
+            return BadRequest(new { message = "Portfolio introuvable" });
+
         var project = await _projectsService.CreateAsync(
             request.Name,
             request.Description,
-            request.PortfolioDirectorId
+            request.PortfolioId   
         );
+
         await _streamingService.SubscribeToProjectAsync(request.Name);
         var safeName = request.Name.ToLower().Replace(" ", "-");
         await _streamingService.WaitForTopicAsync($"project.{safeName}");
+
         await _eventPublisher.PublishAsync(new
         {
             eventType = "ProjetCréé",
-            directorId = request.PortfolioDirectorId,
+            directorId = portfolio.PortfolioDirectorId,   
             projectId = project.Id
-        }, project.Id,request.Name);
+        }, project.Id, request.Name);
 
         return Ok(new
         {
@@ -101,20 +111,20 @@ public class ProjectsController : ControllerBase
     }
 
 
-    [HttpPatch("{id:guid}/assign")]
-    [Authorize(Roles = "HeadOfCDS")]
-    public async Task<IActionResult> AssignDirector(Guid id, [FromBody] AssignDirectorRequest request)
-    {
-        var project = await _projectsService.AssignDirectorAsync(id, request.DirectorId);
-        if (project == null)
-            return NotFound(new { message = "Projet ou Director introuvable" });
+    // [HttpPatch("{id:guid}/assign")]
+    // [Authorize(Roles = "HeadOfCDS")]
+    // public async Task<IActionResult> AssignDirector(Guid id, [FromBody] AssignDirectorRequest request)
+    // {
+    //     var project = await _projectsService.AssignDirectorAsync(id, request.DirectorId);
+    //     if (project == null)
+    //         return NotFound(new { message = "Projet ou Director introuvable" });
 
-        return Ok(new
-        {
-            message = "Director assigné avec succès",
-            data = project
-        });
-    }
+    //     return Ok(new
+    //     {
+    //         message = "Director assigné avec succès",
+    //         data = project
+    //     });
+    // }
     [HttpGet("my")]
     [Authorize(Roles ="PortfolioDirector")]
     public async Task<IActionResult> GetMyProjects()
@@ -132,12 +142,13 @@ public class ProjectsController : ControllerBase
     [Authorize(Roles = "ProjectManager")]
     public async Task<IActionResult> GetManagedProjects()
     {
-        var userIdClaim = User.FindFirst("id")?.Value;
-        if (userIdClaim == null) return Unauthorized();
-        var userId = Guid.Parse(userIdClaim);
+        var keycloakId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (keycloakId == null) return Unauthorized();
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+        if (user == null) return NotFound();
 
         var projects = await _db.Projects
-            .Where(p => p.ProjectManagerId == userId)
+            .Where(p => p.ProjectManagerId == user.Id)
             .ToListAsync();
 
         return Ok(projects);
@@ -150,18 +161,17 @@ public class CreateProjectRequest
 {
     [Required(ErrorMessage = "Name est obligatoire")]
     public string Name { get; set; } = string.Empty;
-
     public string Description { get; set; } = string.Empty;
+    [Required(ErrorMessage = "PortfolioId est obligatoire")]
+    public Guid PortfolioId { get; set; }
 
-    [Required(ErrorMessage = "PortfolioDirectorId est obligatoire")]
-    public Guid PortfolioDirectorId { get; set; }
 }
 
-public class AssignDirectorRequest
-{
-    [Required(ErrorMessage = "DirectorId est obligatoire")]
-    public Guid DirectorId { get; set; }
-}
+// public class AssignDirectorRequest
+// {
+//     [Required(ErrorMessage = "DirectorId est obligatoire")]
+//     public Guid DirectorId { get; set; }
+// }
 public class AssignManagerDto
 {
     public Guid ProjectManagerId { get; set; }
