@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { ProjectsService, Project } from '../../core/services/projects.service';
+import { ProjectsService, Project, Portfolio } from '../../core/services/projects.service';
 import { UsersService, User } from '../../core/services/users.service';
 import { TasksService, Task } from '../../core/services/tasks.service';
 import { NotificationService } from '../../core/services/notification.service';
@@ -21,11 +21,17 @@ export class AdminComponent implements OnInit {
   // --- Création projet ---
   projectName = '';
   projectDescription = '';
-  selectedDirectorId = '';
+  selectedPortfolioId = ''; 
   showCreateProject = false;
 
+
+  portfolioName = '';
+  portfolioDescription = '';
+  selectedDirectorId = '';         
+  showCreatePortfolio = false;
   // --- Données ---
   projects: Project[] = [];
+   portfolios: Portfolio[] = [];
   directors: User[] = [];
   tasks: Task[] = [];
 
@@ -77,28 +83,27 @@ selectedProjectDetail: any = null; // projet cliqué dans la liste
   }
 
   loadAll(): void {
-    // intact
-    this.usersService.getAll().subscribe({
-      next: (users) => {
-        this.directors = this.usersService.getDirectors(users);
-      }
-    });
+  // Charger les directors pour créer un portfolio
+  this.projectsService.getPortfolioDirectors().subscribe({
+    next: (directors) => this.directors = directors
+  });
 
-    // intact
-    this.projectsService.getAll().subscribe({
-      next: (projects) => {
-        this.projects = projects;
-      }
-    });
+  // Charger les portfolios pour créer un projet
+  this.projectsService.getAllPortfolios().subscribe({
+    next: (portfolios) => this.portfolios = portfolios
+  });
 
-    // intact + extraction myTasks
-    this.tasksService.getAll().subscribe({
-      next: (tasks) => {
-        this.tasks = tasks;
-        this.myTasks = tasks.filter(t => t.assignedTo === this.currentUserId );
-      }
-    });
-  }
+  this.projectsService.getAll().subscribe({
+    next: (projects) => this.projects = projects
+  });
+
+  this.tasksService.getAll().subscribe({
+    next: (tasks) => {
+      this.tasks = tasks;
+      this.myTasks = tasks.filter(t => t.assignedTo === this.currentUserId);
+    }
+  });
+}
 
   // Clic sur une tâche HeadOfCDS → ouvre le formulaire
   onMyTaskClick(): void {
@@ -128,7 +133,7 @@ selectedProjectDetail: any = null; // projet cliqué dans la liste
 
   // intact
   createProject(): void {
-    if (!this.projectName || !this.selectedDirectorId) {
+    if (!this.projectName || !this.selectedPortfolioId) {
       this.errorMessage = 'Nom et Director sont obligatoires';
       return;
     }
@@ -137,13 +142,13 @@ selectedProjectDetail: any = null; // projet cliqué dans la liste
     this.projectsService.create(
       this.projectName,
       this.projectDescription,
-      this.selectedDirectorId
+      this.selectedPortfolioId
     ).subscribe({
       next: () => {
         this.successMessage = 'Projet créé avec succès !';
         this.projectName = '';
         this.projectDescription = '';
-        this.selectedDirectorId = '';
+        this.selectedPortfolioId = '';
         this.loading = false;
         this.showCreateProject = false;
         this.loadAll();
@@ -219,6 +224,34 @@ selectProject(project: any): void {
 backToProjects(): void {
   this.selectedProjectDetail = null;
   this.projectTeams = [];
+}
+createPortfolio(): void {
+  if (!this.portfolioName || !this.selectedDirectorId) {
+    this.errorMessage = 'Nom et Director sont obligatoires';
+    return;
+  }
+  this.loading = true;
+  this.projectsService.createPortfolio(
+    this.portfolioName,
+    this.portfolioDescription,
+    this.selectedDirectorId
+  ).subscribe({
+    next: () => {
+      this.portfolioName = '';
+      this.portfolioDescription = '';
+      this.selectedDirectorId = '';
+      this.showCreatePortfolio = false;  // ✅ ferme le formulaire inline
+      this.loading = false;
+      // ✅ recharge les portfolios pour que le select se mette à jour
+      this.projectsService.getAllPortfolios().subscribe({
+        next: (portfolios) => this.portfolios = portfolios
+      });
+    },
+    error: () => {
+      this.errorMessage = 'Erreur lors de la création du portfolio';
+      this.loading = false;
+    }
+  });
 }
 
  
