@@ -60,7 +60,7 @@ export class DirectorComponent implements OnInit {
 
   loadAll(): void {
     // charger les projets
-    this.projectsService.getMyProjects().subscribe({
+    this.projectsService.getAll().subscribe({
       next: (projects) => this.projects = projects
     });
 
