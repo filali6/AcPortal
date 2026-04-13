@@ -392,3 +392,70 @@ tr.done td {
 tr.selected td {
     background: #eff6ff;
 }
+/* Label row — portfolio label + bouton nouveau */
+.label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+/* Bouton petit inline */
+.btn-add-small {
+    padding: 3px 10px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+
+    &:hover {
+        background: var(--accent);
+        color: white;
+    }
+}
+
+/* Bouton secondaire — créer portfolio inline */
+.btn-secondary {
+    padding: 9px 18px;
+    background: white;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    margin-top: 4px;
+
+    &:hover:not(:disabled) {
+        background: var(--accent-light);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+/* Formulaire inline portfolio — séparation visuelle */
+.portfolio-inline-form {
+    grid-column: 1 / -1;
+    padding: 16px;
+    background: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 4px;
+}
+
+/* Alert warning */
+.alert-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
