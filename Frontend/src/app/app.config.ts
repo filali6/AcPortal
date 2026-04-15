@@ -17,7 +17,7 @@ function initializeKeycloak(keycloak: KeycloakService) {
       },
       initOptions: {
   onLoad: 'check-sso',
-  checkLoginIframe: false,  // ← ajoute juste cette ligne
+  checkLoginIframe: false,   
   silentCheckSsoRedirectUri:
     window.location.origin + '/assets/silent-check-sso.html'
 },

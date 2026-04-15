@@ -1,0 +1,57 @@
+<div class="tools-page">
+
+    <div class="page-header">
+        <h1>Mes outils</h1>
+    </div>
+
+    <div *ngIf="loading" class="empty">Chargement...</div>
+
+    <div *ngIf="!loading">
+
+        <!-- Mes outils -->
+        <section class="section">
+            <div *ngIf="myPlugins.length === 0" class="empty">
+                Aucun outil ajouté pour l'instant.
+            </div>
+            <div class="plugins-grid">
+                <div *ngFor="let plugin of myPlugins" class="plugin-card">
+                    <div class="plugin-info">
+                        <span class="plugin-name">{{ plugin.name }}</span>
+                        <span class="category-badge">{{ plugin.category }}</span>
+                        <p class="plugin-desc">{{ plugin.description }}</p>
+                    </div>
+                    <div class="plugin-actions">
+                        <button class="btn-open" (click)="openPlugin(plugin)">Ouvrir</button>
+                        <button class="btn-remove" (click)="removePlugin(plugin.id)">Retirer</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Catalogue -->
+        <div class="page-header">
+            <h1>Catalogue</h1>
+        </div>
+        <section class="section">
+            <div class="plugins-grid">
+                <div *ngFor="let plugin of allPlugins" class="plugin-card" [class.added]="isAdded(plugin.id)">
+                    <div class="plugin-info">
+                        <span class="plugin-name">{{ plugin.name }}</span>
+                        <span class="category-badge">{{ plugin.category }}</span>
+                        <p class="plugin-desc">{{ plugin.description }}</p>
+                    </div>
+                    <div class="plugin-actions">
+                        <button *ngIf="!isAdded(plugin.id)" class="btn-add" (click)="addPlugin(plugin.id)">
+                            + Ajouter
+                        </button>
+                        <button *ngIf="isAdded(plugin.id)" class="btn-added" disabled>
+                            Ajouté
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+</div>

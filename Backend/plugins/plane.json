@@ -1,0 +1,10 @@
+{
+  "id": "plane",
+  "name": "Plane",
+  "description": "Gestion de tickets et suivi de tâches",
+  "category": "issues",
+  "icon": "📋",
+  "baseUrlEnvKey": "PLUGIN_PLANE_URL",
+  "adapterType": "plane",
+  "ssoEnabled": true
+}

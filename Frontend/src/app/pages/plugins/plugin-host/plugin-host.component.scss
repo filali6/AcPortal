@@ -1,0 +1,86 @@
+.plugin-host {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+
+    .loading,
+    .error {
+        text-align: center;
+        font-size: 1.2rem;
+        color: #888;
+    }
+
+    .plugin-card {
+        background: #1e1e2e;
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+
+        .plugin-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+
+            .plugin-icon {
+                width: 64px;
+                height: 64px;
+                object-fit: contain;
+                border-radius: 12px;
+            }
+
+            h2 {
+                margin: 0 0 0.5rem 0;
+                color: #fff;
+            }
+
+            p {
+                margin: 0 0 0.5rem 0;
+                color: #888;
+            }
+
+            .sso-badge {
+                font-size: 0.8rem;
+                color: #4ade80;
+            }
+        }
+
+        .plugin-actions {
+            display: flex;
+            gap: 1rem;
+
+            .btn-open {
+                flex: 1;
+                padding: 0.75rem;
+                background: #6366f1;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 1rem;
+
+                &:hover {
+                    background: #4f46e5;
+                }
+            }
+
+            .btn-back {
+                padding: 0.75rem 1.5rem;
+                background: transparent;
+                color: #888;
+                border: 1px solid #333;
+                border-radius: 8px;
+                cursor: pointer;
+
+                &:hover {
+                    color: #fff;
+                    border-color: #666;
+                }
+            }
+        }
+    }
+}
