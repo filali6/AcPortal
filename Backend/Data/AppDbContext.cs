@@ -26,6 +26,7 @@ public class AppDbContext : DbContext
     public DbSet<AcpTool> AcpTools => Set<AcpTool>();
     public DbSet<ToolRole> ToolRoles => Set<ToolRole>();
     public DbSet<ConsultantToolRole> ConsultantToolRoles => Set<ConsultantToolRole>();
+    public DbSet<UserPlugin> UserPlugins => Set<UserPlugin>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -132,5 +133,8 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(ctr => ctr.ToolRoleId)
             .OnDelete(DeleteBehavior.Cascade);
+        // UserPlugin → User
+        modelBuilder.Entity<UserPlugin>()
+            .HasIndex(up => new { up.UserId, up.PluginId }).IsUnique();
     }
 }
