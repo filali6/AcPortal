@@ -40,6 +40,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProjectsService>();
  
 builder.Services.AddScoped<ToolsService>();
+builder.Services.AddSingleton<PluginRegistry>();
 
 builder.Services.AddScoped<EventPublisher>();
 
