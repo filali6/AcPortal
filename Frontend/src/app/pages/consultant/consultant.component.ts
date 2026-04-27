@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../core/services/notification.service';
+import { PluginBridgeService } from '../../core/services/plugin-bridge.service';
 
 @Component({
   selector: 'app-consultant',
@@ -28,6 +29,8 @@ export class ConsultantComponent implements OnInit {
   activeProjectSteps: string | null = null;
   streams: any[] = [];
 selectedStreamId = '';
+
+availablePlugins: any[] = [];
 
   filterStat = '';
   filterTool = '';
@@ -60,7 +63,8 @@ selectedStreamId = '';
     private tasksService: TasksService,
     private http: HttpClient,
     private router:Router,
-    private notificationService:NotificationService
+    private notificationService:NotificationService,
+    private pluginBridge: PluginBridgeService
   ) {}
 
   ngOnInit(): void {
@@ -73,6 +77,9 @@ selectedStreamId = '';
   next: (s) => this.streams = s.filter(
     (x, i, arr) => arr.findIndex(y => y.id === x.id) === i
   )
+});
+this.pluginBridge.getAllPlugins().subscribe({
+  next: (plugins) => this.availablePlugins = plugins
 });
   }
 
@@ -112,17 +119,23 @@ selectedStreamId = '';
   }
 
   // ← AJOUT : ouvrir l'outil directement depuis la tâche
-  openTool(task: Task): void {
-    const routes: { [key: string]: string } = {
+    openTool(task: Task): void {
+    if (task.status === 1) return; // bloquée
+
+    const plugin = this.availablePlugins.find(p => p.id === task.toolName);
+    if (plugin?.accessUrl) {
+      window.open(plugin.accessUrl, '_blank');
+    } else {
+      // fallback anciens outils internes
+      const routes: { [key: string]: string } = {
         'axeIAM': '/plugins/axe-iam',
         'axeBPM': '/plugins/axe-bpm',
         'axeGUI': '/plugins/axe-gui'
-    };
-    const route = routes[task.toolName];
-    if (route) {
-        this.router.navigate([route], {
-            queryParams: { projectId: task.projectId }
-        });
+      };
+      const route = routes[task.toolName];
+      if (route) {
+        this.router.navigate([route], { queryParams: { projectId: task.projectId } });
+      }
     }
 }
 

@@ -3,7 +3,7 @@
     {
       "eventCode": "ContratSigné",
       "actionType": "CREATE_TASK",
-      "taskTitle": "Créer le projet et assigner un Portfolio Director",
+      "taskTitle": "Créer le projet pour le client : {clientName}",
       "taskDescription": "Un contrat a été signé — créer le projet correspondant",
       "targetType": "ROLE",
       "targetValues": ["HeadOfCDS"]
@@ -11,7 +11,7 @@
     {
       "eventCode": "ProjetCréé",
       "actionType": "CREATE_TASK",
-      "taskTitle": "Assigner un Project Manager",
+      "taskTitle": "Nouveau projet \"{projectName}\" : Assigner un chef de projet",
       "taskDescription": "Le projet a été créé — assigner un Project Manager",
       "targetType": "CONTEXT_USER",
       "targetValues": ["DirectorId"]

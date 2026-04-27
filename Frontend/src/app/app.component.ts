@@ -6,11 +6,12 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../environments/environment';
 import { filter } from 'rxjs/operators';
 import { NotificationService } from './core/services/notification.service';
+import { TabsBarComponent } from './core/components/tabs-bar/tabs-bar.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [CommonModule, RouterOutlet,TabsBarComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -65,7 +66,10 @@ private toastTimeout: any;
     this.router.events.pipe(
       filter(e => e instanceof NavigationEnd)
     ).subscribe((e: any) => {
-      this.showLayout = !e.url.includes('login') && !e.url.includes('plugins');
+      this.showLayout = !e.url.includes('login') 
+    && !e.url.includes('plugins/axe-iam')
+    && !e.url.includes('plugins/axe-bpm')
+    && !e.url.includes('plugins/axe-gui');
       this.currentRoute = e.url;
 
       if (this.showLayout) {
@@ -85,7 +89,10 @@ private toastTimeout: any;
     });
 
     const currentUrl = this.router.url;
-    this.showLayout = !currentUrl.includes('login') && !currentUrl.includes('plugins');
+    this.showLayout = !currentUrl.includes('login') 
+    && !currentUrl.includes('plugins/axe-iam')
+    && !currentUrl.includes('plugins/axe-bpm')
+    && !currentUrl.includes('plugins/axe-gui');
     this.currentRoute = currentUrl;
   }
 
@@ -133,6 +140,9 @@ private toastTimeout: any;
   isChefEquipe(): boolean {
       return this.isChefInAnyProject;
   }
+  isTeamLead(): boolean {
+    return this.userRole === 'BusinessTeamLead' || this.userRole === 'TechnicalTeamLead';
+}
   closeToast(): void {
   this.toastVisible = false;
   clearTimeout(this.toastTimeout);
