@@ -44,7 +44,7 @@
                     <span>Mon espace</span>
                 </a>
             
-                <a class="nav-item" [class.active]="isActive('/tools')" (click)="navigate('/tools')">
+                <a class="nav-item" [class.active]="isActive('/tools-page')" (click)="navigate('/tools-page')">
                     <span class="nav-icon"></span>
                     <span>Tools</span>
                 </a>
@@ -56,6 +56,17 @@
                 <a class="nav-item" [class.active]="isActive('daf')" (click)="navigate('/daf')">
                     <span class="nav-icon"></span>
                     <span>Contrats</span>
+                </a>
+            </ng-container>
+            <!-- Team Lead -->
+            <ng-container *ngIf="isTeamLead()">
+                <a class="nav-item" [class.active]="isActive('team-lead')" (click)="navigate('/team-lead')">
+                    <span class="nav-icon"></span>
+                    <span>Mon Espace</span>
+                </a>
+                <a class="nav-item" [class.active]="isActive('/tools-page')" (click)="navigate('/tools-page')">
+                    <span class="nav-icon"></span>
+                    <span>Tools</span>
                 </a>
             </ng-container>
             
@@ -89,6 +100,7 @@
 
     <!-- Main -->
     <div class="main-wrapper">
+        <app-tabs-bar></app-tabs-bar>
         <main class="main-content">
             <router-outlet />
         </main>

@@ -8,6 +8,7 @@ import { NotificationService } from '../../core/services/notification.service';
 import { ProjectsService } from '../../core/services/projects.service';
 import { UsersService } from '../../core/services/users.service';
 import { StreamsService } from '../../core/services/streams.service';
+import { TabsService } from '../../core/services/tabs.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -19,29 +20,26 @@ import { environment } from '../../../environments/environment';
 })
 export class ProjectManagerComponent implements OnInit {
 
-  activeView: 'tasks' | 'create-stream' = 'tasks';
-
+  activeTabId = 'tasks';
   myTasks: Task[] = [];
   projects: any[] = [];
   bizLeads: any[] = [];
   techLeads: any[] = [];
   consultants: any[] = [];
-  selectedConsultantIds: string[] = [];
-
-  streamName = '';
-  selectedBizLeadId = '';
-  selectedTechLeadId = '';
-  currentTask: any = null;
-
   selectedIds: Set<string> = new Set();
+  openTabs: { [tabId: string]: {
+    task: any,
+    streamName: string,
+    selectedBizLeadId: string,
+    selectedTechLeadId: string,
+    selectedConsultantIds: string[]
+  }} = {};
 
   loading = false;
   successMessage = '';
   errorMessage = '';
-
   currentUserName = '';
   currentUserId = '';
-
   private api = environment.apiUrl;
 
   constructor(
@@ -51,16 +49,17 @@ export class ProjectManagerComponent implements OnInit {
     private notificationService: NotificationService,
     private projectsService: ProjectsService,
     private usersService: UsersService,
-    private streamsService: StreamsService
+    private streamsService: StreamsService,
+    private tabsService: TabsService
   ) {}
 
   ngOnInit(): void {
     const userInfo = this.authService.getUserInfo();
     this.currentUserName = userInfo?.name || '';
-    this.currentUserId= userInfo?.id|| '';
+    this.currentUserId = userInfo?.id || '';
     this.loadAll();
-    this.notificationService.notifications$
-      .subscribe(() => this.refreshTasks());
+    this.notificationService.notifications$.subscribe(() => this.refreshTasks());
+    this.tabsService.activeTabId.subscribe(id => this.activeTabId = id);
   }
 
   loadAll(): void {
@@ -73,17 +72,13 @@ export class ProjectManagerComponent implements OnInit {
   refreshTasks(): void {
     this.tasksService.getAll().subscribe({
       next: (tasks) => {
-        this.myTasks = tasks.filter(
-          t => t.assignedTo === this.currentUserId
-        );
+        this.myTasks = tasks.filter(t => t.assignedTo === this.currentUserId);
       }
     });
   }
 
   loadProjects(): void {
-    this.projectsService.getAll().subscribe({
-      next: (p) => this.projects = p
-    });
+    this.projectsService.getAll().subscribe({ next: (p) => this.projects = p });
   }
 
   loadLeads(): void {
@@ -97,45 +92,72 @@ export class ProjectManagerComponent implements OnInit {
 
   loadConsultants(): void {
     this.usersService.getAll().subscribe({
-      next: (users) => {
-        this.consultants = users.filter(u => u.role === 'Consultant');
-      }
+      next: (users) => this.consultants = users.filter(u => u.role === 'Consultant')
     });
   }
 
   onTaskClick(task: any): void {
     if (task.status === 2) return;
-    this.currentTask = task;
-    this.streamName = '';
-    this.selectedBizLeadId = '';
-    this.selectedTechLeadId = '';
-    this.selectedConsultantIds = [];
-    this.successMessage = '';
-    this.errorMessage = '';
-    this.activeView = 'create-stream';
+    const tabId = `create-stream-${task.id}`;
+    if (!this.openTabs[tabId]) {
+      this.openTabs[tabId] = {
+        task,
+        streamName: '',
+        selectedBizLeadId: '',
+        selectedTechLeadId: '',
+        selectedConsultantIds: []
+      };
+    }
+    this.tabsService.openTab({
+      id: tabId,
+      title: task.title,
+      type: 'create-stream',
+      data: task
+    });
   }
 
-  createStream(): void {
-    if (!this.streamName || !this.currentTask) return;
+  getTabData(tabId: string) {
+    return this.openTabs[tabId] || null;
+  }
+
+  getOpenTabIds(): string[] {
+    return Object.keys(this.openTabs);
+  }
+
+  isConsultantSelected(tabId: string, consultantId: string): boolean {
+    return this.openTabs[tabId]?.selectedConsultantIds.includes(consultantId) || false;
+  }
+
+  toggleConsultant(tabId: string, consultantId: string): void {
+    const tab = this.openTabs[tabId];
+    if (!tab) return;
+    if (tab.selectedConsultantIds.includes(consultantId)) {
+      tab.selectedConsultantIds = tab.selectedConsultantIds.filter(c => c !== consultantId);
+    } else {
+      tab.selectedConsultantIds.push(consultantId);
+    }
+  }
+
+  createStream(tabId: string): void {
+    const tab = this.openTabs[tabId];
+    if (!tab || !tab.streamName) return;
     this.loading = true;
     this.errorMessage = '';
 
     this.streamsService.create(
-      this.streamName,
-      this.currentTask.projectId,
-      this.selectedBizLeadId || null,
-      this.selectedTechLeadId || null
+      tab.streamName,
+      tab.task.projectId,
+      tab.selectedBizLeadId || null,
+      tab.selectedTechLeadId || null
     ).subscribe({
       next: (stream: any) => {
-        this.selectedConsultantIds.forEach(consultantId => {
+        tab.selectedConsultantIds.forEach(consultantId => {
           this.streamsService.addMember(stream.id, consultantId).subscribe();
         });
         this.successMessage = 'Stream créé avec succès !';
         this.loading = false;
-        this.streamName = '';
-        this.selectedBizLeadId = '';
-        this.selectedTechLeadId = '';
-        this.selectedConsultantIds = [];
+       this.refreshTasks();
+this.successMessage = 'Stream créé avec succès !';
       },
       error: () => {
         this.errorMessage = 'Erreur lors de la création';
@@ -144,37 +166,18 @@ export class ProjectManagerComponent implements OnInit {
     });
   }
 
-  isConsultantSelected(id: string): boolean {
-    return this.selectedConsultantIds.includes(id);
-  }
-
-  toggleConsultant(id: string): void {
-    if (this.isConsultantSelected(id)) {
-      this.selectedConsultantIds = this.selectedConsultantIds.filter(c => c !== id);
-    } else {
-      this.selectedConsultantIds.push(id);
-    }
-  }
-
   getProjectName(projectId: string): string {
     return this.projects.find(p => p.id === projectId)?.name || '—';
   }
 
-  get hasSelection(): boolean {
-    return this.selectedIds.size > 0;
-  }
+  get hasSelection(): boolean { return this.selectedIds.size > 0; }
 
   toggleSelect(taskId: string): void {
-    if (this.selectedIds.has(taskId)) {
-      this.selectedIds.delete(taskId);
-    } else {
-      this.selectedIds.add(taskId);
-    }
+    if (this.selectedIds.has(taskId)) this.selectedIds.delete(taskId);
+    else this.selectedIds.add(taskId);
   }
 
-  isSelected(taskId: string): boolean {
-    return this.selectedIds.has(taskId);
-  }
+  isSelected(taskId: string): boolean { return this.selectedIds.has(taskId); }
 
   markDone(): void {
     Array.from(this.selectedIds).forEach(id => {
@@ -188,11 +191,15 @@ export class ProjectManagerComponent implements OnInit {
     });
   }
 
-  getStatusLabel(status: number): string {
-    return this.tasksService.getStatusLabel(status);
-  }
-
-  getStatusColor(status: number): string {
-    return this.tasksService.getStatusColor(status);
-  }
+  getStatusLabel(status: number): string { return this.tasksService.getStatusLabel(status); }
+  getStatusColor(status: number): string { return this.tasksService.getStatusColor(status); }
+  endTask(tabId: string): void {
+  const tab = this.openTabs[tabId];
+  if (!tab) return;
+  this.tasksService.updateStatus(tab.task.id, 2).subscribe(() => {
+    this.refreshTasks();
+    this.tabsService.closeTab(tabId);
+    delete this.openTabs[tabId];
+  });
+}
 }

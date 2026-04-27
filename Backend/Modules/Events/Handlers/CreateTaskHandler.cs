@@ -41,15 +41,22 @@ public class CreateTaskHandler : IActionHandler
                 eventDto.EventType);
             return;
         }
+        var resolvedTitle = rule.TaskTitle!;
+        if (!string.IsNullOrEmpty(eventDto.ClientName))
+            resolvedTitle = resolvedTitle.Replace("{clientName}", eventDto.ClientName);
+        if (!string.IsNullOrEmpty(eventDto.ProjectName))
+            resolvedTitle = resolvedTitle.Replace("{projectName}", eventDto.ProjectName);
 
         // create one task per target
         foreach (var userId in targetUserIds)
         {
             await CreateTaskAsync(
-                rule.TaskTitle!,
+                resolvedTitle,
                 rule.TaskDescription!,
                 userId,
-                projectId, eventDto.StreamId);
+                projectId,
+                eventDto.StreamId
+                 );
         }
     }
 
@@ -94,7 +101,7 @@ public class CreateTaskHandler : IActionHandler
         string title,
         string description,
         Guid userId,
-        Guid? projectId,Guid? streamId)
+        Guid? projectId,Guid? streamId, Guid? contractId = null)
     {
         var user = await _db.Users.FindAsync(userId);
         if (user == null) return;
@@ -119,7 +126,8 @@ public class CreateTaskHandler : IActionHandler
             .SendAsync("NewNotification", new
             {
                 message = title,
-                projectId = projectId
+                projectId = projectId,
+                contractId=contractId
             });
 
         _logger.LogInformation(

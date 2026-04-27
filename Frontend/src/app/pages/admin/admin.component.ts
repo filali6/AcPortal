@@ -7,8 +7,11 @@ import { UsersService, User } from '../../core/services/users.service';
 import { TasksService, Task } from '../../core/services/tasks.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { AuthService } from '../../core/services/auth.service';
+import { TabsService } from '../../core/services/tabs.service';
+import { ContractsService } from '../../core/services/contracts.service';
 import { environment } from '../../../environments/environment';
-import { Router,ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+
 @Component({
   selector: 'app-admin',
   standalone: true,
@@ -18,40 +21,48 @@ import { Router,ActivatedRoute } from '@angular/router';
 })
 export class AdminComponent implements OnInit {
 
-  // --- Création projet ---
-  projectName = '';
-  projectDescription = '';
-  selectedPortfolioId = ''; 
-  showCreateProject = false;
+  activeTabId = 'tasks';
+  showProjectsView = false;
 
-
-  portfolioName = '';
-  portfolioDescription = '';
-  selectedDirectorId = '';         
-  showCreatePortfolio = false;
-  // --- Données ---
   projects: Project[] = [];
-   portfolios: Portfolio[] = [];
+  portfolios: Portfolio[] = [];
   directors: User[] = [];
   tasks: Task[] = [];
-
-  // --- HeadOfCDS ---
-  currentUserId = '';
   myTasks: Task[] = [];
-
-  // --- Supervision par projet ---
-  selectedProjectId = '';
   projectTeams: any[] = [];
+  selectedProjectDetail: any = null;
+  stats = { total: 0, inProgress: 0, contracts: 0 };
 
-  // --- UI ---
+  // Onglet edition projet
+  editingProject: any = null;
+
+  openTabs: { [tabId: string]: {
+    task: any,
+    projectName: string,
+    projectDescription: string,
+    targetDate: string,
+    selectedPortfolioId: string,
+    showCreatePortfolio: boolean,
+    portfolioName: string,
+    portfolioDescription: string,
+    selectedDirectorId: string,
+    contractInfo: any | null
+  }} = {};
+
+  // Onglets édition projet
+  editTabs: { [tabId: string]: {
+    project: any,
+    name: string,
+    description: string,
+    targetDate: string
+  }} = {};
+
   loading = false;
   successMessage = '';
   errorMessage = '';
   currentUserName = '';
-
-  activeView: 'tasks' | 'create-project' | 'projects' = 'tasks';
-selectedProjectDetail: any = null; // projet cliqué dans la liste
- 
+  currentUserId = '';
+  selectedIds: Set<string> = new Set();
 
   constructor(
     private projectsService: ProjectsService,
@@ -62,116 +73,43 @@ selectedProjectDetail: any = null; // projet cliqué dans la liste
     private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
+    private tabsService: TabsService,
+    private contractsService: ContractsService
   ) {}
 
   ngOnInit(): void {
     const userInfo = this.authService.getUserInfo();
     this.currentUserId = userInfo?.id || userInfo?.sub || '';
     this.currentUserName = userInfo?.name || '';
-
     this.loadAll();
-    this.route.queryParams.subscribe(params => {
-  if (params['view'] === 'projects') {
-    this.activeView = 'projects';
-  } else {
-    this.activeView = 'tasks';
-  }
-});
 
-    // intact — notif existante
+    this.route.queryParams.subscribe(params => {
+      if (params['view'] === 'projects') {
+        this.showProjectsView = true;
+        this.tabsService.setActiveTab('tasks');
+      } else {
+        this.showProjectsView = false;
+      }
+    });
+
     this.notificationService.notifications$.subscribe(() => this.refreshTasks());
+    this.tabsService.activeTabId.subscribe(id => {
+      this.activeTabId = id;
+      if (id === 'tasks') this.showProjectsView = false;
+    });
   }
 
   loadAll(): void {
-  // Charger les directors pour créer un portfolio
-  this.projectsService.getPortfolioDirectors().subscribe({
-    next: (directors) => this.directors = directors
-  });
-
-  // Charger les portfolios pour créer un projet
-  this.projectsService.getAllPortfolios().subscribe({
-    next: (portfolios) => this.portfolios = portfolios
-  });
-
-  this.projectsService.getAll().subscribe({
-    next: (projects) => this.projects = projects
-  });
-
-  this.tasksService.getAll().subscribe({
-    next: (tasks) => {
-      this.tasks = tasks;
-      this.myTasks = tasks.filter(t => t.assignedTo === this.currentUserId);
-    }
-  });
-}
-
-  // Clic sur une tâche HeadOfCDS → ouvre le formulaire
-  onMyTaskClick(): void {
-    this.activeView = 'create-project';
-    this.successMessage = '';
-    this.errorMessage = '';
-  }
-  goToTasks(): void {
-    this.activeView = 'tasks';
-    this.router.navigate([], { queryParams: {}, replaceUrl: true });
-}
-
-  // Supervision — chargement équipes + membres du projet
-  onProjectChange(): void {
-    this.projectTeams = [];
-    if (!this.selectedProjectId) return;
-    this.http.get<any[]>(`${environment.apiUrl}/teams/project/${this.selectedProjectId}`).subscribe({
-      next: (teams) => {
-        this.projectTeams = teams;
+    this.projectsService.getPortfolioDirectors().subscribe({ next: (d) => this.directors = d });
+    this.projectsService.getAllPortfolios().subscribe({ next: (p) => this.portfolios = p });
+    this.projectsService.getAll().subscribe({ next: (p) => this.projects = p });
+    this.projectsService.getStats().subscribe({ next: (s) => this.stats = s });
+    this.tasksService.getAll().subscribe({
+      next: (tasks) => {
+        this.tasks = tasks;
+        this.myTasks = tasks.filter(t => t.assignedTo === this.currentUserId);
       }
     });
-  }
-
-  getProjectName(id: string): string {
-    return this.projects.find(p => p.id === id)?.name || '—';
-  }
-
-  // intact
-  createProject(): void {
-    if (!this.projectName || !this.selectedPortfolioId) {
-      this.errorMessage = 'Nom et Director sont obligatoires';
-      return;
-    }
-    this.loading = true;
-    this.errorMessage = '';
-    this.projectsService.create(
-      this.projectName,
-      this.projectDescription,
-      this.selectedPortfolioId
-    ).subscribe({
-      next: () => {
-        this.successMessage = 'Projet créé avec succès !';
-        this.projectName = '';
-        this.projectDescription = '';
-        this.selectedPortfolioId = '';
-        this.loading = false;
-        this.showCreateProject = false;
-        this.loadAll();
-      },
-      error: () => {
-        this.errorMessage = 'Erreur lors de la création du projet';
-        this.loading = false;
-      }
-    });
-  }
-
-  // intact
-  getDirectorName(directorId: string): string {
-    const director = this.directors.find(d => d.id === directorId);
-    return director?.fullName || '—';
-  }
-
-  getStatusLabel(status: number): string {
-    return this.tasksService.getStatusLabel(status);
-  }
-
-  getStatusColor(status: number): string {
-    return this.tasksService.getStatusColor(status);
   }
 
   refreshTasks(): void {
@@ -183,76 +121,209 @@ selectedProjectDetail: any = null; // projet cliqué dans la liste
     });
   }
 
-selectedIds: Set<string> = new Set();
+  onMyTaskClick(task: any): void {
+    if (task.status === 2) return;
+    const tabId = `create-project-${task.id}`;
+    if (!this.openTabs[tabId]) {
+      this.openTabs[tabId] = {
+        task,
+        projectName: '',
+        projectDescription: '',
+        targetDate: '',
+        selectedPortfolioId: '',
+        showCreatePortfolio: false,
+        portfolioName: '',
+        portfolioDescription: '',
+        selectedDirectorId: '',
+        contractInfo: null
+      };
 
-get hasSelection(): boolean {
-  return this.selectedIds.size > 0;
-}
-
-toggleSelect(taskId: string): void {
-  if (this.selectedIds.has(taskId)) {
-    this.selectedIds.delete(taskId);
-  } else {
-    this.selectedIds.add(taskId);
+      // Charger les infos du contrat si contractId disponible
+      if (task.contractId) {
+        this.contractsService.getById(task.contractId).subscribe({
+          next: (contract) => {
+            this.openTabs[tabId].contractInfo = contract;
+          }
+        });
+      }
+    }
+    this.tabsService.openTab({
+      id: tabId,
+      title: task.title,
+      type: 'create-project',
+      data: task
+    });
   }
-}
 
-isSelected(taskId: string): boolean {
-  return this.selectedIds.has(taskId);
-}
+  getTabData(tabId: string) {
+    return this.openTabs[tabId] || null;
+  }
 
-markDone(): void {
-  const ids = Array.from(this.selectedIds);
-  ids.forEach(id => {
-    this.tasksService.updateStatus(id, 2).subscribe({
+  getOpenTabIds(): string[] {
+    return Object.keys(this.openTabs);
+  }
+
+  getEditTabIds(): string[] {
+    return Object.keys(this.editTabs);
+  }
+
+  getEditTabData(tabId: string) {
+    return this.editTabs[tabId] || null;
+  }
+
+  openEditTab(project: any): void {
+    const tabId = `edit-project-${project.id}`;
+    if (!this.editTabs[tabId]) {
+      this.editTabs[tabId] = {
+        project,
+        name: project.name,
+        description: project.description,
+        targetDate: project.targetDate ? project.targetDate.substring(0, 10) : ''
+      };
+    }
+    this.tabsService.openTab({
+      id: tabId,
+      title: `Modifier — ${project.name}`,
+      type: 'create-project',
+      data: project
+    });
+  }
+
+  updateProject(tabId: string): void {
+    const tab = this.editTabs[tabId];
+    if (!tab || !tab.name) return;
+    this.loading = true;
+
+    this.projectsService.update(tab.project.id, tab.name, tab.description, tab.targetDate || undefined).subscribe({
       next: () => {
-        const task = this.myTasks.find(t => t.id === id);
-        if (task) task.status = 2;
-        this.selectedIds.clear();
+        this.successMessage = 'Projet modifié avec succès !';
+        this.loading = false;
+        this.loadAll();
+      },
+      error: () => {
+        this.errorMessage = 'Erreur lors de la modification';
+        this.loading = false;
       }
     });
-  });
-}
-selectProject(project: any): void {
-  this.selectedProjectDetail = project;
-  this.projectTeams = [];
-  this.http.get<any[]>(`${environment.apiUrl}/teams/project/${project.id}`).subscribe({
-    next: (teams) => this.projectTeams = teams
-  });
-}
-
-backToProjects(): void {
-  this.selectedProjectDetail = null;
-  this.projectTeams = [];
-}
-createPortfolio(): void {
-  if (!this.portfolioName || !this.selectedDirectorId) {
-    this.errorMessage = 'Nom et Director sont obligatoires';
-    return;
   }
-  this.loading = true;
-  this.projectsService.createPortfolio(
-    this.portfolioName,
-    this.portfolioDescription,
-    this.selectedDirectorId
-  ).subscribe({
-    next: () => {
-      this.portfolioName = '';
-      this.portfolioDescription = '';
-      this.selectedDirectorId = '';
-      this.showCreatePortfolio = false;  // ✅ ferme le formulaire inline
-      this.loading = false;
-      // ✅ recharge les portfolios pour que le select se mette à jour
-      this.projectsService.getAllPortfolios().subscribe({
-        next: (portfolios) => this.portfolios = portfolios
-      });
-    },
-    error: () => {
-      this.errorMessage = 'Erreur lors de la création du portfolio';
-      this.loading = false;
-    }
-  });
-}
 
- 
+  endEditTask(tabId: string): void {
+    this.tabsService.closeTab(tabId);
+    delete this.editTabs[tabId];
+    this.successMessage = '';
+  }
+
+  createProject(tabId: string): void {
+    const tab = this.openTabs[tabId];
+    if (!tab || !tab.projectName || !tab.selectedPortfolioId) {
+      this.errorMessage = 'Nom et Portfolio sont obligatoires';
+      return;
+    }
+    this.loading = true;
+    this.errorMessage = '';
+    this.projectsService.create(
+      tab.projectName,
+      tab.projectDescription,
+      tab.selectedPortfolioId,
+      tab.targetDate || undefined
+    ).subscribe({
+      next: () => {
+        this.successMessage = 'Projet créé avec succès !';
+        this.loading = false;
+        this.loadAll();
+      },
+      error: () => {
+        this.errorMessage = 'Erreur lors de la création du projet';
+        this.loading = false;
+      }
+    });
+  }
+
+  endTask(tabId: string): void {
+    const tab = this.openTabs[tabId];
+    if (!tab) return;
+    this.tasksService.updateStatus(tab.task.id, 2).subscribe(() => {
+      this.refreshTasks();
+      this.tabsService.closeTab(tabId);
+      delete this.openTabs[tabId];
+    });
+  }
+
+  createPortfolio(tabId: string): void {
+    const tab = this.openTabs[tabId];
+    if (!tab || !tab.portfolioName || !tab.selectedDirectorId) {
+      this.errorMessage = 'Nom et Director sont obligatoires';
+      return;
+    }
+    this.loading = true;
+    this.projectsService.createPortfolio(tab.portfolioName, tab.portfolioDescription, tab.selectedDirectorId).subscribe({
+      next: () => {
+        tab.portfolioName = '';
+        tab.portfolioDescription = '';
+        tab.selectedDirectorId = '';
+        tab.showCreatePortfolio = false;
+        this.loading = false;
+        this.projectsService.getAllPortfolios().subscribe({ next: (p) => this.portfolios = p });
+      },
+      error: () => {
+        this.errorMessage = 'Erreur lors de la création du portfolio';
+        this.loading = false;
+      }
+    });
+  }
+
+  goToTasks(): void {
+    this.showProjectsView = false;
+    this.tabsService.setActiveTab('tasks');
+    this.router.navigate([], { queryParams: {}, replaceUrl: true });
+  }
+
+  selectProject(project: any): void {
+    this.selectedProjectDetail = project;
+    this.projectTeams = [];
+    this.http.get<any[]>(`${environment.apiUrl}/teams/project/${project.id}`).subscribe({
+      next: (teams) => this.projectTeams = teams
+    });
+  }
+
+  backToProjects(): void {
+    this.selectedProjectDetail = null;
+    this.projectTeams = [];
+  }
+
+  getProjectName(id: string): string {
+    return this.projects.find(p => p.id === id)?.name || '—';
+  }
+
+  getDirectorName(directorId: string): string {
+    return this.directors.find(d => d.id === directorId)?.fullName || '—';
+  }
+
+  getFileUrl(fileName: string): string {
+    return this.contractsService.getFileUrl(fileName);
+  }
+
+  get hasSelection(): boolean { return this.selectedIds.size > 0; }
+
+  toggleSelect(taskId: string): void {
+    if (this.selectedIds.has(taskId)) this.selectedIds.delete(taskId);
+    else this.selectedIds.add(taskId);
+  }
+
+  isSelected(taskId: string): boolean { return this.selectedIds.has(taskId); }
+
+  markDone(): void {
+    Array.from(this.selectedIds).forEach(id => {
+      this.tasksService.updateStatus(id, 2).subscribe({
+        next: () => {
+          const task = this.myTasks.find(t => t.id === id);
+          if (task) task.status = 2;
+          this.selectedIds.clear();
+        }
+      });
+    });
+  }
+
+  getStatusLabel(status: number): string { return this.tasksService.getStatusLabel(status); }
+  getStatusColor(status: number): string { return this.tasksService.getStatusColor(status); }
 }

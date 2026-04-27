@@ -1,0 +1,13 @@
+<div style="padding: 2rem; color: black;">
+    <p *ngIf="loading">Chargement...</p>
+    <p *ngIf="error">Erreur</p>
+    <div *ngIf="!loading && !error && plugin">
+        <h2>{{ plugin.name }}</h2>
+        <p>{{ plugin.description }}</p>
+        <button (click)="openTool()">Ouvrir {{ plugin.name }}</button>
+        <button (click)="goBack()">Retour</button>
+    </div>
+    <div *ngIf="!loading && !error && !plugin">
+        <p>Plugin non trouvé</p>
+    </div>
+</div>
