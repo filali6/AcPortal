@@ -4,11 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using Backend.Modules.Events.Services;
 using Microsoft.AspNetCore.Authorization;
-namespace Backend.Modules.Events.Controllers;
-
-
 using System.Text.Json;
 
+namespace Backend.Modules.Events.Controllers;
 
 [ApiController]
 [Route("api/events")]
@@ -16,55 +14,41 @@ public class EventsController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly EventsService _eventsService;
+    private readonly EventPublisher _eventPublisher;
 
-    public EventsController(AppDbContext db, EventsService eventsService)
+    public EventsController(
+        AppDbContext db,
+        EventsService eventsService,
+        EventPublisher eventPublisher)
     {
         _db = db;
-        _eventsService=eventsService;
+        _eventsService = eventsService;
+        _eventPublisher = eventPublisher;
     }
 
     [HttpPost("publish")]
     public async Task<IActionResult> Publish([FromBody] PublishEventRequest request)
     {
-         
-        var topic = request.ProjectId.HasValue
-            ? $"project.{request.ProjectId}"
-            : "system.events";
-
-        var payload = JsonSerializer.Serialize(new
+        await _eventPublisher.PublishAsync(new
         {
             eventType = request.EventType,
             toolName = request.ToolName,
             projectId = request.ProjectId
-        });
-
-        var outboxMessage = new OutboxMessage
-        {
-            Topic = topic,
-            Payload = payload,
-            CreatedAt = DateTime.UtcNow,
-            IsProcessed = false,
-            Retries = 0
-        };
-
-        _db.OutboxMessages.Add(outboxMessage);
-        await _db.SaveChangesAsync();
+        }, request.ProjectId);
 
         return Ok(new
         {
             success = true,
-            message = "Événement enregistré et sera publié sur Kafka",
+            message = "Événement publié via Dapr",
             data = new
             {
-                topic,
                 eventType = request.EventType,
                 toolName = request.ToolName,
                 projectId = request.ProjectId
-
             }
         });
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -72,14 +56,12 @@ public class EventsController : ControllerBase
         return Ok(events);
     }
 
-    
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var acpEvent = await _eventsService.GetByIdAsync(id);
         if (acpEvent == null)
             return NotFound(new { message = "Événement introuvable" });
-
         return Ok(acpEvent);
     }
 
@@ -87,21 +69,11 @@ public class EventsController : ControllerBase
     [Authorize(Roles = "DAF")]
     public async Task<IActionResult> TriggerContract()
     {
-        var payload = System.Text.Json.JsonSerializer.Serialize(new
+        // ✅ EventPublisher au lieu de DaprClient directement
+        await _eventPublisher.PublishAsync(new
         {
             eventType = "ContratSigné"
         });
-
-        _db.OutboxMessages.Add(new OutboxMessage
-        {
-            Topic = "system.events",
-            Payload = payload,
-            CreatedAt = DateTime.UtcNow,
-            IsProcessed = false,
-            Retries = 0
-        });
-
-        await _db.SaveChangesAsync();
 
         return Ok(new
         {
@@ -112,13 +84,13 @@ public class EventsController : ControllerBase
 
 public class PublishEventRequest
 {
-    [Required(ErrorMessage = "ToolName est obligatoire")]
-    [MaxLength(100, ErrorMessage = "ToolName ne peut pas dépasser 100 caractères")]
+    [Required]
+    [MaxLength(100)]
     public string ToolName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "EventType est obligatoire")]
-    [MaxLength(200, ErrorMessage = "EventType ne peut pas dépasser 200 caractères")]
+    [Required]
+    [MaxLength(200)]
     public string EventType { get; set; } = string.Empty;
+
     public Guid? ProjectId { get; set; }
 }
- 
