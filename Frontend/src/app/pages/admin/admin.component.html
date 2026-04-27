@@ -61,9 +61,8 @@
     <!-- ============================================================ -->
     <!-- VUE 2 : Formulaire créer un projet                           -->
     <!-- ============================================================ -->
-   
     <ng-container *ngIf="activeView === 'create-project'">
-    
+
         <div class="card">
             <div class="card-header">
                 <button class="btn-back" (click)="goToTasks()">← Retour</button>
@@ -80,69 +79,26 @@
                         <input type="text" [(ngModel)]="projectDescription" placeholder="Description du projet"
                             class="form-input">
                     </div>
-    
-                    <!-- ✅ Portfolio déroulant -->
                     <div class="form-group">
-                        <div class="label-row">
-                            <label>Portfolio</label>
-                            <button class="btn-add-small" (click)="showCreatePortfolio = !showCreatePortfolio">
-                                + Nouveau portfolio
-                            </button>
-                        </div>
-    
-                        <!-- Message si aucun portfolio -->
-                        <div *ngIf="portfolios.length === 0 && !showCreatePortfolio" class="alert alert-warning">
-                            Aucun portfolio disponible. Veuillez en créer un.
-                        </div>
-    
-                        <!-- Select portfolio -->
-                        <select *ngIf="portfolios.length > 0" [(ngModel)]="selectedPortfolioId" class="form-input">
-                            <option value="">-- Sélectionner un portfolio --</option>
-                            <option *ngFor="let p of portfolios" [value]="p.id">
-                                {{ p.name }} — {{ p.director?.fullName || 'Sans director' }}
+                        <label>Portfolio Director</label>
+                        <select [(ngModel)]="selectedDirectorId" class="form-input">
+                            <option value="">-- Sélectionner --</option>
+                            <option *ngFor="let d of directors" [value]="d.id">
+                                {{ d.fullName }}
                             </option>
                         </select>
                     </div>
-    
-                    
-                    <ng-container *ngIf="showCreatePortfolio">
-                        <div class="portfolio-inline-form">
-                        <div class="form-group">
-                            <label>Nom du portfolio</label>
-                            <input type="text" [(ngModel)]="portfolioName" placeholder="ex: Portfolio Finance"
-                                class="form-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Description du portfolio</label>
-                            <input type="text" [(ngModel)]="portfolioDescription" placeholder="Description"
-                                class="form-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Portfolio Director</label>
-                            <select [(ngModel)]="selectedDirectorId" class="form-input">
-                                <option value="">-- Sélectionner --</option>
-                                <option *ngFor="let d of directors" [value]="d.id">
-                                    {{ d.fullName }}
-                                </option>
-                            </select>
-                        </div>
-                        <button class="btn-secondary" (click)="createPortfolio()" [disabled]="loading">
-                            {{ loading ? 'Création...' : 'Créer le portfolio' }}
-                        </button>
-                        </div>
-                    </ng-container>
-    
                 </div>
-    
+
                 <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
                 <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
-    
-                <button class="btn-primary" (click)="createProject()" [disabled]="loading || !selectedPortfolioId">
+
+                <button class="btn-primary" (click)="createProject()" [disabled]="loading">
                     {{ loading ? 'Création...' : 'Créer le projet' }}
                 </button>
             </div>
         </div>
-    
+
     </ng-container>
 
     <!-- ============================================================ -->
@@ -165,7 +121,7 @@
                         </div>
                         <div class="project-director">
                             <span class="label">Director</span>
-                            <span class="value">{{ getDirectorName(project.portfolioId) }}</span>
+                            <span class="value">{{ getDirectorName(project.portfolioDirectorId) }}</span>
                         </div>
                         <span class="project-date">{{ project.createdAt | date:'dd/MM/yyyy' }}</span>
                         <span class="chevron">›</span>

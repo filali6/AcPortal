@@ -49,13 +49,12 @@ public class WorkflowRulesService
 
     // retourne la règle pour un eventCode donné
     // retourne null si aucune règle trouvée
-    public List<WorkflowRule> GetRules(string eventCode)
+    public WorkflowRule? GetRule(string eventCode)
     {
-        return _rules
-            .Where(r => r.EventCode.Equals(
+        return _rules.FirstOrDefault(r =>
+            r.EventCode.Equals(
                 eventCode,
-                StringComparison.OrdinalIgnoreCase))
-            .ToList();
+                StringComparison.OrdinalIgnoreCase));
     }
 
     public List<WorkflowRule> GetAllRules() => _rules;

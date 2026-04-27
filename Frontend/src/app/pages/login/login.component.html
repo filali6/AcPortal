@@ -7,12 +7,27 @@
             <span class="brand-sub">Portal</span>
         </div>
 
-        <h1 class="login-title">Redirection...</h1>
-        <p class="login-sub">Vous allez être redirigé vers la page de connexion</p>
+        <h1 class="login-title">Connexion</h1>
+        <p class="login-sub">Accédez à votre espace de travail</p>
 
-        <div class="spinner-wrapper">
-            <span class="spinner"></span>
+        <div class="field">
+            <label class="form-label">Email</label>
+            <input type="email" [(ngModel)]="email" placeholder="email@acp.com" class="form-input" />
         </div>
+
+        <div class="field">
+            <label class="form-label">Mot de passe</label>
+            <input type="password" [(ngModel)]="password" placeholder="••••••••" class="form-input" />
+        </div>
+
+        <div *ngIf="errorMessage" class="alert-error">
+            {{ errorMessage }}
+        </div>
+
+        <button (click)="login()" [disabled]="loading" class="login-btn">
+            <span *ngIf="!loading">Se connecter</span>
+            <span *ngIf="loading" class="spinner"></span>
+        </button>
 
     </div>
 </div>

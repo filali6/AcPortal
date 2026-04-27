@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.SignalR;
 using Backend.Hubs;
 using System.Text.Json;
 using Backend.Modules.Events.Handlers;
-using System.Security;
 
 namespace Backend.Modules.Events.Services;
 
@@ -35,8 +34,7 @@ public class EventProcessorService
 
     public async Task ProcessAsync(
         string messageValue,
-        Guid? projectId = null,
-        Guid? streamId=null)
+        Guid? projectId = null)
     {
         var eventDto = JsonSerializer.Deserialize<AcpEventDto>(
             messageValue,
@@ -51,27 +49,24 @@ public class EventProcessorService
                 "Message invalide — impossible de désérialiser.");
             return;
         }
-        if (streamId.HasValue && !eventDto.StreamId.HasValue)
-            eventDto.StreamId = streamId;
 
         // ── AVANT : switch(eventDto.EventType) hard-codé
         // ── APRÈS : on lit la règle depuis le JSON
-        var rules = _workflowRules.GetRules(eventDto.EventType);
+        var rule = _workflowRules.GetRule(eventDto.EventType);
 
-        if (!rules.Any())
+        if (rule == null)
         {
             _logger.LogWarning(
                 "Aucune règle trouvée pour l'event : {EventType}",
                 eventDto.EventType);
             return;
         }
-        foreach(var rule in rules ){
         if (!_handlers.TryGetValue(rule.ActionType, out var handler))
         {
             _logger.LogWarning(
                 "Aucun handler pour l'action : {ActionType}",
                 rule.ActionType);
-            continue;
+            return;
         }
 
         _logger.LogInformation(
@@ -79,6 +74,6 @@ public class EventProcessorService
             eventDto.EventType, rule.ActionType);
 
         await handler.HandleAsync(rule, eventDto, projectId);
-        }
+
     }
 }

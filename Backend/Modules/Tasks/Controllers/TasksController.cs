@@ -1,10 +1,9 @@
 using Backend.Modules.Tasks.Models;
 using Backend.Modules.Tasks.Services;
 using Microsoft.AspNetCore.Mvc;
-using Backend.Modules.Events.Services;
+ 
 using Microsoft.AspNetCore.Authorization;
 using Backend.Data;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace Backend.Modules.Tasks.Controllers;
@@ -15,14 +14,12 @@ public class TasksController : ControllerBase
 {
     private readonly TasksService _tasksService;
     private readonly AppDbContext _db;
-    private readonly EventPublisher _eventPublisher;
 
 
-    public TasksController(TasksService tasksService, AppDbContext db, EventPublisher eventPublisher)
+    public TasksController(TasksService tasksService, AppDbContext db)
     {
         _tasksService = tasksService;
         _db=db;
-        _eventPublisher=eventPublisher;
     }
 
    
@@ -57,18 +54,24 @@ public class TasksController : ControllerBase
 
         if (request.Status == AcpTaskStatus.Done && task.ProjectId.HasValue)
         {
-            if (request.Status == AcpTaskStatus.Done && task.ProjectId.HasValue)
+            var payload = System.Text.Json.JsonSerializer.Serialize(new
             {
-                var project = await _db.Projects.FindAsync(task.ProjectId);
-                await _eventPublisher.PublishAsync(new
-                {
-                    eventType = "TâcheTerminée",
-                    taskId = task.Id,
-                    stepId = task.StepId,
-                    projectId = task.ProjectId,
-                    projectName=project!.Name
-                }, task.ProjectId,project?.Name);
-            }
+                eventType = "TâcheTerminée",
+                taskId = task.Id,
+                stepId = task.StepId,
+                projectId = task.ProjectId
+            });
+
+            _db.OutboxMessages.Add(new Backend.Modules.Events.Models.OutboxMessage
+            {
+                Topic = $"project.{task.ProjectId}",
+                Payload = payload,
+                CreatedAt = DateTime.UtcNow,
+                IsProcessed = false,
+                Retries = 0
+            });
+
+            await _db.SaveChangesAsync();
         }
 
         return Ok(task);
@@ -89,18 +92,12 @@ public class TasksController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetMyTasks()
     {
-        // ✅ Récupérer l'ID Keycloak depuis le token
-        var keycloakId = User.FindFirst(
-            System.Security.Claims.ClaimTypes.NameIdentifier)!.Value;
+        var consultantName = User.FindFirst(
+        "name")!.Value;
 
-        // Chercher le user dans ta BDD par KeycloakId
-        var user = await _db.Users
-            .FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
-
-        if (user == null) return Ok(new List<object>());
-
-        var tasks = await _tasksService.GetMyTasksAsync(user.KeycloakId);
+        var tasks = await _tasksService.GetMyTasksAsync(consultantName);
         return Ok(tasks);
+
     }
 }
 

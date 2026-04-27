@@ -19,7 +19,7 @@ public class WorkflowRule
     public string TargetType { get; set; } = string.Empty;
 
     // "HeadOfCDS" | "DirectorId" | "ChefEquipeId" | "ProjectId" | "StepId"
-    public List<string>TargetValues { get; set; } = new();
+    public string TargetValue { get; set; } = string.Empty;
 }
 
 // représente la racine du JSON { "workflowRules": [...] }

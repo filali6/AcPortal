@@ -6,7 +6,7 @@
       "taskTitle": "Créer le projet et assigner un Portfolio Director",
       "taskDescription": "Un contrat a été signé — créer le projet correspondant",
       "targetType": "ROLE",
-      "targetValues": ["HeadOfCDS"]
+      "targetValue": "HeadOfCDS"
     },
     {
       "eventCode": "ProjetCréé",
@@ -14,7 +14,7 @@
       "taskTitle": "Assigner un Project Manager",
       "taskDescription": "Le projet a été créé — assigner un Project Manager",
       "targetType": "CONTEXT_USER",
-      "targetValues": ["DirectorId"]
+      "targetValue": "DirectorId"
     },
     {
       "eventCode": "ProjectManagerAssigné",
@@ -22,15 +22,15 @@
       "taskTitle": "Créer les streams et assigner les Team Leads",
       "taskDescription": "Project Manager assigné — créer les streams du projet",
       "targetType": "CONTEXT_USER",
-      "targetValues": ["ProjectManagerId"]
+      "targetValue": "ProjectManagerId"
     },
     {
       "eventCode": "StreamCréé",
-      "actionType": "CREATE_TASK",
+      "actionType": "CREATE_TASKS_FOR_LEADS",
       "taskTitle": "Définir les steps du stream",
       "taskDescription": "Stream créé — définir les étapes",
-      "targetType": "CONTEXT_USER",
-      "targetValues": ["BusinessTeamLeadId", "TechnicalTeamLeadId"]
+      "targetType": "CONTEXT_MULTI",
+      "targetValue": "BusinessTeamLeadId,TechnicalTeamLeadId"
     },
     {
       "eventCode": "StepsDéfinis",
@@ -38,7 +38,15 @@
       "taskTitle": null,
       "taskDescription": null,
       "targetType": "BEST_CONSULTANT",
-      "targetValues": ["StreamId"]
+      "targetValue": "StreamId"
+    },
+    {
+      "eventCode": "TâcheTerminée",
+      "actionType": "UNBLOCK_DEPENDENT_STEPS",
+      "taskTitle": null,
+      "taskDescription": null,
+      "targetType": "CONTEXT",
+      "targetValue": "StepId"
     }
   ]
 }
