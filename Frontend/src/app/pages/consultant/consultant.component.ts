@@ -67,7 +67,6 @@ selectedStreamId = '';
     this.loadTasks();
     this.loadMyRoles();
     this.loadProjects();
-    this.loadChefEquipeProjects();
     this.loadProjectNames();
     this.notificationService.notifications$.subscribe(() => this.loadTasks());
     this.http.get<any[]>(`${this.apiUrl}/streams/my`).subscribe({
@@ -188,13 +187,7 @@ selectedStreamId = '';
   getStatusColor(status: number): string {
       return this.tasksService.getStatusColor(status);
   }
-  loadChefEquipeProjects(): void {
-  this.http.get<{ id: string, name: string }[]>(`${this.apiUrl}/teams/my-chef-equipe-projects`).subscribe({
-    next: (projects) => {
-      this.chefEquipeProjectIds = new Set(projects.map(p => p.id));
-    }
-    });
-  }
+  
 
   loadProjectNames(): void {
     this.http.get<{ id: string, name: string }[]>(`${this.apiUrl}/projects`).subscribe({
@@ -202,9 +195,7 @@ selectedStreamId = '';
     });
   }
 
-  isChefInProject(projectId: string): boolean {
-    return this.chefEquipeProjectIds.has(projectId);
-  }
+  
 
   getProjectName(projectId: string): string {
     return this.projectNames.get(projectId) || '';

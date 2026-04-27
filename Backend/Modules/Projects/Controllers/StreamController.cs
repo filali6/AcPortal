@@ -4,6 +4,7 @@ using Backend.Modules.Events.Models;
 using Backend.Modules.Projects.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Backend.Modules.Events.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
@@ -14,13 +15,15 @@ namespace Backend.Modules.Projects.Controllers;
 public class StreamController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly EventPublisher _eventPublisher;
 
-    public StreamController(AppDbContext db)
+    public StreamController(AppDbContext db,EventPublisher eventPublisher)
     {
         _db = db;
+        _eventPublisher=eventPublisher;
     }
 
-    // PROJECT MANAGER — créer un stream et assigner les leads
+     
     [HttpPost]
     [Authorize(Roles = "ProjectManager")]
     public async Task<IActionResult> Create(
@@ -36,24 +39,19 @@ public class StreamController : ControllerBase
 
         _db.Streams.Add(stream);
         await _db.SaveChangesAsync();
+        var project = await _db.Projects.FindAsync(dto.ProjectId);
 
-        // publier event StreamCréé → déclenche tâches pour les leads
-        var eventPayload = JsonSerializer.Serialize(new AcpEventDto
+        await _eventPublisher.PublishAsync(new
         {
-            EventType = "StreamCréé",
-            ProjectId = dto.ProjectId,
-            StreamId = stream.Id,
-            BusinessTeamLeadId = dto.BusinessTeamLeadId,
-            TechnicalTeamLeadId = dto.TechnicalTeamLeadId
-        });
+            eventType = "StreamCréé",
+            projectId = dto.ProjectId,
+            projectName = project!.Name,
+            streamId = stream.Id,
+            businessTeamLeadId = dto.BusinessTeamLeadId,
+            technicalTeamLeadId = dto.TechnicalTeamLeadId
+        }, dto.ProjectId, project.Name);
 
-        _db.OutboxMessages.Add(new OutboxMessage
-        {
-            Topic = $"project.{dto.ProjectId}",
-            Payload = eventPayload
-        });
 
-        await _db.SaveChangesAsync();
 
         return Ok(stream);
     }
@@ -90,20 +88,22 @@ public class StreamController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetMyStreams()
     {
-        var userIdClaim = User.FindFirst("id")?.Value;
-        if (userIdClaim == null) return Unauthorized();
-        var userId = Guid.Parse(userIdClaim);
+        var keycloakId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (keycloakId == null) return Unauthorized();
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+        if (user == null) return NotFound();
 
         var streams = await _db.Streams
             .Where(s =>
-                s.BusinessTeamLeadId == userId ||
-                s.TechnicalTeamLeadId == userId)
+                s.BusinessTeamLeadId == user.Id ||
+                s.TechnicalTeamLeadId == user.Id)
             .Distinct()
             .ToListAsync();
 
         return Ok(streams);
     }
-    
+
 }
 
 public class CreateStreamDto

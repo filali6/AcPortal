@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Backend.Data;
 using System.Text.Json;
-using Backend.Kafka;
+using Backend.Modules.Events.Services;
 using Backend.Modules.Events.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,11 +20,15 @@ public class ProjectsController : ControllerBase
 {
     private readonly ProjectsService _projectsService;
     private readonly AppDbContext _db;
+    private readonly EventPublisher _eventPublisher;
+    private readonly StreamingSubscriptionService _streamingService;
 
-    public ProjectsController(ProjectsService projectsService, AppDbContext db)
+    public ProjectsController(ProjectsService projectsService, AppDbContext db, EventPublisher eventPublisher, StreamingSubscriptionService streamingService)
     {
         _projectsService = projectsService;
         _db=db;
+        _eventPublisher=eventPublisher;
+        _streamingService = streamingService;
     }
 
     
@@ -48,33 +52,35 @@ public class ProjectsController : ControllerBase
         return Ok(project);
     }
 
-   
+
     [HttpPost]
-    [Authorize(Roles="HeadOfCDS")]
+    [Authorize(Roles = "HeadOfCDS")]
     public async Task<IActionResult> Create([FromBody] CreateProjectRequest request)
     {
+        // Vérifier que le portfolio existe et récupérer le PD
+        var portfolio = await _db.Portfolios
+            .Include(p => p.PortfolioDirector)
+            .FirstOrDefaultAsync(p => p.Id == request.PortfolioId);
+
+        if (portfolio == null)
+            return BadRequest(new { message = "Portfolio introuvable" });
+
         var project = await _projectsService.CreateAsync(
             request.Name,
             request.Description,
-            request.PortfolioDirectorId
+            request.PortfolioId   
         );
-        var payload = System.Text.Json.JsonSerializer.Serialize(new
+
+        await _streamingService.SubscribeToProjectAsync(request.Name);
+        var safeName = request.Name.ToLower().Replace(" ", "-");
+        await _streamingService.WaitForTopicAsync($"project.{safeName}");
+
+        await _eventPublisher.PublishAsync(new
         {
             eventType = "ProjetCréé",
-            directorId = request.PortfolioDirectorId,
+            directorId = portfolio.PortfolioDirectorId,   
             projectId = project.Id
-        });
-
-        _db.OutboxMessages.Add(new Backend.Modules.Events.Models.OutboxMessage
-        {
-            Topic = $"project.{project.Id}",
-            Payload = payload,
-            CreatedAt = DateTime.UtcNow,
-            IsProcessed = false,
-            Retries = 0
-        });
-
-        await _db.SaveChangesAsync();
+        }, project.Id, request.Name);
 
         return Ok(new
         {
@@ -95,58 +101,54 @@ public class ProjectsController : ControllerBase
         await _db.SaveChangesAsync();
 
         // publier event → tâche créée pour le Project Manager
-        var eventPayload = JsonSerializer.Serialize(new AcpEventDto
+        await _eventPublisher.PublishAsync(new
         {
-            EventType = "ProjectManagerAssigné",
-            ProjectId = id,
-            ProjectManagerId = dto.ProjectManagerId
-        });
-
-        _db.OutboxMessages.Add(new OutboxMessage
-        {
-            Topic = $"project.{id}",
-            Payload = eventPayload
-        });
-
-        await _db.SaveChangesAsync();
+            eventType = "ProjectManagerAssigné",
+            projectId = id,
+            projectManagerId = dto.ProjectManagerId
+        }, id, project.Name);
         return Ok(project);
     }
 
 
-    [HttpPatch("{id:guid}/assign")]
-    [Authorize(Roles = "HeadOfCDS")]
-    public async Task<IActionResult> AssignDirector(Guid id, [FromBody] AssignDirectorRequest request)
-    {
-        var project = await _projectsService.AssignDirectorAsync(id, request.DirectorId);
-        if (project == null)
-            return NotFound(new { message = "Projet ou Director introuvable" });
+    // [HttpPatch("{id:guid}/assign")]
+    // [Authorize(Roles = "HeadOfCDS")]
+    // public async Task<IActionResult> AssignDirector(Guid id, [FromBody] AssignDirectorRequest request)
+    // {
+    //     var project = await _projectsService.AssignDirectorAsync(id, request.DirectorId);
+    //     if (project == null)
+    //         return NotFound(new { message = "Projet ou Director introuvable" });
 
-        return Ok(new
-        {
-            message = "Director assigné avec succès",
-            data = project
-        });
-    }
+    //     return Ok(new
+    //     {
+    //         message = "Director assigné avec succès",
+    //         data = project
+    //     });
+    // }
     [HttpGet("my")]
     [Authorize(Roles ="PortfolioDirector")]
     public async Task<IActionResult> GetMyProjects()
     {
-        var directorId=Guid.Parse(
-            User.FindFirst("id")!.Value
-        );
-        var projects = await _projectsService.GetMyProjectsAsync(directorId);
+        var keycloakId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (keycloakId == null) return Unauthorized();
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+        if (user == null) return NotFound();
+
+        var projects = await _projectsService.GetMyProjectsAsync(user.Id);
         return Ok(projects);
     }
     [HttpGet("managed")]
     [Authorize(Roles = "ProjectManager")]
     public async Task<IActionResult> GetManagedProjects()
     {
-        var userIdClaim = User.FindFirst("id")?.Value;
-        if (userIdClaim == null) return Unauthorized();
-        var userId = Guid.Parse(userIdClaim);
+        var keycloakId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (keycloakId == null) return Unauthorized();
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+        if (user == null) return NotFound();
 
         var projects = await _db.Projects
-            .Where(p => p.ProjectManagerId == userId)
+            .Where(p => p.ProjectManagerId == user.Id)
             .ToListAsync();
 
         return Ok(projects);
@@ -159,18 +161,17 @@ public class CreateProjectRequest
 {
     [Required(ErrorMessage = "Name est obligatoire")]
     public string Name { get; set; } = string.Empty;
-
     public string Description { get; set; } = string.Empty;
+    [Required(ErrorMessage = "PortfolioId est obligatoire")]
+    public Guid PortfolioId { get; set; }
 
-    [Required(ErrorMessage = "PortfolioDirectorId est obligatoire")]
-    public Guid PortfolioDirectorId { get; set; }
 }
 
-public class AssignDirectorRequest
-{
-    [Required(ErrorMessage = "DirectorId est obligatoire")]
-    public Guid DirectorId { get; set; }
-}
+// public class AssignDirectorRequest
+// {
+//     [Required(ErrorMessage = "DirectorId est obligatoire")]
+//     public Guid DirectorId { get; set; }
+// }
 public class AssignManagerDto
 {
     public Guid ProjectManagerId { get; set; }

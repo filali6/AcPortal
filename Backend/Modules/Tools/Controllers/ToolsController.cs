@@ -1,6 +1,8 @@
+using Backend.Data;
 using Backend.Modules.Tools.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
 namespace Backend.Modules.Tools.Controllers;
@@ -10,10 +12,13 @@ namespace Backend.Modules.Tools.Controllers;
 public class ToolsController : ControllerBase
 {
     private readonly ToolsService _toolsService;
+    private readonly AppDbContext _db;
 
-    public ToolsController(ToolsService toolsService)
+    public ToolsController(ToolsService toolsService, AppDbContext db)
     {
         _toolsService = toolsService;
+        _db=db;
+
     }
 
     // GET api/tools
@@ -69,7 +74,7 @@ public class ToolsController : ControllerBase
 
     // POST api/tools/assign
     [HttpPost("assign")]
-    [Authorize(Roles ="HeadOfCDS")]
+     
     public async Task<IActionResult> AssignRole([FromBody] AssignRoleRequest request)
     {
         var result = await _toolsService.AssignRoleAsync(
@@ -111,8 +116,13 @@ public class ToolsController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetMyRoles()
     {
-        var consultantId = Guid.Parse(User.FindFirst("id")!.Value);
-        var roles = await _toolsService.GetMyRolesGroupedAsync(consultantId);
+        var keycloakId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (keycloakId == null) return Unauthorized();
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+        if (user == null) return NotFound();
+
+        var roles = await _toolsService.GetMyRolesGroupedAsync(user.Id);
         return Ok(roles);
     }
 }

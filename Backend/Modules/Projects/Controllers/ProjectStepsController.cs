@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using Backend.Modules.Events.Services;
 
 namespace Backend.Modules.Projects.Controllers;
 
@@ -13,10 +14,12 @@ namespace Backend.Modules.Projects.Controllers;
 public class ProjectStepsController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly EventPublisher _eventPublisher;
 
-    public ProjectStepsController(AppDbContext db)
+    public ProjectStepsController(AppDbContext db,EventPublisher eventPublisher)
     {
         _db = db;
+        _eventPublisher=eventPublisher;
     }
 
  
@@ -91,23 +94,14 @@ public class ProjectStepsController : ControllerBase
             createdSteps[stepDto.StepName] = step.Id;
         }
         var streamId = request.Steps.FirstOrDefault()?.StreamId;
-        var payload = JsonSerializer.Serialize(new
+        var project = await _db.Projects.FindAsync(request.ProjectId);
+        await _eventPublisher.PublishAsync(new
         {
             eventType = "StepsDéfinis",
             projectId = request.ProjectId,
+            projectName = project!.Name,
             streamId = streamId
-        });
-
-        _db.OutboxMessages.Add(new OutboxMessage
-        {
-            Topic = $"project.{request.ProjectId}",
-            Payload = payload,
-            CreatedAt = DateTime.UtcNow,
-            IsProcessed = false,
-            Retries = 0
-        });
-
-        await _db.SaveChangesAsync();
+        }, request.ProjectId, project.Name);
 
         return Ok(new
         {

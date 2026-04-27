@@ -120,7 +120,7 @@
     
             <div class="group-label">
                 {{ getProjectName(projectId) }}
-                <span *ngIf="isChefInProject(projectId)"> — Chef d'Équipe</span>
+                 
             </div>
     
             <table class="tasks-table">
@@ -136,7 +136,7 @@
                 <tbody>
                     <tr *ngFor="let task of getTasksForProject(projectId)" [class.selected]="isSelected(task.id)"
                         [class.blocked]="isBlocked(task)" [class.done]="task.status === 2"
-                        (click)="isBlocked(task) ? null : (isChefInProject(projectId) && task.toolName === 'portal' ? goToChefEquipe(projectId) : openTool(task))">
+                        (click)="isBlocked(task) ? null : openTool(task)">
     
                         <td (click)="!isBlocked(task) && toggleSelect(task.id); $event.stopPropagation()">
                             <div class="checkbox" [class.checked]="isSelected(task.id) || task.status === 2">

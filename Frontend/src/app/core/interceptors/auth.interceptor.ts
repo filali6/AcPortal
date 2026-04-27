@@ -1,31 +1,25 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { AuthService } from '../services/auth.service';
+import { KeycloakService } from 'keycloak-angular';
+import { from, switchMap } from 'rxjs';
 
-// HttpInterceptorFn → fonction qui intercepte les requêtes
-// c'est le nouveau style Angular (standalone)
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const keycloak = inject(KeycloakService);
 
-  // inject() → récupère le service
-  // comme l'injection dans le constructeur
-  const authService = inject(AuthService);
+  return from(keycloak.updateToken(30)).pipe(
+    switchMap(() => {
+      const token = keycloak.getKeycloakInstance().token;
 
-  // Récupère le token stocké
-  const token = authService.getToken();
-
-  // Si token existe → ajoute le header Authorization
-  if (token) {
-    // clone la requête avec le nouveau header
-    // on clone car les requêtes HTTP sont immutables
-    const authReq = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
+      if (token) {
+        const authReq = req.clone({
+          setHeaders: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        return next(authReq);
       }
-    });
-    // continue avec la requête modifiée
-    return next(authReq);
-  }
 
-  // Pas de token → continue sans modification
-  return next(req);
+      return next(req);
+    })
+  );
 };
