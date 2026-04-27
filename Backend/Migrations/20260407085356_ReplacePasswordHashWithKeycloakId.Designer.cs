@@ -3,6 +3,7 @@ using System;
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260407085356_ReplacePasswordHashWithKeycloakId")]
+    partial class ReplacePasswordHashWithKeycloakId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -49,9 +52,6 @@ namespace Backend.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.HasIndex("KeycloakId")
                         .IsUnique();
 
                     b.ToTable("Users");
@@ -130,12 +130,7 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid?>("PortfolioDirectorId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("PortfolioDirectorId");
 
                     b.ToTable("Portfolios");
                 });
@@ -157,6 +152,9 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid>("PortfolioDirectorId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("PortfolioId")
                         .HasColumnType("uuid");
 
@@ -164,10 +162,6 @@ namespace Backend.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("PortfolioId");
-
-                    b.HasIndex("ProjectManagerId");
 
                     b.ToTable("Projects");
                 });
@@ -206,10 +200,6 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("StreamId");
-
                     b.ToTable("ProjectSteps");
                 });
 
@@ -237,12 +227,6 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BusinessTeamLeadId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("TechnicalTeamLeadId");
-
                     b.ToTable("Streams");
                 });
 
@@ -263,12 +247,57 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ConsultantId");
+                    b.ToTable("StreamMembers");
+                });
 
-                    b.HasIndex("StreamId", "ConsultantId")
+            modelBuilder.Entity("Backend.Modules.Projects.Models.Team", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChefEquipeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId")
                         .IsUnique();
 
-                    b.ToTable("StreamMembers");
+                    b.ToTable("Teams");
+                });
+
+            modelBuilder.Entity("Backend.Modules.Projects.Models.TeamMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConsultantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeamId", "ConsultantId")
+                        .IsUnique();
+
+                    b.ToTable("TeamMembers");
                 });
 
             modelBuilder.Entity("Backend.Modules.Tasks.Models.AcpTask", b =>
@@ -297,9 +326,6 @@ namespace Backend.Migrations
                         .HasColumnType("integer");
 
                     b.Property<Guid?>("StepId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("StreamId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Title")
@@ -360,12 +386,6 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ConsultantId");
-
-                    b.HasIndex("ToolId");
-
-                    b.HasIndex("ToolRoleId");
-
                     b.ToTable("ConsultantToolRoles");
                 });
 
@@ -384,98 +404,7 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ToolId");
-
                     b.ToTable("ToolRoles");
-                });
-
-            modelBuilder.Entity("Backend.Modules.Projects.Models.Portfolio", b =>
-                {
-                    b.HasOne("Backend.Modules.Auth.Models.User", "PortfolioDirector")
-                        .WithMany()
-                        .HasForeignKey("PortfolioDirectorId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("PortfolioDirector");
-                });
-
-            modelBuilder.Entity("Backend.Modules.Projects.Models.Project", b =>
-                {
-                    b.HasOne("Backend.Modules.Projects.Models.Portfolio", "Portfolio")
-                        .WithMany("Projects")
-                        .HasForeignKey("PortfolioId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Backend.Modules.Auth.Models.User", "ProjectManager")
-                        .WithMany()
-                        .HasForeignKey("ProjectManagerId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Portfolio");
-
-                    b.Navigation("ProjectManager");
-                });
-
-            modelBuilder.Entity("Backend.Modules.Projects.Models.ProjectStep", b =>
-                {
-                    b.HasOne("Backend.Modules.Projects.Models.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Backend.Modules.Projects.Models.Stream", "Stream")
-                        .WithMany()
-                        .HasForeignKey("StreamId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Project");
-
-                    b.Navigation("Stream");
-                });
-
-            modelBuilder.Entity("Backend.Modules.Projects.Models.Stream", b =>
-                {
-                    b.HasOne("Backend.Modules.Auth.Models.User", "BusinessTeamLead")
-                        .WithMany()
-                        .HasForeignKey("BusinessTeamLeadId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Backend.Modules.Projects.Models.Project", "Project")
-                        .WithMany("Streams")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Backend.Modules.Auth.Models.User", "TechnicalTeamLead")
-                        .WithMany()
-                        .HasForeignKey("TechnicalTeamLeadId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("BusinessTeamLead");
-
-                    b.Navigation("Project");
-
-                    b.Navigation("TechnicalTeamLead");
-                });
-
-            modelBuilder.Entity("Backend.Modules.Projects.Models.StreamMember", b =>
-                {
-                    b.HasOne("Backend.Modules.Auth.Models.User", "Consultant")
-                        .WithMany()
-                        .HasForeignKey("ConsultantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Backend.Modules.Projects.Models.Stream", "Stream")
-                        .WithMany("Members")
-                        .HasForeignKey("StreamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Consultant");
-
-                    b.Navigation("Stream");
                 });
 
             modelBuilder.Entity("Backend.Modules.Tasks.Models.AcpTask", b =>
@@ -483,59 +412,6 @@ namespace Backend.Migrations
                     b.HasOne("Backend.Modules.Events.Models.AcpEvent", null)
                         .WithOne()
                         .HasForeignKey("Backend.Modules.Tasks.Models.AcpTask", "SourceEventId");
-                });
-
-            modelBuilder.Entity("Backend.Modules.Tools.Models.ConsultantToolRole", b =>
-                {
-                    b.HasOne("Backend.Modules.Auth.Models.User", "Consultant")
-                        .WithMany()
-                        .HasForeignKey("ConsultantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Backend.Modules.Tools.Models.AcpTool", "Tool")
-                        .WithMany()
-                        .HasForeignKey("ToolId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Backend.Modules.Tools.Models.ToolRole", "ToolRole")
-                        .WithMany()
-                        .HasForeignKey("ToolRoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Consultant");
-
-                    b.Navigation("Tool");
-
-                    b.Navigation("ToolRole");
-                });
-
-            modelBuilder.Entity("Backend.Modules.Tools.Models.ToolRole", b =>
-                {
-                    b.HasOne("Backend.Modules.Tools.Models.AcpTool", "Tool")
-                        .WithMany()
-                        .HasForeignKey("ToolId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tool");
-                });
-
-            modelBuilder.Entity("Backend.Modules.Projects.Models.Portfolio", b =>
-                {
-                    b.Navigation("Projects");
-                });
-
-            modelBuilder.Entity("Backend.Modules.Projects.Models.Project", b =>
-                {
-                    b.Navigation("Streams");
-                });
-
-            modelBuilder.Entity("Backend.Modules.Projects.Models.Stream", b =>
-                {
-                    b.Navigation("Members");
                 });
 #pragma warning restore 612, 618
         }
