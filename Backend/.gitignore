@@ -47,3 +47,5 @@ secrets.json
 # Database local files
 *.db
 *.sqlite
+
+.dapr/
