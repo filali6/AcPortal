@@ -7,6 +7,7 @@ import { TasksService, Task } from '../../core/services/tasks.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { AuthService } from '../../core/services/auth.service';
 import { UsersService } from '../../core/services/users.service';
+import { TabsService } from '../../core/services/tabs.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -18,24 +19,16 @@ import { environment } from '../../../environments/environment';
 })
 export class DirectorComponent implements OnInit {
 
-  // UI
-  activeView: 'tasks' | 'assign-manager' = 'tasks';
-
-  // Données
+  activeTabId = 'tasks';
   myTasks: Task[] = [];
   projects: Project[] = [];
   managers: any[] = [];
-
-  // Sélection
   selectedIds: Set<string> = new Set();
-  selectedTask: any = null;
-  selectedManagerId = '';
+  openTabs: { [tabId: string]: { task: any, selectedManagerId: string } } = {};
 
-  // Messages
   loading = false;
   successMessage = '';
   errorMessage = '';
-
   currentUserName = '';
   currentUserId = '';
   private api = environment.apiUrl;
@@ -46,72 +39,67 @@ export class DirectorComponent implements OnInit {
     private notificationService: NotificationService,
     private authService: AuthService,
     private http: HttpClient,
-    private usersService:UsersService
+    private usersService: UsersService,
+    private tabsService: TabsService
   ) {}
 
   ngOnInit(): void {
     const userInfo = this.authService.getUserInfo();
     this.currentUserName = userInfo?.name || '';
-     this.currentUserId = userInfo?.id || '';
+    this.currentUserId = userInfo?.id || '';
     this.loadAll();
-    this.notificationService.notifications$
-      .subscribe(() => this.refreshTasks());
+    this.notificationService.notifications$.subscribe(() => this.refreshTasks());
+    this.tabsService.activeTabId.subscribe(id => this.activeTabId = id);
   }
 
   loadAll(): void {
-    // charger les projets
-    this.projectsService.getAll().subscribe({
-      next: (projects) => this.projects = projects
-    });
-
-    // charger les tâches
+    this.projectsService.getAll().subscribe({ next: (p) => this.projects = p });
     this.refreshTasks();
-
-    // charger les project managers avec leur charge
-    this.usersService.getProjectManagers()
-  .subscribe({ next: (m) => this.managers = m });
+    this.usersService.getProjectManagers().subscribe({ next: (m) => this.managers = m });
   }
 
   refreshTasks(): void {
     this.tasksService.getAll().subscribe({
       next: (tasks) => {
-        console.log('toutes les tâches:', tasks);
-        console.log('currentUserId:', this.currentUserId);
-        this.myTasks = tasks.filter(
-          t => t.assignedTo === this.currentUserId
-        );
-        console.log('myTasks filtrées:', this.myTasks);
+        this.myTasks = tasks.filter(t => t.assignedTo === this.currentUserId);
       }
     });
   }
 
-  // Clic sur une tâche → ouvre la vue assignation
   onTaskClick(task: any): void {
-    if (task.status === 2) return; // tâche done → pas d'action
-    console.log('tâche sélectionnée:', task);
-    this.selectedTask = task;
-    this.selectedManagerId = '';
-    this.successMessage = '';
-    this.errorMessage = '';
-    this.activeView = 'assign-manager';
+    if (task.status === 2) return;
+    const tabId = `assign-manager-${task.id}`;
+    if (!this.openTabs[tabId]) {
+      this.openTabs[tabId] = { task, selectedManagerId: '' };
+    }
+    this.tabsService.openTab({
+      id: tabId,
+      title: task.title,
+      type: 'assign-manager',
+      data: task
+    });
   }
 
-  assignManager(): void {
-    if (!this.selectedManagerId || !this.selectedTask) return;
+  getTabData(tabId: string) {
+    return this.openTabs[tabId] || null;
+  }
+
+  getOpenTabIds(): string[] {
+    return Object.keys(this.openTabs);
+  }
+
+  assignManager(tabId: string): void {
+    const tab = this.openTabs[tabId];
+    if (!tab || !tab.selectedManagerId) return;
     this.loading = true;
     this.errorMessage = '';
 
-   this.projectsService.assignManager(
-  this.selectedTask.projectId,
-  this.selectedManagerId
-).subscribe({
+    this.projectsService.assignManager(tab.task.projectId, tab.selectedManagerId).subscribe({
       next: () => {
         this.successMessage = 'Project Manager assigné avec succès !';
         this.loading = false;
-        // marquer la tâche comme done
-        this.tasksService
-          .updateStatus(this.selectedTask.id, 2)
-          .subscribe(() => this.refreshTasks());
+        this.refreshTasks();
+        this.successMessage = 'Project Manager assigné avec succès !';
       },
       error: () => {
         this.errorMessage = 'Erreur lors de l\'assignation';
@@ -124,22 +112,14 @@ export class DirectorComponent implements OnInit {
     return this.projects.find(p => p.id === projectId)?.name || '—';
   }
 
-  // Sélection multiple
-  get hasSelection(): boolean {
-    return this.selectedIds.size > 0;
-  }
+  get hasSelection(): boolean { return this.selectedIds.size > 0; }
 
   toggleSelect(taskId: string): void {
-    if (this.selectedIds.has(taskId)) {
-      this.selectedIds.delete(taskId);
-    } else {
-      this.selectedIds.add(taskId);
-    }
+    if (this.selectedIds.has(taskId)) this.selectedIds.delete(taskId);
+    else this.selectedIds.add(taskId);
   }
 
-  selectedTask_(taskId: string): boolean {
-    return this.selectedIds.has(taskId);
-  }
+  isSelected(taskId: string): boolean { return this.selectedIds.has(taskId); }
 
   markDone(): void {
     Array.from(this.selectedIds).forEach(id => {
@@ -153,14 +133,15 @@ export class DirectorComponent implements OnInit {
     });
   }
 
-  getStatusLabel(status: number): string {
-    return this.tasksService.getStatusLabel(status);
-  }
-
-  getStatusColor(status: number): string {
-    return this.tasksService.getStatusColor(status);
-  }
-  isSelected(taskId: string): boolean {
-    return this.selectedIds.has(taskId);
+  getStatusLabel(status: number): string { return this.tasksService.getStatusLabel(status); }
+  getStatusColor(status: number): string { return this.tasksService.getStatusColor(status); }
+  endTask(tabId: string): void {
+  const tab = this.openTabs[tabId];
+  if (!tab) return;
+  this.tasksService.updateStatus(tab.task.id, 2).subscribe(() => {
+    this.refreshTasks();
+    this.tabsService.closeTab(tabId);
+    delete this.openTabs[tabId];
+  });
 }
 }

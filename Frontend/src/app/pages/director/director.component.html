@@ -4,20 +4,16 @@
         <h1>Dashboard — Portfolio Director</h1>
     </div>
 
-    <!-- VUE 1 : Liste des tâches -->
-    <ng-container *ngIf="activeView === 'tasks'">
+    <!-- VUE : Liste des tâches -->
+    <ng-container *ngIf="activeTabId === 'tasks'">
         <div class="card">
             <div class="card-header">
                 <h2>Mes tâches ({{ myTasks.length }})</h2>
             </div>
 
             <div class="action-bar" *ngIf="hasSelection">
-                <span class="selection-count">
-                    {{ selectedIds.size }} sélectionnée(s)
-                </span>
-                <button class="action-btn success" (click)="markDone()">
-                    ✓ Mark Done
-                </button>
+                <span class="selection-count">{{ selectedIds.size }} sélectionnée(s)</span>
+                <button class="action-btn success" (click)="markDone()">✓ Mark Done</button>
             </div>
 
             <table class="tasks-table" *ngIf="myTasks.length > 0">
@@ -33,95 +29,74 @@
                 <tbody>
                     <tr *ngFor="let task of myTasks" class="clickable-row" [class.selected]="isSelected(task.id)"
                         [class.done]="task.status === 2" (click)="onTaskClick(task)">
-
                         <td (click)="toggleSelect(task.id); $event.stopPropagation()">
                             <div class="checkbox" [class.checked]="isSelected(task.id) || task.status === 2">
-                                <span *ngIf="isSelected(task.id) || task.status === 2">
-                                    ✓
-                                </span>
+                                <span *ngIf="isSelected(task.id) || task.status === 2">✓</span>
                             </div>
                         </td>
-                        <td class="task-title" [class.done-text]="task.status === 2">
-                            {{ task.title }}
-                        </td>
-                        <td class="text-secondary">
-                            {{ getProjectName(task.projectId ?? '') }}
-                        </td>
+                        <td class="task-title" [class.done-text]="task.status === 2">{{ task.title }}</td>
+                        <td class="text-secondary">{{ getProjectName(task.projectId ?? '') }}</td>
                         <td>
                             <span class="status-badge" [style.background]="getStatusColor(task.status) + '20'"
                                 [style.color]="getStatusColor(task.status)">
                                 {{ getStatusLabel(task.status) }}
                             </span>
                         </td>
-                        <td class="text-secondary">
-                            {{ task.createdAt | date:'dd/MM/yyyy' }}
-                        </td>
+                        <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy' }}</td>
                     </tr>
                 </tbody>
             </table>
 
-            <div class="empty" *ngIf="myTasks.length === 0">
-                Aucune tâche assignée.
-            </div>
+            <div class="empty" *ngIf="myTasks.length === 0">Aucune tâche assignée.</div>
         </div>
     </ng-container>
 
-    <!-- VUE 2 : Assigner un Project Manager -->
-    <ng-container *ngIf="activeView === 'assign-manager'">
-        <div class="card">
-            <div class="card-header">
-                <button class="btn-back" (click)="activeView = 'tasks'">
-                    ← Retour
-                </button>
-                <h2>Assigner un Project Manager</h2>
-            </div>
-
-            <div class="card-body">
-
-                <!-- Info projet -->
-                <div class="project-info-block" *ngIf="selectedTask">
-                    <span class="label">Projet</span>
-                    <span class="project-name">
-                        {{ getProjectName(selectedTask.projectId ?? '') }}
-                    </span>
+    <!-- VUE : Assigner un PM — un par onglet -->
+    <ng-container *ngFor="let tabId of getOpenTabIds()">
+        <ng-container *ngIf="activeTabId === tabId">
+            <div class="card" *ngIf="getTabData(tabId) as tab">
+                <div class="card-header">
+                    <h2>Assigner un Project Manager</h2>
                 </div>
 
-                <!-- Liste des Project Managers -->
-                <div class="managers-list" *ngIf="managers.length > 0">
-                    <div class="manager-card" *ngFor="let m of managers"
-                        [class.selected-manager]="selectedManagerId === m.id" (click)="selectedManagerId = m.id">
+                <div class="card-body">
+                    <div class="project-info-block">
+                        <span class="label">Projet</span>
+                        <span class="project-name">{{ getProjectName(tab.task?.projectId ?? '') }}</span>
+                    </div>
 
-                        <div class="manager-info">
-                            <span class="manager-name">{{ m.fullName }}</span>
-                            <span class="manager-email">{{ m.email }}</span>
-                        </div>
-                        <div class="manager-charge">
-                            <span class="charge-number">{{ m.projectCount }}</span>
-                            <span class="charge-label">projet(s)</span>
-                        </div>
-                        <div class="selected-check" *ngIf="selectedManagerId === m.id">
-                            ✓
+                    <div class="managers-list" *ngIf="managers.length > 0">
+                        <div class="manager-card" *ngFor="let m of managers"
+                            [class.selected-manager]="tab.selectedManagerId === m.id"
+                            (click)="tab.selectedManagerId = m.id">
+                            <div class="manager-info">
+                                <span class="manager-name">{{ m.fullName }}</span>
+                                <span class="manager-email">{{ m.email }}</span>
+                            </div>
+                            <div class="manager-charge">
+                                <span class="charge-number">{{ m.projectCount }}</span>
+                                <span class="charge-label">projet(s)</span>
+                            </div>
+                            <div class="selected-check" *ngIf="tab.selectedManagerId === m.id">✓</div>
                         </div>
                     </div>
-                </div>
 
-                <div class="empty" *ngIf="managers.length === 0">
-                    Aucun Project Manager disponible.
-                </div>
+                    <div class="empty" *ngIf="managers.length === 0">Aucun Project Manager disponible.</div>
 
-                <div *ngIf="successMessage" class="alert alert-success">
-                    {{ successMessage }}
-                </div>
-                <div *ngIf="errorMessage" class="alert alert-error">
-                    {{ errorMessage }}
-                </div>
+                    <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+                    <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
 
-                <button class="btn-primary" (click)="assignManager()" [disabled]="!selectedManagerId || loading">
-                    {{ loading ? 'Assignation...' : 'Assigner' }}
-                </button>
-
+                    <div class="bottom-actions">
+                        <button class="btn-danger" (click)="endTask(tabId)" *ngIf="successMessage">
+                            Terminer la tâche
+                        </button>
+                        <button class="btn-primary" (click)="assignManager(tabId)" [disabled]="!tab.selectedManagerId || loading">
+                            {{ loading ? 'Assignation...' : 'Assigner' }}
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
+        </ng-container>
     </ng-container>
 
 </div>
