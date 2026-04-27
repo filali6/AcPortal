@@ -1,9 +1,0 @@
-version: 1
-apps:
-  - appID: acp-backend
-    appDirPath: ./
-    appPort: 5281
-    daprHTTPPort: 3500
-    daprGRPCPort: 50002
-    resourcesPath: ./dapr/components
-    command: ["dotnet", "run"]

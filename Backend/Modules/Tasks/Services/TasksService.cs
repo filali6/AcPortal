@@ -4,8 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Modules.Tasks.Models;
 namespace Backend.Modules.Tasks.Services;
 
-
-
 public class TasksService
 {
     private readonly AppDbContext _db;
@@ -33,7 +31,7 @@ public class TasksService
                 t.CreatedAt,
                 t.ProjectId,
                 t.StepId,
-                StreamId = t.StreamId ?? _db.ProjectSteps
+                StreamId = _db.ProjectSteps
                     .Where(s => s.Id == t.StepId)
                     .Select(s => s.StreamId)
                     .FirstOrDefault()
@@ -92,7 +90,7 @@ public class TasksService
                 t.CreatedAt,
                 t.ProjectId,
                 t.StepId,
-                StreamId = t.StreamId ?? _db.ProjectSteps
+                StreamId = _db.ProjectSteps
                     .Where(s => s.Id == t.StepId)
                     .Select(s => s.StreamId)
                     .FirstOrDefault()

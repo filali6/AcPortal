@@ -35,6 +35,7 @@ public class CreateTasksFromStepsHandler : IActionHandler
         var query = _db.ProjectSteps
             .Where(s => s.ProjectId == projectId);
 
+        // filtre par stream si fourni
         if (eventDto.StreamId.HasValue)
             query = query.Where(s => s.StreamId == eventDto.StreamId);
 
@@ -52,8 +53,7 @@ public class CreateTasksFromStepsHandler : IActionHandler
                 ? AcpTaskStatus.Blocked
                 : AcpTaskStatus.Pending;
 
-            // ✅ Retourne KeycloakId au lieu de FullName
-            var assignedKeycloakId = await FindBestConsultantKeycloakIdAsync(
+            var assignedTo = await FindBestConsultantAsync(
                 projectId, eventDto.StreamId);
 
             var task = new AcpTask
@@ -61,7 +61,7 @@ public class CreateTasksFromStepsHandler : IActionHandler
                 Title = step.StepName,
                 Description = $"Tâche depuis step : {step.StepName}",
                 ToolName = step.ToolName,
-                AssignedTo = assignedKeycloakId ?? "Non assigné", // ✅
+                AssignedTo = assignedTo ?? "Non assigné",
                 Status = status,
                 CreatedAt = DateTime.UtcNow,
                 ProjectId = projectId,
@@ -70,15 +70,20 @@ public class CreateTasksFromStepsHandler : IActionHandler
 
             _db.AcpTasks.Add(task);
 
-            if (assignedKeycloakId != null)
+            if (assignedTo != null)
             {
-                await _hubContext.Clients
-                    .Group(assignedKeycloakId) // ✅
-                    .SendAsync("NewNotification", new
-                    {
-                        message = $"Nouvelle tâche : {step.StepName}",
-                        projectId = projectId
-                    });
+                var consultant = await _db.Users
+                    .FirstOrDefaultAsync(u => u.FullName == assignedTo);
+                if (consultant != null)
+                {
+                    await _hubContext.Clients
+                        .Group(consultant.Id.ToString())
+                        .SendAsync("NewNotification", new
+                        {
+                            message = $"Nouvelle tâche : {step.StepName}",
+                            projectId = projectId
+                        });
+                }
             }
         }
 
@@ -89,7 +94,7 @@ public class CreateTasksFromStepsHandler : IActionHandler
             projectId);
     }
 
-    private async Task<string?> FindBestConsultantKeycloakIdAsync(
+    private async Task<string?> FindBestConsultantAsync(
         Guid? projectId,
         Guid? streamId = null)
     {
@@ -104,18 +109,20 @@ public class CreateTasksFromStepsHandler : IActionHandler
         }
         else
         {
+            var team = await _db.Teams
+                .FirstOrDefaultAsync(t => t.ProjectId == projectId);
+            if (team == null) return null;
 
-
-            memberIds = await _db.StreamMembers
-         .Where(m => _db.Streams
-             .Any(s => s.ProjectId == projectId && s.Id == m.StreamId))
-         .Select(m => m.ConsultantId)
-         .ToListAsync();
+            memberIds = await _db.TeamMembers
+                .Where(m => m.TeamId == team.Id
+                         && m.ConsultantId != team.ChefEquipeId)
+                .Select(m => m.ConsultantId)
+                .ToListAsync();
         }
 
         if (!memberIds.Any()) return null;
 
-        string? bestKeycloakId = null;
+        string? bestName = null;
         int minTasks = int.MaxValue;
 
         foreach (var memberId in memberIds)
@@ -123,20 +130,19 @@ public class CreateTasksFromStepsHandler : IActionHandler
             var consultant = await _db.Users.FindAsync(memberId);
             if (consultant == null) continue;
 
-            
             var count = await _db.AcpTasks
                 .CountAsync(t =>
-                    t.AssignedTo == consultant.KeycloakId
+                    t.AssignedTo == consultant.FullName
                     && t.ProjectId == projectId
                     && t.Status != AcpTaskStatus.Done);
 
             if (count < minTasks)
             {
                 minTasks = count;
-                bestKeycloakId = consultant.KeycloakId; 
+                bestName = consultant.FullName;
             }
         }
 
-        return bestKeycloakId;
+        return bestName;
     }
 }

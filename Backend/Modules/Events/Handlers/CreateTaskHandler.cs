@@ -31,70 +31,57 @@ public class CreateTaskHandler : IActionHandler
         AcpEventDto eventDto,
         Guid? projectId)
     {
-        // resolve ALL targets from the rule
-        var targetUserIds = await ResolveTargetsAsync(rule, eventDto);
+        var targetUserId = await ResolveTargetAsync(rule, eventDto);
 
-        if (!targetUserIds.Any())
+        if (targetUserId == null)
         {
             _logger.LogWarning(
-                "Aucun destinataire trouvé pour {EventType}",
+                "Destinataire introuvable pour {EventType}",
                 eventDto.EventType);
             return;
         }
 
-        // create one task per target
-        foreach (var userId in targetUserIds)
-        {
-            await CreateTaskAsync(
-                rule.TaskTitle!,
-                rule.TaskDescription!,
-                userId,
-                projectId, eventDto.StreamId);
-        }
+        await CreateTaskAsync(
+            rule.TaskTitle!,
+            rule.TaskDescription!,
+            targetUserId.Value,
+            projectId);
     }
 
-    private async Task<List<Guid>> ResolveTargetsAsync(
-    WorkflowRule rule,
-    AcpEventDto eventDto)
+    private async Task<Guid?> ResolveTargetAsync(
+        WorkflowRule rule,
+        AcpEventDto eventDto)
     {
-        var result = new List<Guid>();
-
-        foreach (var targetValue in rule.TargetValues)
+        switch (rule.TargetType)
         {
-            switch (rule.TargetType)
-            {
-                case "ROLE":
-                    if (Enum.TryParse<GlobalRole>(targetValue, out var roleEnum))
-                    {
-                        var user = await _db.Users
-                            .FirstOrDefaultAsync(u => u.Role == roleEnum);
-                        if (user != null) result.Add(user.Id);
-                    }
-                    break;
+            case "ROLE":
+                if (!Enum.TryParse<GlobalRole>(
+                    rule.TargetValue, out var roleEnum))
+                    return null;
+                var user = await _db.Users
+                    .FirstOrDefaultAsync(u => u.Role == roleEnum);
+                return user?.Id;
 
-                case "CONTEXT_USER":
-                    var property = eventDto.GetType().GetProperty(targetValue);
-                    if (property == null)
-                    {
-                        _logger.LogWarning(
-                            "Propriété introuvable dans AcpEventDto : {Field}",
-                            targetValue);
-                        break;
-                    }
-                    var value = property.GetValue(eventDto) as Guid?;
-                    if (value.HasValue) result.Add(value.Value);
-                    break;
-            }
+            case "CONTEXT_USER":
+                return rule.TargetValue switch
+                {
+                    "DirectorId" => eventDto.DirectorId,
+                    "ProjectManagerId" => eventDto.ProjectManagerId,
+                    "BusinessTeamLeadId" => eventDto.BusinessTeamLeadId,
+                    "TechnicalTeamLeadId" => eventDto.TechnicalTeamLeadId,
+                    _ => null
+                };
+
+            default:
+                return null;
         }
-
-        return result;
     }
 
     private async Task CreateTaskAsync(
         string title,
         string description,
         Guid userId,
-        Guid? projectId,Guid? streamId)
+        Guid? projectId)
     {
         var user = await _db.Users.FindAsync(userId);
         if (user == null) return;
@@ -104,18 +91,17 @@ public class CreateTaskHandler : IActionHandler
             Title = title,
             Description = description,
             ToolName = "portal",
-            AssignedTo = user.KeycloakId,
+            AssignedTo = user.FullName,
             Status = AcpTaskStatus.Pending,
             CreatedAt = DateTime.UtcNow,
-            ProjectId = projectId,
-            StreamId = streamId
+            ProjectId = projectId
         };
 
         _db.AcpTasks.Add(task);
         await _db.SaveChangesAsync();
 
         await _hubContext.Clients
-            .Group(user.KeycloakId)
+            .Group(user.Id.ToString())
             .SendAsync("NewNotification", new
             {
                 message = title,

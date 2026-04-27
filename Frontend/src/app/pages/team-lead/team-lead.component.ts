@@ -44,7 +44,6 @@ export class TeamLeadComponent implements OnInit {
   errorMessage = '';
 
   currentUserName = '';
-  currentUserId = '';
   private api = environment.apiUrl;
 
   constructor(
@@ -57,7 +56,6 @@ export class TeamLeadComponent implements OnInit {
   ngOnInit(): void {
     const userInfo = this.authService.getUserInfo();
     this.currentUserName = userInfo?.name || '';
-    this.currentUserId= userInfo?.id || '';
     this.userRole = userInfo?.role || '';
     this.loadAll();
     this.notificationService.notifications$
@@ -94,11 +92,8 @@ export class TeamLeadComponent implements OnInit {
   this.tasksService.getAll().subscribe({
     next: (tasks) => {
       this.myTasks = tasks.filter(t =>
-        t.assignedTo === this.currentUserId
+        t.assignedTo === this.currentUserName
       );
-       console.log('myStreams:', this.myStreams);
-            console.log('myTasks:', this.myTasks);
-            console.log('first task streamId:', this.myTasks[0]?.streamId);
     }
   });
 }
