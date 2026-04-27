@@ -72,6 +72,14 @@ export const routes: Routes = [
       import('./pages/plugins/axe-gui/axe-gui.component')
         .then(m => m.AxeGuiComponent)
   },
+   
+  {
+    path: 'tools-page',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/tools-page/tools-page.component')
+        .then(m => m.ToolsPageComponent)
+  },
   {
     path : 'daf',
     canActivate:[authGuard],

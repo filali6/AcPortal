@@ -68,7 +68,7 @@ public class ProjectsController : ControllerBase
         var project = await _projectsService.CreateAsync(
             request.Name,
             request.Description,
-            request.PortfolioId   
+            request.PortfolioId , request.TargetDate   
         );
 
         await _streamingService.SubscribeToProjectAsync(request.Name);
@@ -78,7 +78,8 @@ public class ProjectsController : ControllerBase
         await _eventPublisher.PublishAsync(new
         {
             eventType = "ProjetCréé",
-            directorId = portfolio.PortfolioDirectorId,   
+            directorId = portfolio.PortfolioDirectorId,
+            projectName = project.Name,
             projectId = project.Id
         }, project.Id, request.Name);
 
@@ -153,6 +154,27 @@ public class ProjectsController : ControllerBase
 
         return Ok(projects);
     }
+    [HttpPatch("{id:guid}")]
+    [Authorize(Roles = "HeadOfCDS")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProjectRequest request)
+    {
+        var project = await _projectsService.UpdateAsync(id, request.Name, request.Description, request.TargetDate);
+        if (project == null) return NotFound();
+        return Ok(project);
+    }
+
+    [HttpGet("stats")]
+    [Authorize(Roles = "HeadOfCDS")]
+    public async Task<IActionResult> GetStats()
+    {
+        var total = await _db.Projects.CountAsync();
+        var inProgress = await _db.Projects
+            .Where(p => _db.Streams.Any(s => s.ProjectId == p.Id))
+            .CountAsync();
+        var contracts = await _db.Contracts.CountAsync();
+
+        return Ok(new { total, inProgress, contracts });
+    }
 
 
 }
@@ -164,6 +186,7 @@ public class CreateProjectRequest
     public string Description { get; set; } = string.Empty;
     [Required(ErrorMessage = "PortfolioId est obligatoire")]
     public Guid PortfolioId { get; set; }
+    public DateTime? TargetDate { get; set; }
 
 }
 
@@ -175,4 +198,10 @@ public class CreateProjectRequest
 public class AssignManagerDto
 {
     public Guid ProjectManagerId { get; set; }
+}
+public class UpdateProjectRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public DateTime? TargetDate { get; set; }
 }

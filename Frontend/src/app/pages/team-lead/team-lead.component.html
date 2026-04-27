@@ -4,34 +4,23 @@
         <h1>Dashboard — {{ userRole === 'BusinessTeamLead' ? 'Business' : 'Technical' }} Team Lead</h1>
     </div>
 
-    <!-- VUE 1 : Liste des tâches -->
-    <ng-container *ngIf="activeView === 'tasks'">
+    <!-- VUE : Liste des tâches -->
+    <ng-container *ngIf="activeTabId === 'tasks'">
         <div class="card">
             <div class="card-header">
                 <h2>Mes tâches ({{ filteredTasks.length }})</h2>
             </div>
 
-            <!-- Filtres projet + stream -->
             <div class="stream-switcher">
                 <select class="project-select" [(ngModel)]="selectedProjectId" (ngModelChange)="onProjectChange()">
                     <option value="">Tous les projets</option>
                     <option *ngFor="let p of projects" [value]="p.id">{{ p.name }}</option>
                 </select>
-
-                <!-- <select class="project-select" [(ngModel)]="selectedStreamId">
-                    <option value="">Tous les streams</option>
-                    <option *ngFor="let s of filteredStreams" [value]="s.id">{{ s.name }}</option>
-                </select> -->
             </div>
 
-            <!-- Barre de sélection -->
             <div class="action-bar" *ngIf="hasSelection">
-                <span class="selection-count">
-                    {{ selectedIds.size }} sélectionnée(s)
-                </span>
-                <button class="action-btn success" (click)="markDone()">
-                    ✓ Mark Done
-                </button>
+                <span class="selection-count">{{ selectedIds.size }} sélectionnée(s)</span>
+                <button class="action-btn success" (click)="markDone()">✓ Mark Done</button>
             </div>
 
             <table class="tasks-table" *ngIf="filteredTasks.length > 0">
@@ -52,21 +41,15 @@
                                 <span *ngIf="isSelected(task.id) || task.status === 2">✓</span>
                             </div>
                         </td>
-                        <td class="task-title" [class.done-text]="task.status === 2">
-                            {{ task.title }}
-                        </td>
-                        <td class="text-secondary">
-                            {{ getStreamName(task.streamId ?? '') }}
-                        </td>
+                        <td class="task-title" [class.done-text]="task.status === 2">{{ task.title }}</td>
+                        <td class="text-secondary">{{ getStreamName(task.streamId ?? '') }}</td>
                         <td>
                             <span class="status-badge" [style.background]="getStatusColor(task.status) + '20'"
                                 [style.color]="getStatusColor(task.status)">
                                 {{ getStatusLabel(task.status) }}
                             </span>
                         </td>
-                        <td class="text-secondary">
-                            {{ task.createdAt | date:'dd/MM/yyyy' }}
-                        </td>
+                        <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy' }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -77,62 +60,54 @@
         </div>
     </ng-container>
 
-    <!-- VUE 2 : Définir les steps du stream -->
-    <ng-container *ngIf="activeView === 'define-steps'">
-        <div class="card">
-            <div class="card-header">
-                <button class="btn-back" (click)="activeView = 'tasks'">
-                    ← Retour
-                </button>
-                <h2>Définir les steps</h2>
-            </div>
-
-            <div class="card-body">
-
-                <!-- Info stream -->
-                <div class="project-info-block">
-                    <span class="label">Stream</span>
-                    <span class="project-name">
-                        {{ getStreamName(currentTask?.streamId ?? '') }}
-                    </span>
+    <!-- VUE : Définir les steps — un par onglet -->
+    <ng-container *ngFor="let tabId of getOpenTabIds()">
+        <ng-container *ngIf="activeTabId === tabId">
+            <div class="card" *ngIf="getTabData(tabId) as tab">
+                <div class="card-header">
+                    <h2>Définir les steps</h2>
                 </div>
 
-                <!-- Steps -->
-                <div class="steps-container">
-                    <div class="step-row" *ngFor="let step of steps; let i = index">
-                        <span class="step-number">{{ i + 1 }}</span>
-                        <input type="text" [(ngModel)]="step.stepName" placeholder="Nom du step" class="form-input" />
-                        <select [(ngModel)]="step.toolName" class="form-input tool-select">
-                            <option value="">Outil ACP</option>
-                            <option value="axeIAM">axeIAM</option>
-                            <option value="axeBPM">axeBPM</option>
-                            <option value="axeGUI">axeGUI</option>
-                            <option value="axeDMS">axeDMS</option>
-                            <option value="axeBRM">axeBRM</option>
-                        </select>
-                        <input type="number" [(ngModel)]="step.order" placeholder="Ordre"
-                            class="form-input order-input" />
-                        <button class="btn-remove" (click)="removeStep(i)" *ngIf="steps.length > 1">✕</button>
+                <div class="card-body">
+                    <div class="project-info-block">
+                        <span class="label">Stream</span>
+                        <span class="project-name">{{ getStreamName(tab.task?.streamId ?? '') }}</span>
+                    </div>
+
+                    <div class="steps-container">
+                        <div class="step-row" *ngFor="let step of tab.steps; let i = index">
+                            <span class="step-number">{{ i + 1 }}</span>
+                            <input type="text" [(ngModel)]="step.stepName" placeholder="Nom du step"
+                                class="form-input" />
+                            <select [(ngModel)]="step.toolName" class="form-input tool-select">
+                                <option value="">Sélectionner un outil</option>
+                                <option *ngFor="let plugin of availablePlugins" [value]="plugin.id">
+                                    {{ plugin.name }}
+                                </option>
+                            </select>
+                            <input type="number" [(ngModel)]="step.order" placeholder="Ordre"
+                                class="form-input order-input" />
+                            <button class="btn-remove" (click)="removeStep(tabId, i)"
+                                *ngIf="tab.steps.length > 1">✕</button>
+                        </div>
+                    </div>
+
+                    <button class="btn-add" (click)="addStep(tabId)">+ Ajouter un step</button>
+
+                    <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+                    <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+
+                    <div class="bottom-actions">
+                        <button class="btn-danger" (click)="endTask(tabId)" *ngIf="successMessage">
+                            Terminer la tâche
+                        </button>
+                        <button class="btn-primary" (click)="saveSteps(tabId)" [disabled]="loading || !tab.steps.length">
+                            {{ loading ? 'Sauvegarde...' : 'Sauvegarder les steps' }}
+                        </button>
                     </div>
                 </div>
-
-                <button class="btn-add" (click)="addStep()">
-                    + Ajouter un step
-                </button>
-
-                <div *ngIf="successMessage" class="alert alert-success">
-                    {{ successMessage }}
-                </div>
-                <div *ngIf="errorMessage" class="alert alert-error">
-                    {{ errorMessage }}
-                </div>
-
-                <button class="btn-primary" (click)="saveSteps()" [disabled]="loading || !steps.length">
-                    {{ loading ? 'Sauvegarde...' : 'Sauvegarder les steps' }}
-                </button>
-
             </div>
-        </div>
+        </ng-container>
     </ng-container>
 
 </div>

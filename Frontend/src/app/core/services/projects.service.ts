@@ -10,6 +10,7 @@ export interface Project {
   portfolioId: string;
   projectManagerId: string;
   createdAt: string;
+  targetDate?: string;
 }
 export interface Portfolio {
   id: string;
@@ -49,9 +50,9 @@ export class ProjectsService {
 
 
   // POST /api/projects → créer un projet
-  create(name: string, description: string, portfolioId: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/projects`, { name, description, portfolioId });
-  }
+  create(name: string, description: string, portfolioId: string, targetDate?: string): Observable<any> {
+  return this.http.post(`${this.apiUrl}/projects`, { name, description, portfolioId, targetDate });
+}
 getMyPortfolios(): Observable<Portfolio[]> {
     return this.http.get<Portfolio[]>(`${this.apiUrl}/portfolios/my`);
   }
@@ -76,4 +77,11 @@ getMyPortfolios(): Observable<Portfolio[]> {
       { projectManagerId }
     );
   }
+  update(id: string, name: string, description: string, targetDate?: string): Observable<any> {
+  return this.http.patch(`${this.apiUrl}/projects/${id}`, { name, description, targetDate });
+}
+
+getStats(): Observable<any> {
+  return this.http.get(`${this.apiUrl}/projects/stats`);
+}
 }
