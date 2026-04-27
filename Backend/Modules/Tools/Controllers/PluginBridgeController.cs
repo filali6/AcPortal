@@ -21,7 +21,7 @@ public class PluginBridgeController : ControllerBase
         _db = db;
     }
 
-    // GET /api/plugins — catalogue complet
+   
     [HttpGet]
     public IActionResult GetAll()
     {
@@ -38,7 +38,7 @@ public class PluginBridgeController : ControllerBase
         return Ok(plugins);
     }
 
-    // GET /api/plugins/{pluginId} — détail d'un plugin
+   
     [HttpGet("{pluginId}")]
     public IActionResult GetById(string pluginId)
     {
@@ -57,8 +57,7 @@ public class PluginBridgeController : ControllerBase
             accessUrl = adapter?.GetAccessUrl()
         });
     }
-
-    // GET /api/plugins/user/my — plugins de l'utilisateur connecté
+ 
     [HttpGet("user/my")]
     public async Task<IActionResult> GetMyPlugins()
     {
@@ -93,7 +92,7 @@ public class PluginBridgeController : ControllerBase
         return Ok(result);
     }
 
-    // POST /api/plugins/user/{pluginId} — ajouter un plugin
+    
     [HttpPost("user/{pluginId}")]
     public async Task<IActionResult> AddPlugin(string pluginId)
     {
@@ -119,8 +118,7 @@ public class PluginBridgeController : ControllerBase
 
         return Ok(new { message = "Plugin ajouté avec succès" });
     }
-
-    // DELETE /api/plugins/user/{pluginId} — retirer un plugin
+ 
     [HttpDelete("user/{pluginId}")]
     public async Task<IActionResult> RemovePlugin(string pluginId)
     {

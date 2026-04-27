@@ -10,13 +10,13 @@ public class KeycloakRoleTransformer : IClaimsTransformation
     {
         var identity = (ClaimsIdentity)principal.Identity!;
 
-        // Debug — voir tous les claims reçus
+       
         // foreach (var claim in identity.Claims)
         // {
         //     Console.WriteLine($"CLAIM: {claim.Type} = {claim.Value}");
         // }
 
-        // Cherche realm_access
+     
         var realmAccess = identity.FindFirst("realm_access")?.Value;
         if (realmAccess == null) return Task.FromResult(principal);
 

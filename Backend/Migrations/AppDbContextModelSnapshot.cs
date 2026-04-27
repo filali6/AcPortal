@@ -57,6 +57,43 @@ namespace Backend.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Backend.Modules.Contracts.Models.Contract", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ClientName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DafUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FilesPaths")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DafUserId");
+
+                    b.ToTable("Contracts");
+                });
+
             modelBuilder.Entity("Backend.Modules.Events.Models.AcpEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -162,6 +199,9 @@ namespace Backend.Migrations
 
                     b.Property<Guid?>("ProjectManagerId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("TargetDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -411,6 +451,15 @@ namespace Backend.Migrations
                         .IsUnique();
 
                     b.ToTable("UserPlugins");
+                });
+
+            modelBuilder.Entity("Backend.Modules.Contracts.Models.Contract", b =>
+                {
+                    b.HasOne("Backend.Modules.Auth.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("DafUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Backend.Modules.Projects.Models.Portfolio", b =>

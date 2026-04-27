@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication;
 using Backend.Modules.Auth;
 using System.Security.Claims;
 using Dapr.Messaging.PublishSubscribe.Extensions;  
+using Backend.Modules.Contracts.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,7 @@ builder.Services.AddSingleton<PluginRegistry>();
 builder.Services.AddScoped<EventPublisher>();
 
 builder.Services.AddScoped<IClaimsTransformation, KeycloakRoleTransformer>();
+builder.Services.AddScoped<ContractsService>();
 
 builder.Services.AddSignalR();
 builder.Services.AddHttpClient();

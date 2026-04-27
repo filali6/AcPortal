@@ -1,12 +1,27 @@
 <div class="admin-page">
 
     <div class="page-header">
-        <h1> HeadOfCDS</h1>
+        <h1>HeadOfCDS</h1>
     </div>
 
-    
-    <ng-container *ngIf="activeView === 'tasks'">
+    <!-- STATS CARDS -->
+    <div class="stats-grid" *ngIf="activeTabId === 'tasks' && !showProjectsView">
+        <div class="stat-card">
+            <span class="stat-number">{{ stats.total }}</span>
+            <span class="stat-label">Projets créés</span>
+        </div>
+        <div class="stat-card green">
+            <span class="stat-number">{{ stats.inProgress }}</span>
+            <span class="stat-label">En cours</span>
+        </div>
+        <div class="stat-card orange">
+            <span class="stat-number">{{ stats.contracts }}</span>
+            <span class="stat-label">Contrats reçus</span>
+        </div>
+    </div>
 
+    <!-- VUE : Liste des tâches -->
+    <ng-container *ngIf="activeTabId === 'tasks' && !showProjectsView">
         <div class="card">
             <div class="card-header">
                 <h2>Mes tâches ({{ myTasks.length }})</h2>
@@ -29,18 +44,13 @@
                 </thead>
                 <tbody>
                     <tr *ngFor="let task of myTasks" [class.selected]="isSelected(task.id)"
-                        [class.done]="task.status === 2" (click)="onMyTaskClick()">
-
+                        [class.done]="task.status === 2" (click)="onMyTaskClick(task)">
                         <td (click)="toggleSelect(task.id); $event.stopPropagation()">
                             <div class="checkbox" [class.checked]="isSelected(task.id) || task.status === 2">
                                 <span *ngIf="isSelected(task.id) || task.status === 2">✓</span>
                             </div>
                         </td>
-                        <td>
-                            <span class="task-title" [class.done-text]="task.status === 2">
-                                {{ task.title }}
-                            </span>
-                        </td>
+                        <td><span class="task-title" [class.done-text]="task.status === 2">{{ task.title }}</span></td>
                         <td><span class="tool-badge">{{ task.toolName }}</span></td>
                         <td>
                             <span class="status-badge" [style.background]="getStatusColor(task.status) + '20'"
@@ -52,132 +62,181 @@
                     </tr>
                 </tbody>
             </table>
-
             <div class="empty" *ngIf="myTasks.length === 0">Aucune tâche assignée.</div>
         </div>
-
     </ng-container>
 
-    <!-- ============================================================ -->
-    <!-- VUE 2 : Formulaire créer un projet                           -->
-    <!-- ============================================================ -->
    
-    <ng-container *ngIf="activeView === 'create-project'">
+    <!-- VUE : Créer un projet — un par onglet -->
+    <ng-container *ngFor="let tabId of getOpenTabIds()">
+        <ng-container *ngIf="activeTabId === tabId">
+            <div class="card" *ngIf="getTabData(tabId) as tab">
+                <div class="card-header">
+                    <h2>Créer un projet</h2>
+                </div>
+                <div class="card-body">
     
-        <div class="card">
-            <div class="card-header">
-                <button class="btn-back" (click)="goToTasks()">← Retour</button>
-                <h2>Créer un projet</h2>
-            </div>
-            <div class="card-body">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Nom du projet</label>
-                        <input type="text" [(ngModel)]="projectName" placeholder="ex: Migration ACP" class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        <input type="text" [(ngModel)]="projectDescription" placeholder="Description du projet"
-                            class="form-input">
-                    </div>
-    
-                    <!-- ✅ Portfolio déroulant -->
-                    <div class="form-group">
-                        <div class="label-row">
-                            <label>Portfolio</label>
-                            <button class="btn-add-small" (click)="showCreatePortfolio = !showCreatePortfolio">
-                                + Nouveau portfolio
-                            </button>
+                    <!-- Infos contrat -->
+                    <div class="contract-info" *ngIf="tab.contractInfo">
+                        <div class="contract-header">
+                            <span class="contract-label">Contrat signé</span>
+                            <span class="contract-client">{{ tab.contractInfo.clientName }}</span>
                         </div>
-    
-                        <!-- Message si aucun portfolio -->
-                        <div *ngIf="portfolios.length === 0 && !showCreatePortfolio" class="alert alert-warning">
-                            Aucun portfolio disponible. Veuillez en créer un.
+                        <p class="contract-desc" *ngIf="tab.contractInfo.description">
+                            {{ tab.contractInfo.description }}
+                        </p>
+                        <div class="files-list" *ngIf="tab.contractInfo.filesPaths?.length > 0">
+                            <a *ngFor="let f of tab.contractInfo.filesPaths" [href]="getFileUrl(f)" target="_blank"
+                                class="file-link">
+                                📄 {{ f }}
+                            </a>
                         </div>
-    
-                        <!-- Select portfolio -->
-                        <select *ngIf="portfolios.length > 0" [(ngModel)]="selectedPortfolioId" class="form-input">
-                            <option value="">-- Sélectionner un portfolio --</option>
-                            <option *ngFor="let p of portfolios" [value]="p.id">
-                                {{ p.name }} — {{ p.director?.fullName || 'Sans director' }}
-                            </option>
-                        </select>
                     </div>
     
-                    
-                    <ng-container *ngIf="showCreatePortfolio">
-                        <div class="portfolio-inline-form">
+                    <div class="form-grid">
                         <div class="form-group">
-                            <label>Nom du portfolio</label>
-                            <input type="text" [(ngModel)]="portfolioName" placeholder="ex: Portfolio Finance"
+                            <label>Nom du projet</label>
+                            <input type="text" [(ngModel)]="tab.projectName" placeholder="ex: Migration ACP"
                                 class="form-input">
                         </div>
+    
                         <div class="form-group">
-                            <label>Description du portfolio</label>
-                            <input type="text" [(ngModel)]="portfolioDescription" placeholder="Description"
+                            <label>Description</label>
+                            <input type="text" [(ngModel)]="tab.projectDescription" placeholder="Description du projet"
                                 class="form-input">
                         </div>
+    
                         <div class="form-group">
-                            <label>Portfolio Director</label>
-                            <select [(ngModel)]="selectedDirectorId" class="form-input">
-                                <option value="">-- Sélectionner --</option>
-                                <option *ngFor="let d of directors" [value]="d.id">
-                                    {{ d.fullName }}
+                            <label>Date de livraison prévue</label>
+                            <input type="date" [(ngModel)]="tab.targetDate" class="form-input">
+                        </div>
+    
+                        <div class="form-group">
+                            <div class="label-row">
+                                <label>Portfolio</label>
+                                <button class="btn-add-small" (click)="tab.showCreatePortfolio = !tab.showCreatePortfolio">
+                                    + Nouveau portfolio
+                                </button>
+                            </div>
+                            <div *ngIf="portfolios.length === 0 && !tab.showCreatePortfolio" class="alert alert-warning">
+                                Aucun portfolio disponible.
+                            </div>
+                            <select *ngIf="portfolios.length > 0" [(ngModel)]="tab.selectedPortfolioId" class="form-input">
+                                <option value="">-- Sélectionner un portfolio --</option>
+                                <option *ngFor="let p of portfolios" [value]="p.id">
+                                    {{ p.name }} — {{ p.director?.fullName || 'Sans director' }}
                                 </option>
                             </select>
                         </div>
-                        <button class="btn-secondary" (click)="createPortfolio()" [disabled]="loading">
-                            {{ loading ? 'Création...' : 'Créer le portfolio' }}
-                        </button>
+    
+                        <div class="portfolio-inline-form" *ngIf="tab.showCreatePortfolio">
+                            <div class="form-group">
+                                <label>Nom du portfolio</label>
+                                <input type="text" [(ngModel)]="tab.portfolioName" placeholder="ex: Portfolio Finance"
+                                    class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" [(ngModel)]="tab.portfolioDescription" placeholder="Description"
+                                    class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Portfolio Director</label>
+                                <select [(ngModel)]="tab.selectedDirectorId" class="form-input">
+                                    <option value="">-- Sélectionner --</option>
+                                    <option *ngFor="let d of directors" [value]="d.id">
+                                        {{ d.fullName }}
+                                    </option>
+                                </select>
+                            </div>
+                            <button class="btn-secondary" (click)="createPortfolio(tabId)" [disabled]="loading">
+                                Créer le portfolio
+                            </button>
                         </div>
-                    </ng-container>
+                    </div>
+    
+                    <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+                    <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+    
+                    <div class="bottom-actions">
+                        <button class="btn-danger" (click)="endTask(tabId)" *ngIf="successMessage">
+                            Terminer la tâche
+                        </button>
+                        <button class="btn-primary" (click)="createProject(tabId)"
+                            [disabled]="loading || !tab.selectedPortfolioId">
+                            {{ loading ? 'Création...' : 'Créer le projet' }}
+                        </button>
+                    </div>
     
                 </div>
-    
-                <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
-                <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
-    
-                <button class="btn-primary" (click)="createProject()" [disabled]="loading || !selectedPortfolioId">
-                    {{ loading ? 'Création...' : 'Créer le projet' }}
-                </button>
             </div>
-        </div>
-    
+        </ng-container>
     </ng-container>
 
-    <!-- ============================================================ -->
-    <!-- VUE 3 : Projets                                              -->
-    <!-- ============================================================ -->
-    <ng-container *ngIf="activeView === 'projects'">
+    <!-- VUE : Modifier un projet — un par onglet -->
+    <ng-container *ngFor="let tabId of getEditTabIds()">
+        <ng-container *ngIf="activeTabId === tabId">
+            <div class="card" *ngIf="getEditTabData(tabId) as tab">
+                <div class="card-header">
+                    <h2>Modifier le projet</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nom du projet</label>
+                            <input type="text" [(ngModel)]="tab.name" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <input type="text" [(ngModel)]="tab.description" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Date de livraison prévue</label>
+                            <input type="date" [(ngModel)]="tab.targetDate" class="form-input">
+                        </div>
+                    </div>
 
-        <!-- Liste des projets -->
+                    <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+                    <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+
+                    <div class="bottom-actions">
+                        <button class="btn-danger" (click)="endEditTask(tabId)" *ngIf="successMessage">
+                            Fermer
+                        </button>
+                        <button class="btn-primary" (click)="updateProject(tabId)" [disabled]="loading">
+                            {{ loading ? 'Modification...' : 'Modifier' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+    </ng-container>
+
+    <!-- VUE : Projets -->
+    <ng-container *ngIf="showProjectsView">
         <ng-container *ngIf="!selectedProjectDetail">
             <div class="card">
                 <div class="card-header">
                     <h2>Projets ({{ projects.length }})</h2>
                 </div>
                 <div class="projects-list" *ngIf="projects.length > 0">
-                    <div class="project-item clickable-row" *ngFor="let project of projects"
-                        (click)="selectProject(project)">
-                        <div class="project-info">
+                    <div class="project-item clickable-row" *ngFor="let project of projects">
+                        <div class="project-info" (click)="selectProject(project)">
                             <span class="project-name">{{ project.name }}</span>
                             <span class="project-desc">{{ project.description }}</span>
+                            <span class="project-date text-secondary" *ngIf="project.targetDate">
+                                📅 Livraison : {{ project.targetDate | date:'dd/MM/yyyy' }}
+                            </span>
                         </div>
-                        <div class="project-director">
-                            <span class="label">Director</span>
-                            <span class="value">{{ getDirectorName(project.portfolioId) }}</span>
-                        </div>
-                        <span class="project-date">{{ project.createdAt | date:'dd/MM/yyyy' }}</span>
-                        <span class="chevron">›</span>
+                        <button class="btn-small" (click)="openEditTab(project)">Modifier</button>
+                        <span class="chevron" (click)="selectProject(project)">›</span>
                     </div>
                 </div>
                 <div class="empty" *ngIf="projects.length === 0">Aucun projet.</div>
             </div>
         </ng-container>
 
-        <!-- Détail d'un projet -->
         <ng-container *ngIf="selectedProjectDetail">
-
             <div class="card">
                 <div class="card-header">
                     <button class="btn-back" (click)="backToProjects()">← Projets</button>
@@ -185,35 +244,6 @@
                 </div>
             </div>
 
-            <!-- Équipes + membres -->
-            <div class="card" *ngIf="projectTeams.length > 0">
-                <div class="card-header">
-                    <h2>Équipes</h2>
-                </div>
-                <div class="teams-list">
-                    <div class="team-block" *ngFor="let team of projectTeams">
-                        <div class="team-header">
-                            <span class="team-name">{{ team.name }}</span>
-                            <span class="chef-badge" *ngIf="team.chefEquipe">
-                                Chef : {{ team.chefEquipe.fullName || team.chefEquipe.email }}
-                            </span>
-                        </div>
-                        <div class="members-list" *ngIf="team.members?.length > 0">
-                            <span class="member-badge" *ngFor="let m of team.members">
-                                {{ m.fullName || m.email }}
-                            </span>
-                        </div>
-                        <div class="empty" *ngIf="!team.members || team.members.length === 0">
-                            Aucun membre
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card" *ngIf="projectTeams.length === 0">
-                <div class="empty">Aucune équipe pour ce projet.</div>
-            </div>
-
-            <!-- Tâches du projet -->
             <div class="card">
                 <div class="card-header">
                     <h2>Tâches</h2>
@@ -224,7 +254,6 @@
                             <th>Titre</th>
                             <th>Outil</th>
                             <th>Statut</th>
-                            <th>Assigné à</th>
                             <th>Date</th>
                         </tr>
                     </thead>
@@ -239,16 +268,13 @@
                                         {{ getStatusLabel(task.status) }}
                                     </span>
                                 </td>
-                                <td class="text-secondary">{{ task.assignedTo || '—' }}</td>
                                 <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
                             </tr>
                         </ng-container>
                     </tbody>
                 </table>
             </div>
-
         </ng-container>
-
     </ng-container>
 
 </div>

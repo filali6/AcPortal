@@ -1,19 +1,183 @@
 <div class="daf-page">
-    <div class="daf-header">
-        <h1>DAF — Signature de contrat</h1>
-       
+
+    <div class="page-header">
+        <h1>DAF — Gestion des contrats</h1>
     </div>
 
-    
-        <div *ngIf="successMessage" class="alert alert-success">
-            {{ successMessage }}
-        </div>
-        <div *ngIf="errorMessage" class="alert alert-error">
-            {{ errorMessage }}
+    <!-- DASHBOARD -->
+    <ng-container *ngIf="activeTabId === 'tasks'">
+
+        <!-- Stats cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number">{{ stats.total }}</span>
+                <span class="stat-label">Contrats signés</span>
+            </div>
+            <div class="stat-card green">
+                <span class="stat-number">{{ stats.projectCreated }}</span>
+                <span class="stat-label">Projets créés</span>
+            </div>
+            <div class="stat-card orange">
+                <span class="stat-number">{{ stats.pending }}</span>
+                <span class="stat-label">En attente</span>
+            </div>
         </div>
 
-        <button class="btn-sign" (click)="signerContrat()" [disabled]="loading">
-            {{ loading ? 'Signature en cours...' : ' Signer le contrat' }}
-        </button>
+        <!-- Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Contrats ({{ contracts.length }})</h2>
+                <button class="btn-primary" (click)="openNewContractTab()">
+                    + Nouveau contrat
+                </button>
+            </div>
+
+            <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+
+            <table class="tasks-table" *ngIf="contracts.length > 0">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Statut</th>
+                        <th>Projet</th>
+                        <th>Fichiers</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let contract of contracts" class="clickable-row">
+                        <td class="task-title">{{ contract.clientName }}</td>
+                        <td>
+                            <span class="status-badge" [style.background]="getStatusColor(contract.status) + '20'"
+                                [style.color]="getStatusColor(contract.status)">
+                                {{ getStatusLabel(contract.status) }}
+                            </span>
+                        </td>
+                        <td class="text-secondary">
+                            {{ contract.projectId ? ' Créé' : ' En attente' }}
+                        </td>
+                        <td class="text-secondary">{{ contract.filesPaths?.length || 0 }} fichier(s)</td>
+                        <td class="text-secondary">{{ contract.createdAt | date:'dd/MM/yyyy' }}</td>
+                        <td>
+                            <button class="btn-small" (click)="openContractTab(contract)">Voir</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="empty" *ngIf="contracts.length === 0">
+                Aucun contrat signé pour l'instant.
+            </div>
+        </div>
+
+    </ng-container>
+
+    <!-- NOUVEAU CONTRAT -->
+    <!-- FORMULAIRE NOUVEAU CONTRAT — inline dans dashboard -->
+    <ng-container *ngIf="activeTabId === 'tasks' && showNewContractForm">
+        <div class="card">
+            <div class="card-header">
+                <h2>Nouveau contrat</h2>
+            </div>
+            <div class="card-body">
     
+                <div class="form-group">
+                    <label>Nom du client</label>
+                    <input type="text" [(ngModel)]="newContract.clientName" placeholder="ex: Axe Finance SA"
+                        class="form-input">
+                </div>
+    
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" [(ngModel)]="newContract.description" placeholder="Description du contrat"
+                        class="form-input">
+                </div>
+    
+                <div class="form-group">
+                    <label>Fichiers (contrat, documents)</label>
+                    <input type="file" multiple (change)="onFilesSelected($event)" class="form-input">
+                    <div class="files-preview" *ngIf="newContract.files.length > 0">
+                        <span class="file-tag" *ngFor="let f of newContract.files">{{ f.name }}</span>
+                    </div>
+                </div>
+    
+                <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+                <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+    
+                <div class="bottom-actions">
+                    <button class="btn-danger" *ngIf="contractCreated" (click)="endNewContract()">
+                        Terminer
+                    </button>
+                    <button class="btn-primary" (click)="createContract()" [disabled]="loading || contractCreated">
+                        {{ loading ? 'Signature...' : 'Signer le contrat' }}
+                    </button>
+                </div>
+    
+            </div>
+        </div>
+    </ng-container>
+
+    <!-- DÉTAIL CONTRAT -->
+    <ng-container *ngFor="let tabId of getOpenTabIds()">
+        <ng-container *ngIf="activeTabId === tabId">
+            <div class="card" *ngIf="getTabData(tabId) as tab">
+                <div class="card-header">
+                    <h2>{{ tab.contract.clientName }}</h2>
+                    <span class="status-badge" [style.background]="getStatusColor(tab.contract.status) + '20'"
+                        [style.color]="getStatusColor(tab.contract.status)">
+                        {{ getStatusLabel(tab.contract.status) }}
+                    </span>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="info-block">
+                        <span class="label">Description</span>
+                        <span class="value">{{ tab.contract.description || '—' }}</span>
+                    </div>
+
+                    <div class="info-block">
+                        <span class="label">Projet associé</span>
+                        <span class="value">{{ tab.contract.projectId ? ' Projet créé' : ' En attente de création'
+                            }}</span>
+                    </div>
+
+                    <div class="info-block">
+                        <span class="label">Date de signature</span>
+                        <span class="value">{{ tab.contract.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+
+                    <!-- Fichiers existants -->
+                    <div class="form-group" *ngIf="tab.contract.filesPaths?.length > 0">
+                        <label>Fichiers attachés</label>
+                        <div class="files-list">
+                            <a *ngFor="let f of tab.contract.filesPaths" [href]="getFileUrl(f)" target="_blank"
+                                class="file-link">
+                                📄 {{ f }}
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Ajouter des fichiers -->
+                    <div class="form-group">
+                        <label>Ajouter des fichiers</label>
+                        <input type="file" multiple (change)="onAddFilesSelected($event, tab.contract.id)"
+                            class="form-input">
+                    </div>
+
+                    <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+
+                    <div class="bottom-actions">
+                        <button class="btn-primary" (click)="addFiles(tab.contract.id)"
+                            [disabled]="!addFilesData[tab.contract.id] || addFilesData[tab.contract.id].length === 0">
+                            Ajouter les fichiers
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </ng-container>
+    </ng-container>
+
 </div>

@@ -352,4 +352,24 @@ tr.done td {
     }
 }
 
- 
+ .bottom-actions {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     margin-top: 1rem;
+
+     .btn-danger {
+         padding: 6px 14px;
+         border: 1px solid #fecaca;
+         border-radius: 6px;
+         background: white;
+         color: #ef4444;
+         font-size: 13px;
+         cursor: pointer;
+         font-family: 'DM Sans', sans-serif;
+
+         &:hover {
+             background: #fee2e2;
+         }
+     }
+ }
