@@ -29,7 +29,7 @@ export class AdminComponent implements OnInit {
   directors: User[] = [];
   tasks: Task[] = [];
 
-  // --- Superadmin ---
+  // --- HeadOfCDS ---
   currentUserId = '';
   myTasks: Task[] = [];
 
@@ -100,7 +100,7 @@ selectedProjectDetail: any = null; // projet cliqué dans la liste
     });
   }
 
-  // Clic sur une tâche superadmin → ouvre le formulaire
+  // Clic sur une tâche HeadOfCDS → ouvre le formulaire
   onMyTaskClick(): void {
     this.activeView = 'create-project';
     this.successMessage = '';

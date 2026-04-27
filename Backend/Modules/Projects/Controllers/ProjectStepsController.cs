@@ -21,7 +21,7 @@ public class ProjectStepsController : ControllerBase
 
  
     [HttpPost]
-    [Authorize(Roles = "ChefEquipe,SuperAdmin,Consultant")]
+    [Authorize(Roles = "BusinessTeamLead,TechnicalTeamLead,HeadOfCDS")]
     // public async Task<IActionResult> CreateSteps([FromBody] CreateStepsRequest request)
     // {
 
@@ -83,16 +83,19 @@ public class ProjectStepsController : ControllerBase
                 Order = stepDto.Order,
                 CanBeParallel = stepDto.CanBeParallel,
                 DependsOnStepId = resolvedDependsOn,
+                StreamId = stepDto.StreamId,
                 CreatedAt = DateTime.UtcNow
             };
             _db.ProjectSteps.Add(step);
             await _db.SaveChangesAsync();
             createdSteps[stepDto.StepName] = step.Id;
         }
+        var streamId = request.Steps.FirstOrDefault()?.StreamId;
         var payload = JsonSerializer.Serialize(new
         {
             eventType = "StepsDéfinis",
-            projectId = request.ProjectId
+            projectId = request.ProjectId,
+            streamId = streamId
         });
 
         _db.OutboxMessages.Add(new OutboxMessage

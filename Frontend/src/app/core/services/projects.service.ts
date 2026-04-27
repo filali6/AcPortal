@@ -3,12 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-// Interface → structure d'un projet
 export interface Project {
   id: string;
   name: string;
   description: string;
   portfolioDirectorId: string;
+  projectManagerId: string;
   createdAt: string;
 }
 
@@ -21,7 +21,7 @@ export class ProjectsService {
 
   constructor(private http: HttpClient) {}
 
-  // GET /api/projects → tous les projets (SuperAdmin)
+  // GET /api/projects → tous les projets (HeadOfCDS)
   getAll(): Observable<Project[]> {
     return this.http.get<Project[]>(`${this.apiUrl}/projects`);
   }
@@ -31,8 +31,17 @@ export class ProjectsService {
     return this.http.get<Project[]>(`${this.apiUrl}/projects/my`);
   }
 
+  // GET /api/projects/managed → projets du ProjectManager connecté
+  getManagedProjects(): Observable<Project[]> {
+    return this.http.get<Project[]>(`${this.apiUrl}/projects/managed`);
+  }
+
   // POST /api/projects → créer un projet
-  create(name: string, description: string, portfolioDirectorId: string): Observable<any> {
+  create(
+    name: string,
+    description: string,
+    portfolioDirectorId: string
+  ): Observable<any> {
     return this.http.post(`${this.apiUrl}/projects`, {
       name,
       description,
@@ -45,5 +54,16 @@ export class ProjectsService {
     return this.http.patch(`${this.apiUrl}/projects/${projectId}/assign`, {
       directorId
     });
+  }
+
+  // PATCH /api/projects/{id}/assign-manager → affecter un ProjectManager
+  assignManager(
+    projectId: string,
+    projectManagerId: string
+  ): Observable<any> {
+    return this.http.patch(
+      `${this.apiUrl}/projects/${projectId}/assign-manager`,
+      { projectManagerId }
+    );
   }
 }

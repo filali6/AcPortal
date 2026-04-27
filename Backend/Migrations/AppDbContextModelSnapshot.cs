@@ -110,6 +110,28 @@ namespace Backend.Migrations
                     b.ToTable("OutboxMessages");
                 });
 
+            modelBuilder.Entity("Backend.Modules.Projects.Models.Portfolio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Portfolios");
+                });
+
             modelBuilder.Entity("Backend.Modules.Projects.Models.Project", b =>
                 {
                     b.Property<Guid>("Id")
@@ -128,6 +150,12 @@ namespace Backend.Migrations
                         .HasColumnType("text");
 
                     b.Property<Guid>("PortfolioDirectorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PortfolioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ProjectManagerId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -160,6 +188,9 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("StreamId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ToolName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -167,6 +198,53 @@ namespace Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ProjectSteps");
+                });
+
+            modelBuilder.Entity("Backend.Modules.Projects.Models.Stream", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BusinessTeamLeadId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TechnicalTeamLeadId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Streams");
+                });
+
+            modelBuilder.Entity("Backend.Modules.Projects.Models.StreamMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConsultantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("StreamId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("StreamMembers");
                 });
 
             modelBuilder.Entity("Backend.Modules.Projects.Models.Team", b =>
@@ -238,7 +316,7 @@ namespace Backend.Migrations
                     b.Property<Guid?>("ProjectId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("SourceEventId")
+                    b.Property<Guid?>("SourceEventId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Status")
@@ -330,9 +408,7 @@ namespace Backend.Migrations
                 {
                     b.HasOne("Backend.Modules.Events.Models.AcpEvent", null)
                         .WithOne()
-                        .HasForeignKey("Backend.Modules.Tasks.Models.AcpTask", "SourceEventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("Backend.Modules.Tasks.Models.AcpTask", "SourceEventId");
                 });
 #pragma warning restore 612, 618
         }

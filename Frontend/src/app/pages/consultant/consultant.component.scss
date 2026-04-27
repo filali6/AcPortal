@@ -510,3 +510,27 @@
     text-decoration: line-through;
     color: var(--text-secondary);
 }
+.project-switcher {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+
+    .project-select {
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-family: 'DM Sans', sans-serif;
+        background: var(--bg-card);
+        color: var(--text-primary);
+        cursor: pointer;
+        min-width: 200px;
+
+        &:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+    }
+}
+
+ 
