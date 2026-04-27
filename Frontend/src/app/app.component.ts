@@ -6,11 +6,12 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../environments/environment';
 import { filter } from 'rxjs/operators';
 import { NotificationService } from './core/services/notification.service';
+import { TabsBarComponent } from './core/components/tabs-bar/tabs-bar.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [CommonModule, RouterOutlet,TabsBarComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

@@ -1,0 +1,14 @@
+<div class="tabs-bar" *ngIf="tabs.length > 0">
+
+    <!-- Onglet fixe — Mon Espace -->
+    <div class="tab" [class.active]="activeTabId === 'tasks'" (click)="setActive('tasks')">
+        <span class="tab-title">Mon Espace</span>
+    </div>
+
+    <!-- Onglets dynamiques -->
+    <div *ngFor="let tab of tabs" class="tab" [class.active]="activeTabId === tab.id" (click)="setActive(tab.id)">
+        <span class="tab-title">{{ tab.title }}</span>
+        <button class="tab-close" (click)="close(tab.id, $event)">✕</button>
+    </div>
+
+</div>

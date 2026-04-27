@@ -5,7 +5,7 @@ using Backend.Modules.Tasks.Models;
 using Backend.Modules.Tools.Models;
 using Backend.Modules.Projects.Models;
 using Microsoft.EntityFrameworkCore;
-
+using Backend.Modules.Contracts.Models;
 namespace Backend.Data;
 
 public class AppDbContext : DbContext
@@ -27,6 +27,7 @@ public class AppDbContext : DbContext
     public DbSet<ToolRole> ToolRoles => Set<ToolRole>();
     public DbSet<ConsultantToolRole> ConsultantToolRoles => Set<ConsultantToolRole>();
     public DbSet<UserPlugin> UserPlugins => Set<UserPlugin>();
+    public DbSet<Contract> Contracts => Set<Contract>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -136,5 +137,21 @@ public class AppDbContext : DbContext
         // UserPlugin → User
         modelBuilder.Entity<UserPlugin>()
             .HasIndex(up => new { up.UserId, up.PluginId }).IsUnique();
+
+        // Contract → User (DAF)
+        modelBuilder.Entity<Contract>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(c => c.DafUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Files stockés comme JSON
+        modelBuilder.Entity<Contract>()
+            .Property(c => c.FilesPaths)
+            .HasConversion(
+                v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>()
+            );
+
     }
 }

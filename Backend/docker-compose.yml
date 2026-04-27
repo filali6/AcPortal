@@ -48,17 +48,18 @@ services:
       - keycloak-data:/opt/keycloak/data
       - ./acp-realm.json:/opt/keycloak/data/import/acp-realm.json
 
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
+   
 
   dapr-zipkin:
     image: openzipkin/zipkin
     container_name: dapr-zipkin
     ports:
       - "9411:9411"
+  
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
 
   dapr-placement:
     image: daprio/dapr:1.13.0
@@ -67,11 +68,7 @@ services:
     ports:
       - "50006:50006"
 
-  dapr-dashboard:
-    image: daprio/dashboard:0.14.0
-    container_name: dapr-dashboard
-    ports:
-      - "8888:8080"
+  
  
   plugins-db:
     image: postgres:16-alpine
@@ -105,21 +102,10 @@ services:
     volumes:
       - gitea-data:/data
   
-  budibase:
-    image: budibase/budibase:latest
-    container_name: budibase
-    ports:
-      - "3002:80"
-    volumes:
-      - budibase-data:/data
-
-   
-   
-
 volumes:
   kafka-data:
   keycloak-data:
   plugins-db-data:
   gitea-data:
-  budibase-data:
+  
   
