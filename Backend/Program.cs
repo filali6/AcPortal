@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Backend.Modules.Tasks.Services;
 using Microsoft.IdentityModel.Tokens;
+using Backend.Modules.Events.Handlers;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,11 +20,20 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 
 builder.Services.AddHostedService<KafkaConsumerService>();
+
+
 //builder.Services.AddSingleton<KafkaProducerService>();
 
 builder.Services.AddHostedService<OutboxPublisherService>();
  
 builder.Services.AddScoped<EventProcessorService>();
+builder.Services.AddSingleton<WorkflowRulesService>();
+
+builder.Services.AddScoped<IActionHandler, CreateTaskHandler>();
+builder.Services.AddScoped<IActionHandler, CreateTasksForLeadsHandler>();
+builder.Services.AddScoped<IActionHandler, CreateTasksFromStepsHandler>();
+builder.Services.AddScoped<IActionHandler, UnblockDependentStepsHandler>();
+
 builder.Services.AddScoped<TasksService>();
 builder.Services.AddScoped<EventsService>();
 builder.Services.AddScoped<AuthService>();
@@ -104,10 +114,13 @@ using (var scope = app.Services.CreateScope())
 
 
 
+
 app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<Backend.Hubs.NotificationHub>("/hubs/notifications");
+
+var workflowRulesService = app.Services.GetRequiredService<WorkflowRulesService>();
 
 app.Run();

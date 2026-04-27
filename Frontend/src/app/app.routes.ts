@@ -17,7 +17,7 @@ export const routes: Routes = [
         .then(m => m.LoginComponent)
   },
 
-  // SuperAdmin
+  // HeadOfCDS
   {
     path: 'admin',
     canActivate: [authGuard],
@@ -83,6 +83,20 @@ export const routes: Routes = [
     loadComponent:()=>import('./pages/chef-equipe/chef-equipe.component').then(m=>m.ChefEquipeComponent)
 
   },
+  {
+    path: 'project-manager',
+    canActivate: [authGuard],
+    loadComponent: () =>
+        import('./pages/project-manager/project-manager.component')
+            .then(m => m.ProjectManagerComponent)
+},
+{
+    path: 'team-lead',
+    canActivate: [authGuard],
+    loadComponent: () =>
+        import('./pages/team-lead/team-lead.component')
+            .then(m => m.TeamLeadComponent)
+},
 
   // Route inconnue
   {

@@ -11,4 +11,9 @@ public class AcpEventDto
     public Guid? TaskId { get; set; }
     public Guid? StepId { get; set; }
     public Guid? ProjectId { get; set; }
+
+    public Guid? ProjectManagerId { get; set; }
+    public Guid? BusinessTeamLeadId { get; set; }
+    public Guid? TechnicalTeamLeadId { get; set; }
+    public Guid? StreamId { get; set; }
 }

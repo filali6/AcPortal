@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-// Interface → structure d'un user
 export interface User {
   id: string;
   fullName: string;
   email: string;
   role: string;
+  projectCount?: number;
+  streamCount?: number;
 }
 
 @Injectable({
@@ -25,12 +26,23 @@ export class UsersService {
     return this.http.get<User[]>(`${this.apiUrl}/auth/users`);
   }
 
-  // Filtre les Directors depuis la liste
+  // GET /api/auth/users/project-managers → PM avec projectCount
+  getProjectManagers(): Observable<User[]> {
+    return this.http.get<User[]>(
+      `${this.apiUrl}/auth/users/project-managers`
+    );
+  }
+
+  // GET /api/auth/users/leads → leads avec streamCount
+  getLeads(): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}/auth/users/leads`);
+  }
+
+  // helpers locaux
   getDirectors(users: User[]): User[] {
     return users.filter(u => u.role === 'PortfolioDirector');
   }
 
-  // Filtre les Consultants depuis la liste
   getConsultants(users: User[]): User[] {
     return users.filter(u => u.role === 'Consultant');
   }
