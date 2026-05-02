@@ -28,4 +28,11 @@ export class ContractsService {
   getFileUrl(fileName: string): string {
     return `${this.api}/contracts/files/${fileName}`;
   }
+  update(contractId: string, formData: FormData): Observable<any> {
+  return this.http.put(`${this.api}/contracts/${contractId}`, formData);
+}
+
+deleteFile(contractId: string, fileName: string): Observable<any> {
+  return this.http.delete(`${this.api}/contracts/${contractId}/files/${encodeURIComponent(fileName)}`);
+}
 }

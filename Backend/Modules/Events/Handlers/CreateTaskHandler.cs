@@ -55,7 +55,8 @@ public class CreateTaskHandler : IActionHandler
                 rule.TaskDescription!,
                 userId,
                 projectId,
-                eventDto.StreamId
+                eventDto.StreamId,
+                eventDto.ContractId
                  );
         }
     }
@@ -115,7 +116,8 @@ public class CreateTaskHandler : IActionHandler
             Status = AcpTaskStatus.Pending,
             CreatedAt = DateTime.UtcNow,
             ProjectId = projectId,
-            StreamId = streamId
+            StreamId = streamId,
+            ContractId=contractId
         };
 
         _db.AcpTasks.Add(task);
