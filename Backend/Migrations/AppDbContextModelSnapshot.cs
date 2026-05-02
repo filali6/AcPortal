@@ -301,6 +301,9 @@ namespace Backend.Migrations
                     b.Property<Guid>("StreamId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("TeamType")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ConsultantId");
@@ -319,6 +322,9 @@ namespace Backend.Migrations
 
                     b.Property<string>("AssignedTo")
                         .HasColumnType("text");
+
+                    b.Property<Guid?>("ContractId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");

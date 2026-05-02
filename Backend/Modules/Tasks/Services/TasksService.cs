@@ -32,6 +32,7 @@ public class TasksService
                 t.AssignedTo,
                 t.CreatedAt,
                 t.ProjectId,
+                t.ContractId,
                 t.StepId,
                 StreamId = t.StreamId ?? _db.ProjectSteps
                     .Where(s => s.Id == t.StepId)
@@ -92,6 +93,7 @@ public class TasksService
                 t.CreatedAt,
                 t.ProjectId,
                 t.StepId,
+                t.ContractId,
                 StreamId = t.StreamId ?? _db.ProjectSteps
                     .Where(s => s.Id == t.StepId)
                     .Select(s => s.StreamId)

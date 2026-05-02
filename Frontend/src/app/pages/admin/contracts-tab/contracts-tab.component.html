@@ -1,0 +1,88 @@
+<div class="tab-content">
+
+    <!-- Liste contrats -->
+    <ng-container *ngIf="!selectedContract">
+        <div class="card">
+            <div class="card-header">
+                <h2>Contracts ({{ contracts.length }})</h2>
+            </div>
+            <div *ngIf="loading" class="empty">Loading...</div>
+            <div class="table-wrapper" *ngIf="!loading">
+                <table class="contracts-table">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Status</th>
+                            <th>Files</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let c of contracts" (click)="selectContract(c)" class="clickable">
+                            <td class="item-name">{{ c.clientName }}</td>
+                            <td>
+                                <span class="status-badge" [style.background]="utils.getContractStatusColor(c.status) + '20'"
+                                    [style.color]="utils.getContractStatusColor(c.status)">
+                                    {{ utils.getContractStatusLabel(c.status) }}
+                                </span>
+                            </td>
+                            <td class="text-secondary">{{ c.filesPaths?.length || 0 }} file(s)</td>
+                            <td class="text-secondary">{{ c.createdAt | date:'dd/MM/yyyy' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty" *ngIf="!loading && contracts.length === 0">No contracts found.</div>
+        </div>
+    </ng-container>
+
+    <!-- Détail contrat -->
+    <ng-container *ngIf="selectedContract">
+        <div class="card">
+            <div class="card-header">
+                <button class="btn-back" (click)="selectedContract = null">← Contracts</button>
+                <h2>{{ selectedContract.clientName }}</h2>
+                <span class="status-badge" [style.background]="utils.getContractStatusColor(selectedContract.status) + '20'"
+                    [style.color]="utils.getContractStatusColor(selectedContract.status)">
+                    {{ utils.getContractStatusLabel(selectedContract.status)}}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="info-grid">
+                    <div class="info-block">
+                        <span class="info-label">Client</span>
+                        <span class="info-value">{{ selectedContract.clientName }}</span>
+                    </div>
+                    <div class="info-block">
+                        <span class="info-label">Description</span>
+                        <span class="info-value">{{ selectedContract.description || '—' }}</span>
+                    </div>
+                    <div class="info-block">
+                        <span class="info-label">Date</span>
+                        <span class="info-value">{{ selectedContract.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+                    <div class="info-block">
+                        <span class="info-label">Project</span>
+                        <span class="info-value">
+                            <span class="project-badge" *ngIf="selectedContract.projectId">Created</span>
+                            <span class="project-pending" *ngIf="!selectedContract.projectId">Pending</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Files -->
+                <div class="files-section" *ngIf="selectedContract.filesPaths?.length > 0">
+                    <span class="info-label">Attached Files</span>
+                    <div class="files-list">
+                        <a *ngFor="let f of selectedContract.filesPaths" [href]="getFileUrl(f)" target="_blank"
+                            class="file-link">
+                            📄 {{ getFileName(f) }}
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </ng-container>
+
+</div>

@@ -1,10 +1,13 @@
-.admin-page {
-    max-width: 960px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+// .admin-page {
+//     max-width: 960px;
+//     display: flex;
+//     flex-direction: column;
+//     gap: 24px;
+// }
+.table-wrapper {
+    max-height: 200px;
+    overflow-y: auto;
 }
-
 .page-header h1 {
     font-size: 24px;
     font-weight: 600;
@@ -18,12 +21,23 @@
     overflow: hidden;
     box-shadow: var(--shadow-sm);
 }
+.card:first-child {
+    flex: 1;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
 
+    .table-wrapper {
+        flex: 1;
+        max-height: 300px; // supprimer la hauteur fixe
+        overflow-y: auto;
+    }
+}
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 20px;
+    padding: 10px 16px;
     border-bottom: 1px solid var(--border);
 
     h2 {
@@ -379,10 +393,10 @@
     }
 }
 
-/* Done */
-tr.done td {
-    opacity: 0.5;
-}
+
+ 
+
+ 
 
 .done-text {
     text-decoration: line-through;
@@ -480,106 +494,86 @@ tr.selected td {
         }
     }
 }
-// Stats cards
-.stats-grid {
+.charts-grid {
+     
+    bottom: 0;
+    background: var(--bg-main);
+    padding: 10px 0;
+    z-index: 10;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+
+    @media (max-width: 1024px) {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
-.stat-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 24px;
+.chart-card {
+    .chart-body {
+        height: 160px;
+        position: relative;
+        padding: 8px 12px;
+    }
+}
+
+.quick-stats {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    box-shadow: var(--shadow-sm);
+    gap: 8px;
+    padding: 2px 0;
+}
 
-    &.green {
-        border-left: 3px solid #ffffff;
+.qs-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+
+    &:last-child {
+        border-bottom: none;
     }
 
-    &.orange {
-        border-left: 3px solid #ffffff;
-    }
-
-    .stat-number {
-        font-size: 32px;
-        font-weight: 700;
-        color: var(--text-primary);
-    }
-
-    .stat-label {
-        font-size: 13px;
-        color: var(--text-secondary);
+    &.qs-alert .qs-value {
+        color: #ef4444;
     }
 }
 
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+.qs-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.qs-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.qs-name {
+    font-size: 14px;
+}
+
+.qs-sub {
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+// Responsive page
+.admin-page {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 ;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
     gap: 16px;
-    margin-bottom: 16px;
-    align-items: end;
-}
-
-// Contract info block
-.contract-info {
-    background: #f0fdf4;
-    border: 1px solid #a7f3d0;
-    border-radius: 8px;
-    padding: 14px 16px;
-    margin-bottom: 16px;
-    grid-column: 1 / -1;
-
-    .contract-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 6px;
-
-        .contract-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #065f46;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .contract-client {
-            font-size: 14px;
-            font-weight: 600;
-            color: #065f46;
-        }
-    }
-
-    .contract-desc {
-        font-size: 13px;
-        color: #047857;
-        margin: 0 0 8px 0;
-    }
-
-    .files-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .file-link {
-        font-size: 12px;
-        color: #065f46;
-        text-decoration: none;
-        background: white;
-        padding: 3px 10px;
-        border-radius: 20px;
-        border: 1px solid #a7f3d0;
-
-        &:hover {
-            text-decoration: underline;
-        }
-    }
+    min-height: 100%;
+    //height: calc(100vh - 48px);
 }
 
 // Btn small
@@ -602,4 +596,77 @@ tr.selected td {
     font-size: 12px;
     color: var(--text-secondary);
     margin-top: 2px;
+}
+.search-bar {
+    display: flex;
+    gap: 10px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: #fafafa;
+
+    .search-input {
+        flex: 1;
+    }
+
+    .filter-select {
+        width: 160px;
+    }
+}
+.access-icon {
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+.access-arrow {
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+.access-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.access-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover {
+        border-color: var(--accent);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .access-icon {
+        font-size: 20px;
+    }
+
+    .access-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex: 1;
+    }
+
+    .access-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .access-sub {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .access-arrow {
+        font-size: 18px;
+        color: var(--text-secondary);
+    }
 }

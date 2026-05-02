@@ -1,0 +1,20 @@
+<div class="modal-overlay" *ngIf="!minimized" (click)="close()"></div>
+
+<div class="floating-modal" [class.minimized]="minimized" [style.width]="!minimized ? width : '220px'"
+    [style.transform]="!minimized ? 'translate(calc(-50% + ' + modalX + 'px), calc(-50% + ' + modalY + 'px))' : 'none'">
+
+    <div class="modal-header" (mousedown)="!minimized && onDragStart($event)">
+        <span class="modal-title">{{ title }}</span>
+        <div class="modal-actions">
+            <button class="modal-btn" (click)="minimized = !minimized">
+                {{ minimized ? '▲' : '▼' }}
+            </button>
+            <button class="modal-btn" (click)="close()">✕</button>
+        </div>
+    </div>
+
+    <div class="modal-content" *ngIf="!minimized">
+        <ng-content></ng-content>
+    </div>
+
+</div>

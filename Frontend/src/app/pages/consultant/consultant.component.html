@@ -1,172 +1,177 @@
 <div class="consultant-page">
 
-    <div class="page-header">
-        <h1>Mon espace</h1>
-    </div>
-    <!-- Project Switcher -->
-    <div class="project-switcher">
-  <select class="project-select" [(ngModel)]="selectedProjectId" (ngModelChange)="onProjectChange()">
-    <option value="">Tous les projets</option>
-    <option *ngFor="let p of projects" [value]="p.id">{{ p.name }}</option>
-  </select>
+    <!-- TASK INBOX -->
+    <ng-container *ngIf="activeTabId === 'tasks'">
 
-  
-</div>
-
-    <!-- Tableau des rôles -->
-    <!-- <div class="card">
-        <div class="card-header">
-            <h2>Mes rôles par outil</h2>
-        </div>
-        <table class="roles-table">
-            <thead>
-                <tr>
-                    <th>Outil</th>
-                    <th>Rôles assignés</th>
-                    <th>Accès</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let tool of toolRoles">
-                    <td>
-                        <span class="tool-name">{{ tool.toolName }}</span>
-                    </td>
-                    <td>
-                        <div class="roles-list" *ngIf="tool.roles.length > 0">
-                            <span class="role-badge" *ngFor="let role of tool.roles">
-                                {{ role }}
-                            </span>
-                        </div>
-                        <span class="no-role" *ngIf="tool.roles.length === 0">—</span>
-                    </td>
-                    <td>
-                        <span class="access-badge yes" *ngIf="tool.roles.length > 0">
-                            ✓ Accès
-                        </span>
-                        <span class="access-badge no" *ngIf="tool.roles.length === 0">
-                            ✗ Aucun accès
-                        </span>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div> -->
-
-    <!-- Barre d'actions → visible si sélection -->
-    <div class="action-bar" *ngIf="hasSelection">
-        <span class="selection-count">{{ selectedIds.size }} sélectionnée(s)</span>
-        <div class="action-btns">
-            <button class="action-btn">→ Reassign</button>
-            <button class="action-btn danger">🗑 Delete</button>
-            <button class="action-btn success" (click)="markDone()">✓ Mark Done</button>
-        </div>
-    </div>
-
-    <!-- Toolbar -->
-    <!-- <div class="toolbar">
-        <div class="search-box">
-            <span class="search-icon"></span>
-            <input type="text" [(ngModel)]="searchQuery" placeholder="Rechercher une tâche..." class="search-input">
-        </div>
-        <div class="filters">
-            <button class="filter-btn" *ngFor="let f of filters" [class.active]="activeFilter === f"
-                (click)="activeFilter = f">
-                {{ f }}
-            </button>
-        </div>
-        <div class="view-toggle">
-            <button class="view-btn" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">≡</button>
-            <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'">⊞</button>
-        </div>
-    </div> -->
-    <div class="toolbar">
-        <div class="search-box">
-            
-            <input type="text" [(ngModel)]="searchQuery" placeholder="Rechercher une tâche..." class="search-input">
-        </div>
-    
-        <div class="filters">
-            <button class="filter-btn" *ngFor="let f of filters" [class.active]="activeFilter === f"
-                (click)="activeFilter = f">
-                {{ f }}
-            </button>
-    
-            <select *ngIf="activeFilter === 'Stat'" class="filter-select" [(ngModel)]="filterStat">
-                <option value="">Tous</option>
-                <option value="0">En attente</option>
-                <option value="1">Bloquée</option>
-                <option value="2">Terminée</option>
-            </select>
-    
-            <select *ngIf="activeFilter === 'Tool'" class="filter-select" [(ngModel)]="filterTool">
-                <option value="">Tous</option>
-                <option *ngFor="let t of availableTools" [value]="t">{{ t }}</option>
-            </select>
-    
-            <select *ngIf="activeFilter === 'Date'" class="filter-select" [(ngModel)]="filterDate">
-                <option value="desc">Plus récent</option>
-                <option value="asc">Plus ancien</option>
-            </select>
-        </div>
-    
-         
-    </div>
-    <!-- Tasks -->
-    <div class="tasks-card">
-        <div *ngIf="loading" class="empty">Chargement...</div>
-        <div *ngIf="!loading && tasks.length === 0" class="empty">Aucune tâche assignée.</div>
-    
-        <div *ngFor="let projectId of filteredProjectIds">
-    
-            <div class="group-label">
-                {{ getProjectName(projectId) }}
-                 
+        <!-- Search + Filtres -->
+        <div class="card">
+            <div class="card-header">
+                <h2>My Tasks ({{ tasks.length }})</h2>
             </div>
-    
-            <table class="tasks-table">
-                <thead>
-                    <tr>
-                        <th style="width:40px"></th>
-                        <th>Titre</th>
-                        <th>Outil</th>
-                        <th>Statut</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let task of getTasksForProject(projectId)" [class.selected]="isSelected(task.id)"
-                        [class.blocked]="isBlocked(task)" [class.done]="task.status === 2"
-                        (click)="isBlocked(task) ? null : openTool(task)">
-    
-                        <td (click)="!isBlocked(task) && toggleSelect(task.id); $event.stopPropagation()">
-                            <div class="checkbox" [class.checked]="isSelected(task.id) || task.status === 2">
-                                <span *ngIf="isSelected(task.id) || task.status === 2">✓</span>
-                            </div>
-                        </td>
-    
-                        <td>
-                            <span class="task-title" [class.done-text]="task.status === 2">
-                                {{ task.title }}
-                            </span>
-                        </td>
-    
-                        <td>
-                            <span class="tool-badge">{{ task.toolName }}</span>
-                        </td>
-    
-                        <td>
-                            <span class="status-badge" [style.background]="getStatusColor(task.status) + '20'"
-                                [style.color]="getStatusColor(task.status)">
-                                {{ getStatusLabel(task.status) }}
-                            </span>
-                        </td>
-    
-                        <td class="text-secondary">
-                            {{ task.createdAt | date:'dd/MM/yyyy' }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="search-bar">
+                <input type="text" [(ngModel)]="searchQuery" placeholder="Search tasks..."
+                    class="form-input search-input">
+                <select [(ngModel)]="filterStatus" class="form-input filter-select">
+                    <option value="all">All statuses</option>
+                    <option value="0">Pending</option>
+                    <option value="1">Blocked</option>
+                    <option value="2">Done</option>
+                </select>
+                <select [(ngModel)]="selectedProjectId" class="form-input filter-select"
+                    (ngModelChange)="onProjectChange()">
+                    <option value="">All projects</option>
+                    <option *ngFor="let p of projects" [value]="p.id">{{ p.name }}</option>
+                </select>
+                <select [(ngModel)]="filterStreamId" class="form-input filter-select">
+                    <option value="">All streams</option>
+                    <option *ngFor="let s of filteredStreams" [value]="s.id">{{ s.name }}</option>
+                </select>
+            </div>
+
+            <div class="action-bar" *ngIf="hasSelection">
+                <span class="selection-count">{{ selectedIds.size }} selected</span>
+                <button class="action-btn success" (click)="markDone()">✓ Mark Done</button>
+            </div>
+
+            <div *ngIf="loading" class="empty">Loading...</div>
+            <div *ngIf="!loading && tasks.length === 0" class="empty">No tasks assigned.</div>
+
+            <div *ngFor="let projectId of filteredProjectIds">
+                <div class="group-label">{{ getProjectName(projectId) }}</div>
+                <div class="table-wrapper">
+                    <table class="tasks-table">
+                        <thead>
+                            <tr>
+                                <th style="width:40px"></th>
+                                <th>Title</th>
+                                <th>Tool</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let task of getTasksForProject(projectId)" [class.task-done]="task.status === 2"
+                                [class.task-blocked]="task.status === 1" [class.selected]="isSelected(task.id)"
+                                (click)="openTool(task)">
+                                <td (click)="toggleSelect(task.id); $event.stopPropagation()">
+                                    <div class="checkbox" [class.checked]="isSelected(task.id)">
+                                        <span *ngIf="isSelected(task.id)">✓</span>
+                                    </div>
+                                </td>
+                                <td class="task-title" [class.done-text]="task.status === 2">
+                                    {{ task.title }}
+                                </td>
+                                <td>
+                                    <span class="tool-badge" *ngIf="task.toolName">{{ task.toolName }}</span>
+                                    <span class="text-secondary" *ngIf="!task.toolName">—</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge"
+                                        [style.background]="utils.getTaskStatusColor(task.status) + '20'"
+                                        [style.color]="utils.getTaskStatusColor(task.status)">
+                                        {{ utils.getTaskStatusLabel(task.status) }}
+                                    </span>
+                                </td>
+                                <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy' }}</td>
+                                <td>
+                                    <button class="btn-open-tool" *ngIf="task.status !== 1 && task.toolName"
+                                        (click)="openTool(task); $event.stopPropagation()">
+                                        Open →
+                                    </button>
+                                    <span class="blocked-label" *ngIf="task.status === 1">Blocked</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-    </div>
+
+        <!-- My Streams Card -->
+        <div class="access-card" (click)="openStreamsTab()">
+            <lucide-icon [img]="Layers" size="18" class="access-icon"></lucide-icon>
+            <div class="access-info">
+                <span class="access-title">My Streams</span>
+                <span class="access-sub">{{ myStreams.length }} streams assigned</span>
+            </div>
+            <lucide-icon [img]="ChevronRight" size="16" class="access-arrow"></lucide-icon>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>Task Distribution</h2>
+                </div>
+                <div class="card-body chart-body">
+                    <canvas id="consultantDonutChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>Tasks per Month</h2>
+                </div>
+                <div class="card-body chart-body">
+                    <canvas id="consultantBarChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>Statistics</h2>
+                </div>
+                <div class="card-body">
+                    <div class="quick-stats">
+                        <div class="qs-item" [class.qs-alert]="statsBottom.pendingTasks > 0">
+                            <span class="qs-label">Pending Tasks</span>
+                            <span class="qs-value">{{ statsBottom.pendingTasks }}</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">Completion Rate</span>
+                            <span class="qs-value">{{ statsBottom.completionRate }}%</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">Active Streams</span>
+                            <span class="qs-value">{{ statsBottom.activeStreams }}</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">Tools Used</span>
+                            <span class="qs-value">{{ statsBottom.toolsUsed }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </ng-container>
+
+    <!-- MY STREAMS TAB -->
+    <ng-container *ngIf="activeTabId === 'my-streams'">
+        <div class="card">
+            <div class="card-header">
+                <h2>My Streams ({{ myStreams.length }})</h2>
+                <select [(ngModel)]="selectedProjectId" class="form-input filter-select"
+                    (ngModelChange)="onProjectChange()">
+                    <option value="">All projects</option>
+                    <option *ngFor="let p of projects" [value]="p.id">{{ p.name }}</option>
+                </select>
+            </div>
+            <div class="streams-list">
+                <div class="stream-item" *ngFor="let stream of filteredStreams">
+                    <div class="stream-header">
+                        <span class="stream-name">{{ stream.name }}</span>
+                        <span class="project-tag">{{ getProjectName(stream.projectId) }}</span>
+                        <span class="team-tag business" *ngIf="getStreamTeamType(stream) === 'Business'">
+                            Business Team
+                        </span>
+                        <span class="team-tag technical" *ngIf="getStreamTeamType(stream) === 'Technical'">
+                            Technical Team
+                        </span>
+                    </div>
+                </div>
+                <div class="empty" *ngIf="filteredStreams.length === 0">No streams found.</div>
+            </div>
+        </div>
+    </ng-container>
+
 </div>

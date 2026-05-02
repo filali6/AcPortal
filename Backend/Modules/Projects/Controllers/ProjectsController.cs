@@ -9,6 +9,8 @@ using System.Text.Json;
 using Backend.Modules.Events.Services;
 using Backend.Modules.Events.Models;
 using Microsoft.EntityFrameworkCore;
+using Backend.Modules.Contracts.Services;
+using Backend.Modules.Tasks.Models;
 
 
 
@@ -22,13 +24,19 @@ public class ProjectsController : ControllerBase
     private readonly AppDbContext _db;
     private readonly EventPublisher _eventPublisher;
     private readonly StreamingSubscriptionService _streamingService;
+    private readonly ContractsService _contractsService;
+    private readonly ILogger<ProjectsController> _logger;
 
-    public ProjectsController(ProjectsService projectsService, AppDbContext db, EventPublisher eventPublisher, StreamingSubscriptionService streamingService)
+
+    public ProjectsController(ProjectsService projectsService, AppDbContext db, EventPublisher eventPublisher, StreamingSubscriptionService streamingService, ContractsService contractsService, ILogger<ProjectsController> logger)
     {
         _projectsService = projectsService;
         _db=db;
         _eventPublisher=eventPublisher;
         _streamingService = streamingService;
+        _contractsService = contractsService;
+        _logger = logger;
+
     }
 
     
@@ -70,6 +78,11 @@ public class ProjectsController : ControllerBase
             request.Description,
             request.PortfolioId , request.TargetDate   
         );
+        if (request.ContractId.HasValue)
+        {
+            await _contractsService.LinkProjectAsync(request.ContractId.Value, project.Id);
+        }
+        _logger.LogInformation("ContractId reçu: {ContractId}", request.ContractId);
 
         await _streamingService.SubscribeToProjectAsync(request.Name);
         var safeName = request.Name.ToLower().Replace(" ", "-");
@@ -176,6 +189,109 @@ public class ProjectsController : ControllerBase
         return Ok(new { total, inProgress, contracts });
     }
 
+    [HttpGet("{id:guid}/details")]
+    [Authorize(Roles = "HeadOfCDS,PortfolioDirector,ProjectManager")]
+    public async Task<IActionResult> GetDetails(Guid id)
+    {
+        var project = await _db.Projects
+            .Include(p => p.Portfolio)
+                .ThenInclude(pf => pf!.PortfolioDirector)
+            .Include(p => p.ProjectManager)
+            .Include(p => p.Streams)
+                .ThenInclude(s => s.Members)
+                    .ThenInclude(m => m.Consultant)
+            .Include(p => p.Streams)
+                .ThenInclude(s => s.BusinessTeamLead)
+            .Include(p => p.Streams)
+                .ThenInclude(s => s.TechnicalTeamLead)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (project == null) return NotFound();
+
+        var tasks = await _db.AcpTasks
+            .Where(t => t.ProjectId == id)
+            .ToListAsync();
+
+        var steps = await _db.ProjectSteps
+            .Where(s => s.ProjectId == id)
+            .ToListAsync();
+
+        var totalTasks = tasks.Count;
+        var doneTasks = tasks.Count(t => t.Status == AcpTaskStatus.Done);
+        var progress = totalTasks > 0 ? (int)Math.Round((double)doneTasks / totalTasks * 100) : 0;
+
+        return Ok(new
+        {
+            project.Id,
+            project.Name,
+            project.Description,
+            project.CreatedAt,
+            project.TargetDate,
+            portfolio = project.Portfolio == null ? null : new
+            {
+                project.Portfolio.Id,
+                project.Portfolio.Name,
+                director = project.Portfolio.PortfolioDirector == null ? null : new
+                {
+                    project.Portfolio.PortfolioDirector.Id,
+                    project.Portfolio.PortfolioDirector.FullName
+                }
+            },
+            projectManager = project.ProjectManager == null ? null : new
+            {
+                project.ProjectManager.Id,
+                project.ProjectManager.FullName
+            },
+            progress,
+            totalTasks,
+            doneTasks,
+            streams = project.Streams.Select(s => new
+            {
+                s.Id,
+                s.Name,
+                s.CreatedAt,
+                businessTeamLead = s.BusinessTeamLead == null ? null : new
+                {
+                    s.BusinessTeamLead.Id,
+                    s.BusinessTeamLead.FullName
+                },
+                technicalTeamLead = s.TechnicalTeamLead == null ? null : new
+                {
+                    s.TechnicalTeamLead.Id,
+                    s.TechnicalTeamLead.FullName
+                },
+                members = s.Members.Select(m => new
+                {
+                    m.Id,
+                    m.Consultant.FullName,
+                    m.Consultant.Email,
+                    teamType=m.TeamType.ToString()
+                }),
+                streamTasks = tasks.Where(t => t.StreamId == s.Id).Select(t => new
+                {
+                    t.Id,
+                    t.Title,
+                    t.Status,
+                    t.AssignedTo
+                }),
+                streamProgress = tasks.Where(t => t.StreamId == s.Id).Count() > 0
+                    ? (int)Math.Round((double)tasks.Count(t => t.StreamId == s.Id && t.Status == AcpTaskStatus.Done)
+                        / tasks.Count(t => t.StreamId == s.Id) * 100)
+                    : 0
+            }),
+            steps = steps.Select(s => new
+            {
+                s.Id,
+                s.StepName,
+                s.Order,
+                s.DependsOnStepId,
+                s.StreamId
+            })
+        });
+    }
+
+
+
 
 }
 
@@ -187,6 +303,7 @@ public class CreateProjectRequest
     [Required(ErrorMessage = "PortfolioId est obligatoire")]
     public Guid PortfolioId { get; set; }
     public DateTime? TargetDate { get; set; }
+    public Guid? ContractId { get; set; }
 
 }
 

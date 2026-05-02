@@ -1,85 +1,150 @@
 <div class="admin-page">
 
-    <div class="page-header">
-        <h1>HeadOfCDS</h1>
-    </div>
-
-    <!-- STATS CARDS -->
-    <div class="stats-grid" *ngIf="activeTabId === 'tasks' && !showProjectsView">
-        <div class="stat-card">
-            <span class="stat-number">{{ stats.total }}</span>
-            <span class="stat-label">Projets créés</span>
-        </div>
-        <div class="stat-card green">
-            <span class="stat-number">{{ stats.inProgress }}</span>
-            <span class="stat-label">En cours</span>
-        </div>
-        <div class="stat-card orange">
-            <span class="stat-number">{{ stats.contracts }}</span>
-            <span class="stat-label">Contrats reçus</span>
-        </div>
-    </div>
-
-    <!-- VUE : Liste des tâches -->
-    <ng-container *ngIf="activeTabId === 'tasks' && !showProjectsView">
+    <!-- TASK LIST -->
+    <ng-container *ngIf="activeTabId === 'tasks'">
         <div class="card">
             <div class="card-header">
-                <h2>Mes tâches ({{ myTasks.length }})</h2>
+                <h2>My Tasks ({{ myTasks.length }})</h2>
             </div>
-
+            <div class="search-bar">
+                <input type="text" [(ngModel)]="searchQuery" placeholder="Search tasks..."
+                    class="form-input search-input">
+                <select [(ngModel)]="filterStatus" class="form-input filter-select">
+                    <option value="all">All statuses</option>
+                    <option value="0">Pending</option>
+                    <option value="1">Blocked</option>
+                    <option value="2">Done</option>
+                </select>
+                <input type="date" [(ngModel)]="filterDateFrom" class="form-input date-input" title="From">
+                <input type="date" [(ngModel)]="filterDateTo" class="form-input date-input" title="To">
+                <button class="btn-reset" (click)="resetFilters()"
+                    *ngIf="searchQuery || filterStatus !== 'all' || filterDateFrom || filterDateTo">✕</button>
+            </div>
             <div class="action-bar" *ngIf="hasSelection">
-                <span class="selection-count">{{ selectedIds.size }} sélectionnée(s)</span>
+                <span class="selection-count">{{ selectedIds.size }} selected</span>
                 <button class="action-btn success" (click)="markDone()">✓ Mark Done</button>
             </div>
+            <div class="table-wrapper">
+                <table class="tasks-table" *ngIf="myTasks.length > 0">
+                    <thead>
+                        <tr>
+                            <th style="width:40px"></th>
+                            <th>Title</th>
+                            <th>Tool</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let task of filteredTasks" [class.task-done]="task.status === 2"
+                            [class.selected]="isSelected(task.id)" (click)="onMyTaskClick(task)">
+                            <td (click)="toggleSelect(task.id); $event.stopPropagation()">
+                                <div class="checkbox" [class.checked]="isSelected(task.id)">
+                                    <span *ngIf="isSelected(task.id)">✓</span>
+                                </div>
+                            </td>
+                            <td><span class="task-title">{{ task.title }}</span></td>
+                            <td><span class="tool-badge">{{ task.toolName }}</span></td>
+                            <td>
+                                <span class="status-badge" [style.background]="utils.getTaskStatusColor(task.status) + '20'"
+                                    [style.color]="utils.getTaskStatusColor(task.status)">
+                                    {{ utils.getTaskStatusLabel(task.status) }}
+                                </span>
+                            </td>
+                            <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty" *ngIf="myTasks.length === 0">No tasks assigned.</div>
+        </div>
 
-            <table class="tasks-table" *ngIf="myTasks.length > 0">
-                <thead>
-                    <tr>
-                        <th style="width:40px"></th>
-                        <th>Titre</th>
-                        <th>Outil</th>
-                        <th>Statut</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let task of myTasks" [class.selected]="isSelected(task.id)"
-                        [class.done]="task.status === 2" (click)="onMyTaskClick(task)">
-                        <td (click)="toggleSelect(task.id); $event.stopPropagation()">
-                            <div class="checkbox" [class.checked]="isSelected(task.id) || task.status === 2">
-                                <span *ngIf="isSelected(task.id) || task.status === 2">✓</span>
-                            </div>
-                        </td>
-                        <td><span class="task-title" [class.done-text]="task.status === 2">{{ task.title }}</span></td>
-                        <td><span class="tool-badge">{{ task.toolName }}</span></td>
-                        <td>
-                            <span class="status-badge" [style.background]="getStatusColor(task.status) + '20'"
-                                [style.color]="getStatusColor(task.status)">
-                                {{ getStatusLabel(task.status) }}
-                            </span>
-                        </td>
-                        <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy' }}</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="empty" *ngIf="myTasks.length === 0">Aucune tâche assignée.</div>
+        <!-- ACCESS CARDS -->
+        <div class="access-grid">
+            <div class="access-card" (click)="openAccessTab('portfolios')">
+                <lucide-icon [img]="FolderOpen" size="18" class="access-icon"></lucide-icon>
+                <div class="access-info">
+                    <span class="access-title">Portfolios</span>
+                    <span class="access-sub">{{ portfolios.length }} portfolios</span>
+                </div>
+                <lucide-icon [img]="ChevronRight" size="16" class="access-arrow"></lucide-icon>
+            </div>
+            <div class="access-card" (click)="openAccessTab('projects')">
+                <lucide-icon [img]="BarChart2" size="18" class="access-icon"></lucide-icon>
+                <div class="access-info">
+                    <span class="access-title">Projects</span>
+                    <span class="access-sub">{{ projects.length }} projects</span>
+                </div>
+                <lucide-icon [img]="ChevronRight" size="16" class="access-arrow"></lucide-icon>
+            </div>
+            <div class="access-card" (click)="openAccessTab('contracts')">
+                <lucide-icon [img]="FileText" size="18" class="access-icon"></lucide-icon>
+                <div class="access-info">
+                    <span class="access-title">Contracts</span>
+                    <span class="access-sub">{{ stats.contracts }} contracts</span>
+                </div>
+                <lucide-icon [img]="ChevronRight" size="16" class="access-arrow"></lucide-icon>
+            </div>
+        </div>
+
+        <!-- CHARTS -->
+        <div class="charts-grid">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>Task Distribution</h2>
+                </div>
+                <div class="card-body chart-body">
+                    <canvas id="adminDonutChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>Projects per Month</h2>
+                </div>
+                <div class="card-body chart-body">
+                    <canvas id="adminBarChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>Statistics</h2>
+                </div>
+                <div class="card-body">
+                    <div class="quick-stats">
+                        <div class="qs-item" [class.qs-alert]="statsBottom.pendingTasks > 0">
+                            <span class="qs-label">Pending Tasks</span>
+                            <span class="qs-value">{{ statsBottom.pendingTasks }}</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">Completion Rate</span>
+                            <span class="qs-value">{{ statsBottom.completionRate }}%</span>
+                        </div>
+                        <div class="qs-item" [class.qs-alert]="statsBottom.contractsNotTreated > 0">
+                            <span class="qs-label">Untreated Contracts</span>
+                            <span class="qs-value">{{ statsBottom.contractsNotTreated }}</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">Next Delivery</span>
+                            <span class="qs-value qs-name">{{ statsBottom.nextDelivery.name }}</span>
+                            <span class="qs-sub">{{ statsBottom.nextDelivery.date }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </ng-container>
 
-   
-    <!-- VUE : Créer un projet — un par onglet -->
+    <!-- CREATE PROJECT TAB -->
     <ng-container *ngFor="let tabId of getOpenTabIds()">
         <ng-container *ngIf="activeTabId === tabId">
             <div class="card" *ngIf="getTabData(tabId) as tab">
                 <div class="card-header">
-                    <h2>Créer un projet</h2>
+                    <h2>Create Project</h2>
                 </div>
                 <div class="card-body">
-    
-                    <!-- Infos contrat -->
                     <div class="contract-info" *ngIf="tab.contractInfo">
                         <div class="contract-header">
-                            <span class="contract-label">Contrat signé</span>
+                            <span class="contract-label">Signed Contract</span>
                             <span class="contract-client">{{ tab.contractInfo.clientName }}</span>
                         </div>
                         <p class="contract-desc" *ngIf="tab.contractInfo.description">
@@ -92,47 +157,45 @@
                             </a>
                         </div>
                     </div>
-    
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>Nom du projet</label>
-                            <input type="text" [(ngModel)]="tab.projectName" placeholder="ex: Migration ACP"
+                            <label>Project Name</label>
+                            <input type="text" [(ngModel)]="tab.projectName" placeholder="e.g. ACP Migration"
                                 class="form-input">
                         </div>
-    
                         <div class="form-group">
                             <label>Description</label>
-                            <input type="text" [(ngModel)]="tab.projectDescription" placeholder="Description du projet"
+                            <input type="text" [(ngModel)]="tab.projectDescription" placeholder="Project description"
                                 class="form-input">
                         </div>
-    
                         <div class="form-group">
-                            <label>Date de livraison prévue</label>
+                            <label>Target Delivery Date</label>
                             <input type="date" [(ngModel)]="tab.targetDate" class="form-input">
                         </div>
-    
                         <div class="form-group">
                             <div class="label-row">
                                 <label>Portfolio</label>
-                                <button class="btn-add-small" (click)="tab.showCreatePortfolio = !tab.showCreatePortfolio">
-                                    + Nouveau portfolio
+                                <button class="btn-add-small"
+                                    (click)="tab.showCreatePortfolio = !tab.showCreatePortfolio">
+                                    + New Portfolio
                                 </button>
                             </div>
-                            <div *ngIf="portfolios.length === 0 && !tab.showCreatePortfolio" class="alert alert-warning">
-                                Aucun portfolio disponible.
+                            <div *ngIf="portfolios.length === 0 && !tab.showCreatePortfolio"
+                                class="alert alert-warning">
+                                No portfolios available.
                             </div>
-                            <select *ngIf="portfolios.length > 0" [(ngModel)]="tab.selectedPortfolioId" class="form-input">
-                                <option value="">-- Sélectionner un portfolio --</option>
+                            <select *ngIf="portfolios.length > 0" [(ngModel)]="tab.selectedPortfolioId"
+                                class="form-input">
+                                <option value="">-- Select a portfolio --</option>
                                 <option *ngFor="let p of portfolios" [value]="p.id">
-                                    {{ p.name }} — {{ p.director?.fullName || 'Sans director' }}
+                                    {{ p.name }} — {{ p.director?.fullName || 'No director' }}
                                 </option>
                             </select>
                         </div>
-    
                         <div class="portfolio-inline-form" *ngIf="tab.showCreatePortfolio">
                             <div class="form-group">
-                                <label>Nom du portfolio</label>
-                                <input type="text" [(ngModel)]="tab.portfolioName" placeholder="ex: Portfolio Finance"
+                                <label>Portfolio Name</label>
+                                <input type="text" [(ngModel)]="tab.portfolioName" placeholder="e.g. Finance Portfolio"
                                     class="form-input">
                             </div>
                             <div class="form-group">
@@ -143,47 +206,39 @@
                             <div class="form-group">
                                 <label>Portfolio Director</label>
                                 <select [(ngModel)]="tab.selectedDirectorId" class="form-input">
-                                    <option value="">-- Sélectionner --</option>
+                                    <option value="">-- Select --</option>
                                     <option *ngFor="let d of directors" [value]="d.id">
                                         {{ d.fullName }}
                                     </option>
                                 </select>
                             </div>
                             <button class="btn-secondary" (click)="createPortfolio(tabId)" [disabled]="loading">
-                                Créer le portfolio
+                                Create Portfolio
                             </button>
                         </div>
                     </div>
-    
-                    <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
-                    <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
-    
                     <div class="bottom-actions">
-                        <button class="btn-danger" (click)="endTask(tabId)" *ngIf="successMessage">
-                            Terminer la tâche
-                        </button>
                         <button class="btn-primary" (click)="createProject(tabId)"
                             [disabled]="loading || !tab.selectedPortfolioId">
-                            {{ loading ? 'Création...' : 'Créer le projet' }}
+                            {{ loading ? 'Creating...' : 'Create Project' }}
                         </button>
                     </div>
-    
                 </div>
             </div>
         </ng-container>
     </ng-container>
 
-    <!-- VUE : Modifier un projet — un par onglet -->
+    <!-- EDIT PROJECT TAB -->
     <ng-container *ngFor="let tabId of getEditTabIds()">
         <ng-container *ngIf="activeTabId === tabId">
             <div class="card" *ngIf="getEditTabData(tabId) as tab">
                 <div class="card-header">
-                    <h2>Modifier le projet</h2>
+                    <h2>Edit Project</h2>
                 </div>
                 <div class="card-body">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>Nom du projet</label>
+                            <label>Project Name</label>
                             <input type="text" [(ngModel)]="tab.name" class="form-input">
                         </div>
                         <div class="form-group">
@@ -191,20 +246,13 @@
                             <input type="text" [(ngModel)]="tab.description" class="form-input">
                         </div>
                         <div class="form-group">
-                            <label>Date de livraison prévue</label>
+                            <label>Target Delivery Date</label>
                             <input type="date" [(ngModel)]="tab.targetDate" class="form-input">
                         </div>
                     </div>
-
-                    <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
-                    <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
-
                     <div class="bottom-actions">
-                        <button class="btn-danger" (click)="endEditTask(tabId)" *ngIf="successMessage">
-                            Fermer
-                        </button>
                         <button class="btn-primary" (click)="updateProject(tabId)" [disabled]="loading">
-                            {{ loading ? 'Modification...' : 'Modifier' }}
+                            {{ loading ? 'Saving...' : 'Save Changes' }}
                         </button>
                     </div>
                 </div>
@@ -212,69 +260,19 @@
         </ng-container>
     </ng-container>
 
-    <!-- VUE : Projets -->
-    <ng-container *ngIf="showProjectsView">
-        <ng-container *ngIf="!selectedProjectDetail">
-            <div class="card">
-                <div class="card-header">
-                    <h2>Projets ({{ projects.length }})</h2>
-                </div>
-                <div class="projects-list" *ngIf="projects.length > 0">
-                    <div class="project-item clickable-row" *ngFor="let project of projects">
-                        <div class="project-info" (click)="selectProject(project)">
-                            <span class="project-name">{{ project.name }}</span>
-                            <span class="project-desc">{{ project.description }}</span>
-                            <span class="project-date text-secondary" *ngIf="project.targetDate">
-                                📅 Livraison : {{ project.targetDate | date:'dd/MM/yyyy' }}
-                            </span>
-                        </div>
-                        <button class="btn-small" (click)="openEditTab(project)">Modifier</button>
-                        <span class="chevron" (click)="selectProject(project)">›</span>
-                    </div>
-                </div>
-                <div class="empty" *ngIf="projects.length === 0">Aucun projet.</div>
-            </div>
-        </ng-container>
+    <!-- PORTFOLIOS TAB -->
+    <ng-container *ngIf="activeTabId === 'portfolios-tab'">
+        <app-portfolios-tab [directors]="directors"></app-portfolios-tab>
+    </ng-container>
 
-        <ng-container *ngIf="selectedProjectDetail">
-            <div class="card">
-                <div class="card-header">
-                    <button class="btn-back" (click)="backToProjects()">← Projets</button>
-                    <h2>{{ selectedProjectDetail.name }}</h2>
-                </div>
-            </div>
+    <!-- PROJECTS TAB -->
+    <ng-container *ngIf="activeTabId === 'projects-tab'">
+        <app-projects-tab></app-projects-tab>
+    </ng-container>
 
-            <div class="card">
-                <div class="card-header">
-                    <h2>Tâches</h2>
-                </div>
-                <table class="tasks-table">
-                    <thead>
-                        <tr>
-                            <th>Titre</th>
-                            <th>Outil</th>
-                            <th>Statut</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <ng-container *ngFor="let task of tasks">
-                            <tr *ngIf="task.projectId === selectedProjectDetail.id">
-                                <td class="task-title">{{ task.title }}</td>
-                                <td><span class="tool-badge">{{ task.toolName }}</span></td>
-                                <td>
-                                    <span class="status-badge" [style.background]="getStatusColor(task.status) + '20'"
-                                        [style.color]="getStatusColor(task.status)">
-                                        {{ getStatusLabel(task.status) }}
-                                    </span>
-                                </td>
-                                <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
-                            </tr>
-                        </ng-container>
-                    </tbody>
-                </table>
-            </div>
-        </ng-container>
+    <!-- CONTRACTS TAB -->
+    <ng-container *ngIf="activeTabId === 'contracts-tab'">
+        <app-contracts-tab></app-contracts-tab>
     </ng-container>
 
 </div>

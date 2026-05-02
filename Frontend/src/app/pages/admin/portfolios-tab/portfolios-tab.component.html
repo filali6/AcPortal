@@ -1,0 +1,77 @@
+<div class="tab-content">
+
+    <!-- Liste portfolios -->
+    <ng-container *ngIf="!selectedPortfolio">
+        <div class="card">
+            <div class="card-header">
+                <h2>Portfolios ({{ portfolios.length }})</h2>
+            </div>
+            <div class="items-list">
+                <div class="list-item" *ngFor="let p of portfolios">
+                    <div class="item-info" (click)="selectPortfolio(p)">
+                        <span class="item-name">{{ p.name }}</span>
+                        <span class="item-sub">
+                            {{ p.projectCount }} projects · Director: {{ p.director?.fullName || 'None' }}
+                        </span>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-small" (click)="openModal(p); $event.stopPropagation()">
+                            Change Director
+                        </button>
+                        <lucide-icon [img]="ChevronRight" size="16" class="chevron-icon"
+                            (click)="selectPortfolio(p)"></lucide-icon>
+                    </div>
+                </div>
+                <div class="empty" *ngIf="portfolios.length === 0">No portfolios found.</div>
+            </div>
+        </div>
+    </ng-container>
+
+    <!-- Détail portfolio -->
+    <ng-container *ngIf="selectedPortfolio">
+        <div class="card">
+            <div class="card-header">
+                <button class="btn-back" (click)="selectedPortfolio = null">← Portfolios</button>
+                <h2>{{ selectedPortfolio.name }}</h2>
+                <span class="text-secondary">
+                    Director: {{ selectedPortfolio.director?.fullName || 'None' }}
+                </span>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2>Projects</h2>
+            </div>
+            <div class="items-list">
+                <div class="list-item" *ngFor="let proj of selectedPortfolio.projects">
+                    <div class="item-info">
+                        <span class="item-name">{{ proj.name }}</span>
+                        <span class="item-sub">{{ proj.description }}</span>
+                    </div>
+                </div>
+                <div class="empty" *ngIf="!selectedPortfolio.projects?.length">
+                    No projects in this portfolio.
+                </div>
+            </div>
+        </div>
+    </ng-container>
+
+<app-modal *ngIf="showModal" title="Change Director — {{ modalPortfolio?.name }}" width="360px" (closed)="closeModal()">
+
+    <div class="form-group">
+        <label>Select new Director</label>
+        <select [(ngModel)]="selectedDirectorId" class="form-input">
+            <option value="">-- Select --</option>
+            <option *ngFor="let d of directors" [value]="d.id">{{ d.fullName }}</option>
+        </select>
+    </div>
+    <div class="modal-footer">
+        <button class="btn-small" (click)="closeModal()">Cancel</button>
+        <button class="btn-primary" (click)="changeDirector()" [disabled]="loading || !selectedDirectorId">
+            {{ loading ? 'Saving...' : 'Save' }}
+        </button>
+    </div>
+
+</app-modal>
+
+</div>

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using Backend.Modules.Events.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Modules.Projects.Controllers;
 
@@ -93,6 +94,10 @@ public class ProjectStepsController : ControllerBase
             await _db.SaveChangesAsync();
             createdSteps[stepDto.StepName] = step.Id;
         }
+
+        var keycloakId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var leadUser = await _db.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+        var leadRole = leadUser?.Role.ToString() ?? "";
         var streamId = request.Steps.FirstOrDefault()?.StreamId;
         var project = await _db.Projects.FindAsync(request.ProjectId);
         await _eventPublisher.PublishAsync(new
@@ -100,7 +105,8 @@ public class ProjectStepsController : ControllerBase
             eventType = "StepsDéfinis",
             projectId = request.ProjectId,
             projectName = project!.Name,
-            streamId = streamId
+            streamId = streamId,
+            leadRole = leadRole
         }, request.ProjectId, project.Name);
 
         return Ok(new

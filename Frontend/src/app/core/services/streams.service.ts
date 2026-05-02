@@ -27,32 +27,47 @@ export class StreamsService {
   }
 
   // GET /api/streams/project/{projectId} → streams d'un projet
-  getByProject(projectId: string): Observable<Stream[]> {
-    return this.http.get<Stream[]>(
-      `${this.apiUrl}/streams/project/${projectId}`
-    );
-  }
+   getByProject(projectId: string): Observable<any[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/streams/project/${projectId}`);
+}
 
   // POST /api/streams → créer un stream
   create(
-    name: string,
-    projectId: string,
-    businessTeamLeadId: string | null,
-    technicalTeamLeadId: string | null
-  ): Observable<any> {
-    return this.http.post(`${this.apiUrl}/streams`, {
-      name,
-      projectId,
-      businessTeamLeadId,
-      technicalTeamLeadId
-    });
-  }
+  name: string,
+  projectId: string,
+  businessTeamLeadId: string | null,
+  technicalTeamLeadId: string | null,
+  businessTeamConsultants: string[] = [],
+  technicalTeamConsultants: string[] = []
+): Observable<any> {
+  return this.http.post(`${this.apiUrl}/streams`, {
+    name,
+    projectId,
+    businessTeamLeadId,
+    technicalTeamLeadId,
+    businessTeamConsultants,
+    technicalTeamConsultants
+  });
+}
 
   // POST /api/streams/{id}/members → ajouter consultant au stream
-  addMember(streamId: string, consultantId: string): Observable<any> {
-    return this.http.post(
-      `${this.apiUrl}/streams/${streamId}/members`,
-      { consultantId }
-    );
-  }
+ addMember(streamId: string, consultantId: string, teamType: number): Observable<any> {
+  return this.http.post(`${this.apiUrl}/streams/${streamId}/members`, {
+    consultantId,
+    teamType
+  });
+}
+ 
+
+removeMember(streamId: string, consultantId: string): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/streams/${streamId}/members/${consultantId}`);
+}
+
+updateLeads(streamId: string, bizLeadId?: string, techLeadId?: string): Observable<any> {
+  return this.http.patch(`${this.apiUrl}/streams/${streamId}/leads`, {
+    businessTeamLeadId: bizLeadId || null,
+    technicalTeamLeadId: techLeadId || null
+  });
+}
+
 }

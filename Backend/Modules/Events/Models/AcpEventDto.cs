@@ -19,4 +19,6 @@ public class AcpEventDto
     public string? ClientName { get; set; }
     public Guid? ContractId { get; set; }
     public string? ProjectName { get; set; }
+
+    public string? LeadRole { get; set; }
 }

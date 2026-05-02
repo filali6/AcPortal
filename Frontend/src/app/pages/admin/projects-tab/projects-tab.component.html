@@ -1,0 +1,86 @@
+<div class="tab-content">
+
+    <ng-container *ngIf="!selectedProject">
+        <div class="card">
+            <div class="card-header">
+                <h2>Projects ({{ filteredProjects.length }})</h2>
+                <div class="filter-badge" *ngIf="portfolioFilterName">
+                    Portfolio: {{ portfolioFilterName }}
+                    <button class="clear-filter" (click)="portfolioFilter = null; portfolioFilterName = null">✕</button>
+                </div>
+            </div>
+            <div *ngIf="loading" class="empty">Loading...</div>
+            <div class="table-wrapper" *ngIf="!loading">
+                <table class="projects-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>PM</th>
+                            <th>Target Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let p of filteredProjects" class="clickable" (click)="selectProject(p)">
+                            <td class="item-name">{{ p.name }}</td>
+                            <td class="text-secondary">{{ p.description || '—' }}</td>
+                            <td class="text-secondary">{{ p.projectManagerName || '—' }}</td>
+                            <td class="text-secondary">{{ p.targetDate ? (p.targetDate | date:'dd/MM/yyyy') : '—' }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty" *ngIf="!loading && filteredProjects.length === 0">No projects found.</div>
+        </div>
+    </ng-container>
+
+    <ng-container *ngIf="selectedProject">
+        <div class="card">
+            <div class="card-header">
+                <button class="btn-back" (click)="selectedProject = null">← Projects</button>
+                <h2>{{ selectedProject.name }}</h2>
+                <span class="pm-badge" *ngIf="selectedProject.projectManager">
+                    PM: {{ selectedProject.projectManager.fullName }}
+                </span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Overall Progress</h2>
+            </div>
+            <div class="card-body">
+                <div class="progress-wrap">
+                    <div class="progress-bar" [style.width.%]="selectedProject.progress"></div>
+                </div>
+                <span class="text-secondary">
+                    {{ selectedProject.progress }}% — {{ selectedProject.doneTasks }}/{{ selectedProject.totalTasks }}
+                    tasks done
+                </span>
+            </div>
+        </div>
+
+        <div class="card" *ngFor="let stream of selectedProject.streams">
+            <div class="card-header">
+                <h2>{{ stream.name }}</h2>
+                <span class="progress-label">{{ stream.streamProgress }}%</span>
+            </div>
+            <div class="card-body">
+                <div class="progress-wrap" style="margin-bottom: 12px">
+                    <div class="progress-bar" [style.width.%]="stream.streamProgress"></div>
+                </div>
+                <div class="stream-leads">
+                    <span class="lead-badge" *ngIf="stream.businessTeamLead">BTL: {{ stream.businessTeamLead.fullName
+                        }}</span>
+                    <span class="lead-badge" *ngIf="stream.technicalTeamLead">TTL: {{ stream.technicalTeamLead.fullName
+                        }}</span>
+                </div>
+                <div class="members-row" *ngIf="stream.members?.length > 0">
+                    <span class="member-chip" *ngFor="let m of stream.members">{{ m.fullName }}</span>
+                </div>
+            </div>
+        </div>
+    </ng-container>
+
+</div>

@@ -33,29 +33,59 @@ public class ProjectsService
         return project;
     }
 
-    
-    public async Task<List<Project>> GetAllAsync()
+
+    // public async Task<List<Project>> GetAllAsync()
+    // {
+    //     return await _db.Projects
+    //         .OrderByDescending(p => p.CreatedAt)
+    //         .ToListAsync();
+    // }
+    public async Task<List<object>> GetAllAsync()
     {
         return await _db.Projects
+            .Include(p => p.ProjectManager)
             .OrderByDescending(p => p.CreatedAt)
+            .Select(p => (object)new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.CreatedAt,
+                p.TargetDate,
+                p.PortfolioId,
+                p.ProjectManagerId,
+                projectManagerName = p.ProjectManager != null ? p.ProjectManager.FullName : null
+            })
             .ToListAsync();
     }
 
-     
+
     public async Task<Project?> GetByIdAsync(Guid id)
     {
         return await _db.Projects
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
-    
-    
-    public async Task<List<Project>> GetMyProjectsAsync(Guid directorId)
+
+
+    public async Task<List<object>> GetMyProjectsAsync(Guid directorId)
     {
         return await _db.Projects
             .Include(p => p.Portfolio)
+            .Include(p => p.ProjectManager)
             .Where(p => p.Portfolio != null && p.Portfolio.PortfolioDirectorId == directorId)
             .OrderByDescending(p => p.CreatedAt)
+            .Select(p => (object)new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.CreatedAt,
+                p.TargetDate,
+                p.PortfolioId,
+                p.ProjectManagerId,
+                projectManagerName = p.ProjectManager != null ? p.ProjectManager.FullName : null
+            })
             .ToListAsync();
     }
     public async Task<Project> CreateAsync(string name, string description, Guid portfolioId, DateTime? targetDate = null)

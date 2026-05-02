@@ -89,7 +89,13 @@ public class ContractsController : ControllerBase
                 c.Status,
                 c.CreatedAt,
                 c.ProjectId,
-                c.FilesPaths
+                c.FilesPaths,
+                projectCreatedAt = c.ProjectId.HasValue
+        ? _db.Projects
+            .Where(p => p.Id == c.ProjectId)
+            .Select(p => (DateTime?)p.CreatedAt)
+            .FirstOrDefault()
+        : null
             })
         });
     }
@@ -124,6 +130,51 @@ public class ContractsController : ControllerBase
         var contentType = "application/octet-stream";
         return File(fileBytes, contentType, fileName);
     }
+
+    // PUT /api/contracts/{id}
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromForm] UpdateContractRequest request)
+    {
+        var contract = await _contractsService.UpdateAsync(
+            id,
+            request.ClientName,
+            request.Description,
+            request.Status,
+            request.NewFiles
+        );
+        if (contract == null) return NotFound();
+        return Ok(contract);
+    }
+
+    // DELETE /api/contracts/{id}/files/{fileName}
+    [HttpDelete("{id:guid}/files/{fileName}")]
+    public async Task<IActionResult> DeleteFile(Guid id, string fileName)
+    {
+        fileName = Uri.UnescapeDataString(fileName);
+        var contract = await _contractsService.DeleteFileAsync(id, fileName);
+        if (contract == null) return NotFound();
+        return Ok(contract);
+    }
+    [HttpGet("all")]
+    [Authorize(Roles = "HeadOfCDS")]
+    public async Task<IActionResult> GetAll()
+    {
+        var contracts = await _db.Contracts
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => new
+            {
+                c.Id,
+                c.ClientName,
+                c.Description,
+                c.Status,
+                c.CreatedAt,
+                c.ProjectId,
+                c.FilesPaths
+            })
+            .ToListAsync();
+        return Ok(contracts);
+    }
+
 }
 
 public class CreateContractRequest
@@ -136,4 +187,12 @@ public class CreateContractRequest
 public class AddFilesRequest
 {
     public List<IFormFile>? Files { get; set; }
+}
+
+public class UpdateContractRequest
+{
+    public string ClientName { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int Status { get; set; }
+    public List<IFormFile>? NewFiles { get; set; }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -6,76 +6,99 @@ import { AuthService } from '../../core/services/auth.service';
 import { TasksService, Task } from '../../core/services/tasks.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { TabsService } from '../../core/services/tabs.service';
-import { environment } from '../../../environments/environment';
+import { ToastService } from '../../core/services/toast.service';
+import { UtilsService } from '../../core/services/utils.service';
+import { ChartService } from '../../core/services/chart.service';
 import { PluginBridgeService } from '../../core/services/plugin-bridge.service';
+import { LucideAngularModule, ChevronRight, Layers } from 'lucide-angular';
+import { environment } from '../../../environments/environment';
+import { Subscription } from 'rxjs';
+import { Chart, registerables } from 'chart.js';
+Chart.register(...registerables);
+import { TeamFilterPipe } from '../../core/pipes/team-filter.pipe';
 
 @Component({
   selector: 'app-team-lead',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule,TeamFilterPipe],
   templateUrl: './team-lead.component.html',
   styleUrl: './team-lead.component.scss'
 })
-export class TeamLeadComponent implements OnInit {
+export class TeamLeadComponent implements OnInit, OnDestroy {
 
-  activeTabId = 'tasks';
+  activeTabId: string = 'tasks';
   userRole = '';
+  currentUserId = '';
 
   myTasks: Task[] = [];
   myStreams: any[] = [];
-  projects: { id: string, name: string }[] = [];
-
+  projects: any[] = [];
   availablePlugins: any[] = [];
 
-  selectedProjectId = '';
-  selectedStreamId = '';
-
-  currentTask: any = null;
-  steps: any[] = [
-    { stepName: '', toolName: '', order: 1, dependsOnStepId: null }
-  ];
+  // Filtres
+  filterProjectId = '';
+  filterStreamId = '';
+  filterStatus = 'all';
+  searchQuery = '';
+  selectedStream: any = null;
 
   selectedIds: Set<string> = new Set();
   openTabs: { [tabId: string]: { task: any, steps: any[] } } = {};
 
   loading = false;
-  successMessage = '';
-  errorMessage = '';
-
-  currentUserName = '';
-  currentUserId = '';
   private api = environment.apiUrl;
+  private subs: Subscription[] = [];
+
+  private donutChart: Chart | null = null;
+  private barChart: Chart | null = null;
+
+  statsBottom = {
+    pendingTasks: 0,
+    completionRate: 0,
+    activeStreams: 0,
+    nextDelivery: { name: '', date: '' }
+  };
+
+  readonly ChevronRight = ChevronRight;
+  readonly Layers = Layers;
 
   constructor(
     private http: HttpClient,
     private authService: AuthService,
     private tasksService: TasksService,
     private notificationService: NotificationService,
-    private tabsService: TabsService,
+    public tabsService: TabsService,
+    private toastService: ToastService,
+    public utils: UtilsService,
+    private chartService: ChartService,
     private pluginBridge: PluginBridgeService
   ) {}
 
   ngOnInit(): void {
     const userInfo = this.authService.getUserInfo();
-    this.currentUserName = userInfo?.name || '';
-    this.currentUserId = userInfo?.id || '';
+    this.currentUserId = userInfo?.id || userInfo?.sub || '';
     this.userRole = userInfo?.role || '';
     this.loadAll();
-    this.notificationService.notifications$.subscribe(() => this.refreshTasks());
-    
-    // Écoute l'onglet actif
-    this.tabsService.activeTabId.subscribe(id => this.activeTabId = id);
+
+    this.subs.push(
+      this.notificationService.notifications$.subscribe(() => this.refreshTasks()),
+      this.tabsService.activeTabId.subscribe(id => this.activeTabId = id)
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subs.forEach(s => s.unsubscribe());
   }
 
   loadAll(): void {
     this.http.get<any[]>(`${this.api}/streams/my`).subscribe({
-      next: (s) => {
-        this.myStreams = s;
-        this.refreshTasks();
+      next: (streams) => {
+        this.myStreams = streams;
         this.loadProjects();
+        this.refreshTasks();
         this.pluginBridge.getAllPlugins().subscribe({
-        next: (plugins) => this.availablePlugins = plugins
-      });
+          next: (plugins) => this.availablePlugins = plugins
+        });
       }
     });
   }
@@ -88,7 +111,7 @@ export class TeamLeadComponent implements OnInit {
         this.http.get<any>(`${this.api}/projects/${s.projectId}`).subscribe({
           next: (p) => {
             if (!this.projects.find(x => x.id === p.id))
-              this.projects.push({ id: p.id, name: p.name });
+              this.projects.push(p);
           }
         });
       }
@@ -98,51 +121,103 @@ export class TeamLeadComponent implements OnInit {
   refreshTasks(): void {
     this.tasksService.getAll().subscribe({
       next: (tasks) => {
-        this.myTasks = tasks.filter(t => t.assignedTo === this.currentUserId);
+        this.myTasks = tasks
+          .filter(t => t.assignedTo === this.currentUserId)
+          .sort((a, b) => a.status - b.status);
+        this.computeStats();
       }
     });
   }
 
-  get filteredStreams(): any[] {
-    if (!this.selectedProjectId) return this.myStreams;
-    return this.myStreams.filter(s => s.projectId === this.selectedProjectId);
+  computeStats(): void {
+    this.statsBottom.pendingTasks = this.myTasks.filter(t => t.status === 0).length;
+    this.statsBottom.completionRate = this.myTasks.length
+      ? Math.round((this.myTasks.filter(t => t.status === 2).length / this.myTasks.length) * 100)
+      : 0;
+    this.statsBottom.activeStreams = this.myStreams.length;
+
+    const upcoming = this.projects
+      .filter(p => p.targetDate)
+      .sort((a, b) => new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime());
+
+    this.statsBottom.nextDelivery = upcoming[0]
+      ? { name: upcoming[0].name, date: new Date(upcoming[0].targetDate).toLocaleDateString('en-GB') }
+      : { name: '—', date: '—' };
+
+    setTimeout(() => this.renderCharts(), 100);
   }
 
-  onProjectChange(): void {
-    this.selectedStreamId = '';
+  renderCharts(): void {
+    this.donutChart = this.chartService.createDoughnut(
+      'tlDonutChart',
+      ['Pending', 'Blocked', 'Done'],
+      [
+        this.myTasks.filter(t => t.status === 0).length,
+        this.myTasks.filter(t => t.status === 1).length,
+        this.myTasks.filter(t => t.status === 2).length
+      ],
+      ['#f59e0b', '#ef4444', '#10b981'],
+      this.donutChart
+    );
+
+    this.barChart = this.chartService.createBar(
+      'tlBarChart',
+      this.chartService.getLast6MonthsLabels(),
+      this.chartService.getLast6MonthsData(this.myTasks, 'createdAt'),
+      '#3b82f6',
+      this.barChart
+    );
+  }
+
+  // ===== FILTRES =====
+  get filteredStreams(): any[] {
+    if (!this.filterProjectId) return this.myStreams;
+    return this.myStreams.filter(s => s.projectId === this.filterProjectId);
   }
 
   get filteredTasks(): Task[] {
-    let tasks = this.myTasks;
-    if (this.selectedProjectId)
-      tasks = tasks.filter(t => t.projectId === this.selectedProjectId);
-    if (this.selectedStreamId)
-      tasks = tasks.filter(t => t.streamId === this.selectedStreamId);
-    return tasks;
+    return this.myTasks.filter(t => {
+      const matchSearch = t.title.toLowerCase().includes(this.searchQuery.toLowerCase());
+      const matchStatus = this.filterStatus === 'all' || t.status === +this.filterStatus;
+      const matchProject = !this.filterProjectId || t.projectId === this.filterProjectId;
+      const matchStream = !this.filterStreamId || t.streamId === this.filterStreamId;
+      return matchSearch && matchStatus && matchProject && matchStream;
+    });
   }
 
-  getProjectName(projectId: string): string {
-    return this.projects.find(p => p.id === projectId)?.name || '—';
+  get workflowTasks(): Task[] {
+    return this.filteredTasks.filter(t => !t.stepId);
   }
 
-  getStreamName(streamId: string): string {
-    const stream = this.myStreams.find(s => s.id === streamId);
-    return stream?.name || '—';
+  get stepTasks(): Task[] {
+    return this.filteredTasks.filter(t => !!t.stepId);
   }
 
+  // ===== NAVIGATION =====
+  openStreamsTab(): void {
+    this.tabsService.openTab({
+      id: 'my-streams',
+      title: 'My Streams',
+      type: 'create-project'
+    });
+  }
+
+  // ===== TASK CLICK =====
   onTaskClick(task: any): void {
     if (task.status === 2) return;
-    
+    if (task.stepId) {
+      // Tâche depuis step → ouvrir l'outil
+      this.openTool(task);
+      return;
+    }
+    // Tâche workflow → définir les steps
     const tabId = `define-steps-${task.id}`;
-    
-    // Garde les données de cet onglet
     if (!this.openTabs[tabId]) {
       this.openTabs[tabId] = {
-        task: task,
+        task,
         steps: [{ stepName: '', toolName: '', order: 1, dependsOnStepId: null }]
       };
     }
-
     this.tabsService.openTab({
       id: tabId,
       title: task.title,
@@ -151,19 +226,21 @@ export class TeamLeadComponent implements OnInit {
     });
   }
 
-  getTabData(tabId: string): { task: any, steps: any[] } | null {
-    return this.openTabs[tabId] || null;
+  openTool(task: any): void {
+    const plugin = this.availablePlugins.find(p => p.id === task.toolName);
+    if (plugin?.accessUrl) {
+      window.open(plugin.accessUrl, '_blank');
+    }
   }
+
+  // ===== STEPS =====
+  getTabData(tabId: string) { return this.openTabs[tabId] || null; }
+  getOpenTabIds(): string[] { return Object.keys(this.openTabs); }
 
   addStep(tabId: string): void {
     const tab = this.openTabs[tabId];
     if (!tab) return;
-    tab.steps.push({
-      stepName: '',
-      toolName: '',
-      order: tab.steps.length + 1,
-      dependsOnStepId: null
-    });
+    tab.steps.push({ stepName: '', toolName: '', order: tab.steps.length + 1, dependsOnStepId: null });
   }
 
   removeStep(tabId: string, index: number): void {
@@ -179,13 +256,11 @@ export class TeamLeadComponent implements OnInit {
 
     const stream = this.myStreams.find(s => s.projectId === tab.task.projectId);
     if (!stream) {
-      this.errorMessage = 'Stream introuvable';
+      this.toastService.show('Stream not found', 'error');
       return;
     }
 
     this.loading = true;
-    this.errorMessage = '';
-
     const payload = {
       projectId: tab.task.projectId,
       steps: tab.steps.map(s => ({
@@ -200,34 +275,34 @@ export class TeamLeadComponent implements OnInit {
 
     this.http.post(`${this.api}/steps`, payload).subscribe({
       next: () => {
-        this.successMessage = 'Steps sauvegardés !';
+        this.toastService.show('Steps saved!', 'success');
         this.loading = false;
-        this.refreshTasks();
-        this.successMessage = 'Steps sauvegardés !';
+        this.endTask(tabId);
       },
       error: () => {
-        this.errorMessage = 'Erreur lors de la sauvegarde';
+        this.toastService.show('Error saving steps', 'error');
         this.loading = false;
       }
     });
   }
 
-  get hasSelection(): boolean {
-    return this.selectedIds.size > 0;
+  endTask(tabId: string): void {
+    const tab = this.openTabs[tabId];
+    if (!tab) return;
+    this.tasksService.updateStatus(tab.task.id, 2).subscribe(() => {
+      this.refreshTasks();
+      this.tabsService.closeTab(tabId);
+      delete this.openTabs[tabId];
+    });
   }
 
+  // ===== SELECTION =====
+  get hasSelection(): boolean { return this.selectedIds.size > 0; }
   toggleSelect(taskId: string): void {
-    if (this.selectedIds.has(taskId)) {
-      this.selectedIds.delete(taskId);
-    } else {
-      this.selectedIds.add(taskId);
-    }
+    if (this.selectedIds.has(taskId)) this.selectedIds.delete(taskId);
+    else this.selectedIds.add(taskId);
   }
-
-  isSelected(taskId: string): boolean {
-    return this.selectedIds.has(taskId);
-  }
-
+  isSelected(taskId: string): boolean { return this.selectedIds.has(taskId); }
   markDone(): void {
     Array.from(this.selectedIds).forEach(id => {
       this.tasksService.updateStatus(id, 2).subscribe({
@@ -240,23 +315,19 @@ export class TeamLeadComponent implements OnInit {
     });
   }
 
-  getStatusLabel(status: number): string {
-    return this.tasksService.getStatusLabel(status);
+  getProjectName(projectId: string): string {
+    return this.projects.find(p => p.id === projectId)?.name || '—';
   }
 
-  getStatusColor(status: number): string {
-    return this.tasksService.getStatusColor(status);
+  getStreamName(streamId: string): string {
+    return this.myStreams.find(s => s.id === streamId)?.name || '—';
   }
-  getOpenTabIds(): string[] {
-  return Object.keys(this.openTabs);
-}
-endTask(tabId: string): void {
-  const tab = this.openTabs[tabId];
-  if (!tab) return;
-  this.tasksService.updateStatus(tab.task.id, 2).subscribe(() => {
-    this.refreshTasks();
-    this.tabsService.closeTab(tabId);
-    delete this.openTabs[tabId];
+  selectStream(stream: any): void {
+  this.selectedStream = stream;
+  this.tabsService.openTab({
+    id: `stream-detail-${stream.id}`,
+    title: stream.name,
+    type: 'create-project'
   });
 }
 }

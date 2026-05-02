@@ -4,6 +4,7 @@ using Backend.Modules.Tasks.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Backend.Hubs;
+using Backend.Modules.Projects.Models;
 
 namespace Backend.Modules.Events.Handlers;
 
@@ -25,43 +26,37 @@ public class CreateTasksFromStepsHandler : IActionHandler
         _logger = logger;
     }
 
-    public async Task HandleAsync(
-        WorkflowRule rule,
-        AcpEventDto eventDto,
-        Guid? projectId)
+    public async Task HandleAsync(WorkflowRule rule, AcpEventDto eventDto, Guid? projectId)
     {
         if (projectId == null) return;
 
-        var query = _db.ProjectSteps
-            .Where(s => s.ProjectId == projectId);
-
+        var query = _db.ProjectSteps.Where(s => s.ProjectId == projectId);
         if (eventDto.StreamId.HasValue)
             query = query.Where(s => s.StreamId == eventDto.StreamId);
 
-        var steps = await query
-            .OrderBy(s => s.Order)
-            .ToListAsync();
+        var steps = await query.OrderBy(s => s.Order).ToListAsync();
+
+        // Déterminer le TeamType selon le rôle du Lead
+        var teamType = eventDto.LeadRole == "BusinessTeamLead"
+            ? TeamType.Business
+            : TeamType.Technical;
 
         foreach (var step in steps)
         {
-            var taskExists = await _db.AcpTasks
-                .AnyAsync(t => t.StepId == step.Id);
+            var taskExists = await _db.AcpTasks.AnyAsync(t => t.StepId == step.Id);
             if (taskExists) continue;
 
-            var status = step.DependsOnStepId.HasValue
-                ? AcpTaskStatus.Blocked
-                : AcpTaskStatus.Pending;
+            var status = step.DependsOnStepId.HasValue ? AcpTaskStatus.Blocked : AcpTaskStatus.Pending;
 
-            // ✅ Retourne KeycloakId au lieu de FullName
             var assignedKeycloakId = await FindBestConsultantKeycloakIdAsync(
-                projectId, eventDto.StreamId);
+                projectId, eventDto.StreamId, teamType);
 
             var task = new AcpTask
             {
                 Title = step.StepName,
-                Description = $"Tâche depuis step : {step.StepName}",
+                Description = $"Task from step: {step.StepName}",
                 ToolName = step.ToolName,
-                AssignedTo = assignedKeycloakId ?? "Non assigné", // ✅
+                AssignedTo = assignedKeycloakId ?? "Unassigned",
                 Status = status,
                 CreatedAt = DateTime.UtcNow,
                 ProjectId = projectId,
@@ -72,49 +67,61 @@ public class CreateTasksFromStepsHandler : IActionHandler
 
             if (assignedKeycloakId != null)
             {
-                await _hubContext.Clients
-                    .Group(assignedKeycloakId) // ✅
+                await _hubContext.Clients.Group(assignedKeycloakId)
                     .SendAsync("NewNotification", new
                     {
-                        message = $"Nouvelle tâche : {step.StepName}",
+                        message = $"New task: {step.StepName}",
                         projectId = projectId
                     });
             }
         }
 
         await _db.SaveChangesAsync();
-
-        _logger.LogInformation(
-            "Tâches créées depuis les steps — projet {ProjectId}",
-            projectId);
     }
 
     private async Task<string?> FindBestConsultantKeycloakIdAsync(
-        Guid? projectId,
-        Guid? streamId = null)
+        Guid? projectId, Guid? streamId, TeamType teamType)
     {
         List<Guid> memberIds;
 
         if (streamId.HasValue)
         {
             memberIds = await _db.StreamMembers
-                .Where(m => m.StreamId == streamId)
+                .Where(m => m.StreamId == streamId && m.TeamType == teamType)
                 .Select(m => m.ConsultantId)
                 .ToListAsync();
         }
         else
         {
-
-
             memberIds = await _db.StreamMembers
-         .Where(m => _db.Streams
-             .Any(s => s.ProjectId == projectId && s.Id == m.StreamId))
-         .Select(m => m.ConsultantId)
-         .ToListAsync();
+                .Where(m => _db.Streams.Any(s => s.ProjectId == projectId && s.Id == m.StreamId)
+                    && m.TeamType == teamType)
+                .Select(m => m.ConsultantId)
+                .ToListAsync();
         }
 
-        if (!memberIds.Any()) return null;
+        // Si pas de membres dans cette équipe → prendre le Lead lui-même
+        if (!memberIds.Any())
+        {
+            var stream = await _db.Streams
+                .FirstOrDefaultAsync(s => s.Id == streamId);
 
+            if (stream != null)
+            {
+                var leadId = teamType == TeamType.Business
+                    ? stream.BusinessTeamLeadId
+                    : stream.TechnicalTeamLeadId;
+
+                if (leadId.HasValue)
+                {
+                    var lead = await _db.Users.FindAsync(leadId.Value);
+                    return lead?.KeycloakId;
+                }
+            }
+            return null;
+        }
+
+        // Assigner au consultant avec le moins de tâches
         string? bestKeycloakId = null;
         int minTasks = int.MaxValue;
 
@@ -123,17 +130,15 @@ public class CreateTasksFromStepsHandler : IActionHandler
             var consultant = await _db.Users.FindAsync(memberId);
             if (consultant == null) continue;
 
-            
-            var count = await _db.AcpTasks
-                .CountAsync(t =>
-                    t.AssignedTo == consultant.KeycloakId
-                    && t.ProjectId == projectId
-                    && t.Status != AcpTaskStatus.Done);
+            var count = await _db.AcpTasks.CountAsync(t =>
+                t.AssignedTo == consultant.KeycloakId &&
+                t.ProjectId == projectId &&
+                t.Status != AcpTaskStatus.Done);
 
             if (count < minTasks)
             {
                 minTasks = count;
-                bestKeycloakId = consultant.KeycloakId; 
+                bestKeycloakId = consultant.KeycloakId;
             }
         }
 

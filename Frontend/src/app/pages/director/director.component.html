@@ -1,70 +1,295 @@
 <div class="director-page">
 
-    <div class="page-header">
-        <h1>Dashboard — Portfolio Director</h1>
-    </div>
-
-    <!-- VUE : Liste des tâches -->
+    <!-- TASK INBOX -->
     <ng-container *ngIf="activeTabId === 'tasks'">
+
         <div class="card">
             <div class="card-header">
-                <h2>Mes tâches ({{ myTasks.length }})</h2>
+                <h2>My Tasks ({{ myTasks.length }})</h2>
             </div>
-
+            <div class="search-bar">
+                <input type="text" [(ngModel)]="searchQuery" placeholder="Search tasks..."
+                    class="form-input search-input">
+                <select [(ngModel)]="filterStatus" class="form-input filter-select">
+                    <option value="all">All statuses</option>
+                    <option value="0">Pending</option>
+                    <option value="1">Blocked</option>
+                    <option value="2">Done</option>
+                </select>
+            </div>
             <div class="action-bar" *ngIf="hasSelection">
-                <span class="selection-count">{{ selectedIds.size }} sélectionnée(s)</span>
+                <span class="selection-count">{{ selectedIds.size }} selected</span>
                 <button class="action-btn success" (click)="markDone()">✓ Mark Done</button>
             </div>
+            <div class="table-wrapper">
+                <table class="tasks-table" *ngIf="myTasks.length > 0">
+                    <thead>
+                        <tr>
+                            <th style="width:40px"></th>
+                            <th>Title</th>
+                            <th>Project</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let task of filteredTasks" [class.task-done]="task.status === 2"
+                            [class.selected]="isSelected(task.id)" (click)="onTaskClick(task)">
+                            <td (click)="toggleSelect(task.id); $event.stopPropagation()">
+                                <div class="checkbox" [class.checked]="isSelected(task.id)">
+                                    <span *ngIf="isSelected(task.id)">✓</span>
+                                </div>
+                            </td>
+                            <td class="task-title">{{ task.title }}</td>
+                            <td class="text-secondary">{{ getProjectName(task.projectId ?? '') }}</td>
+                            <td>
+                                <span class="status-badge"
+                                    [style.background]="utils.getTaskStatusColor(task.status) + '20'"
+                                    [style.color]="utils.getTaskStatusColor(task.status)">
+                                    {{ utils.getTaskStatusLabel(task.status) }}
+                                </span>
+                            </td>
+                            <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty" *ngIf="myTasks.length === 0">No tasks assigned.</div>
+        </div>
 
-            <table class="tasks-table" *ngIf="myTasks.length > 0">
-                <thead>
-                    <tr>
-                        <th style="width:40px"></th>
-                        <th>Titre</th>
-                        <th>Projet</th>
-                        <th>Statut</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let task of myTasks" class="clickable-row" [class.selected]="isSelected(task.id)"
-                        [class.done]="task.status === 2" (click)="onTaskClick(task)">
-                        <td (click)="toggleSelect(task.id); $event.stopPropagation()">
-                            <div class="checkbox" [class.checked]="isSelected(task.id) || task.status === 2">
-                                <span *ngIf="isSelected(task.id) || task.status === 2">✓</span>
-                            </div>
-                        </td>
-                        <td class="task-title" [class.done-text]="task.status === 2">{{ task.title }}</td>
-                        <td class="text-secondary">{{ getProjectName(task.projectId ?? '') }}</td>
-                        <td>
-                            <span class="status-badge" [style.background]="getStatusColor(task.status) + '20'"
-                                [style.color]="getStatusColor(task.status)">
-                                {{ getStatusLabel(task.status) }}
-                            </span>
-                        </td>
-                        <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy' }}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- Portfolio Card -->
+        <div class="access-card" *ngIf="myPortfolio" (click)="openPortfolioTab()">
+            <lucide-icon [img]="Briefcase" size="18" class="access-icon"></lucide-icon>
+            <div class="access-info">
+                <span class="access-title">{{ myPortfolio.name }}</span>
+                <span class="access-sub">{{ myPortfolio.projectCount }} projects · My Portfolio</span>
+            </div>
+            <lucide-icon [img]="ChevronRight" size="16" class="access-arrow"></lucide-icon>
+        </div>
 
-            <div class="empty" *ngIf="myTasks.length === 0">Aucune tâche assignée.</div>
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>Task Distribution</h2>
+                </div>
+                <div class="card-body chart-body">
+                    <canvas id="directorDonutChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>Projects per Month</h2>
+                </div>
+                <div class="card-body chart-body">
+                    <canvas id="directorBarChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>Statistics</h2>
+                </div>
+                <div class="card-body">
+                    <div class="quick-stats">
+                        <div class="qs-item" [class.qs-alert]="statsBottom.pendingTasks > 0">
+                            <span class="qs-label">Pending Tasks</span>
+                            <span class="qs-value">{{ statsBottom.pendingTasks }}</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">Completion Rate</span>
+                            <span class="qs-value">{{ statsBottom.completionRate }}%</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">Active Projects</span>
+                            <span class="qs-value">{{ statsBottom.activeProjects }}</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">Next Delivery</span>
+                            <span class="qs-value qs-name">{{ statsBottom.nextDelivery.name }}</span>
+                            <span class="qs-sub">{{ statsBottom.nextDelivery.date }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </ng-container>
+
+    <!-- MY PORTFOLIO TAB -->
+    <ng-container *ngIf="activeTabId === 'my-portfolio'">
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ myPortfolio?.name }}</h2>
+                <span class="text-secondary">{{ projects.length }} projects</span>
+            </div>
+            <div class="table-wrapper">
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>PM</th>
+                            <th>Target Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let p of projects" class="clickable-row" (click)="selectProject(p)">
+                            <td class="task-title">{{ p.name }}</td>
+                            <td class="text-secondary">{{ p.description || '—' }}</td>
+                            <td class="text-secondary">{{ p.projectManagerName || 'Not assigned' }}</td>
+                            <td class="text-secondary">
+                                {{ p.targetDate ? (p.targetDate | date:'dd/MM/yyyy') : '—' }}
+                            </td>
+                            <td>
+                                <button class="btn-small" (click)="openReassignModal(p); $event.stopPropagation()">
+                                    Reassign PM
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty" *ngIf="projects.length === 0">No projects in this portfolio.</div>
         </div>
     </ng-container>
 
-    <!-- VUE : Assigner un PM — un par onglet -->
+    <!-- PROJECT DETAIL TAB -->
+    <!-- PROJECT DETAIL TAB -->
+    <ng-container *ngFor="let p of [selectedProject]">
+        <ng-container *ngIf="selectedProject && activeTabId === 'project-detail-' + selectedProject.id">
+    
+            <!-- Header -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="project-header-info">
+                        <h2>{{ selectedProject.name }}</h2>
+                        <span class="pm-badge" *ngIf="selectedProject.projectManager">
+                            PM: {{ selectedProject.projectManager.fullName }}
+                        </span>
+                        <span class="date-badge" *ngIf="selectedProject.targetDate">
+                            {{ selectedProject.targetDate | date:'dd/MM/yyyy' }}
+                        </span>
+                    </div>
+                    <div class="progress-header">
+                        <div class="progress-wrap" style="width: 200px">
+                            <div class="progress-bar" [style.width.%]="selectedProject.progress"></div>
+                        </div>
+                        <span class="progress-pct">{{ selectedProject.progress }}%</span>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- 2 colonnes -->
+            <div class="detail-grid">
+    
+                <!-- Gauche — Streams -->
+                <div class="detail-col">
+                    <div class="card stream-card" *ngFor="let stream of selectedProject.streams">
+                        <div class="card-header">
+                            <h2>{{ stream.name }}</h2>
+                            <span class="progress-label">{{ stream.streamProgress }}%</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="progress-wrap" style="margin-bottom: 10px">
+                                <div class="progress-bar" [style.width.%]="stream.streamProgress"></div>
+                            </div>
+                            <div class="stream-leads">
+                                <span class="lead-badge" *ngIf="stream.businessTeamLead">
+                                    BTL: {{ stream.businessTeamLead.fullName }}
+                                </span>
+                                <span class="lead-badge" *ngIf="stream.technicalTeamLead">
+                                    TTL: {{ stream.technicalTeamLead.fullName }}
+                                </span>
+                            </div>
+                            <div class="members-row" *ngIf="stream.members?.length > 0">
+                                <span class="member-chip" *ngFor="let m of stream.members">
+                                    {{ m.fullName }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="empty" *ngIf="!selectedProject.streams?.length">
+                        No streams yet.
+                    </div>
+                </div>
+    
+                <!-- Droite — Team Overview + Tasks Summary -->
+                <div class="detail-col">
+    
+                    <!-- Team Overview -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Team Overview</h2>
+                        </div>
+                        <div class="card-body">
+                            <ng-container *ngFor="let stream of selectedProject.streams">
+                                <div class="team-stream-block">
+                                    <span class="stream-label">{{ stream.name }}</span>
+                                    <div class="team-row" *ngIf="stream.businessTeamLead">
+                                        <span class="role-tag btl">BTL</span>
+                                        <span class="member-name">{{ stream.businessTeamLead.fullName }}</span>
+                                    </div>
+                                    <div class="team-row" *ngIf="stream.technicalTeamLead">
+                                        <span class="role-tag ttl">TTL</span>
+                                        <span class="member-name">{{ stream.technicalTeamLead.fullName }}</span>
+                                    </div>
+                                    <div class="team-row" *ngFor="let m of stream.members">
+                                        <span class="role-tag consultant">DEV</span>
+                                        <span class="member-name">{{ m.fullName }}</span>
+                                    </div>
+                                </div>
+                            </ng-container>
+                        </div>
+                    </div>
+    
+                    <!-- Tasks Summary -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Tasks Summary</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="task-summary-row">
+                                <span class="summary-label">Total</span>
+                                <span class="summary-value">{{ selectedProject.totalTasks }}</span>
+                            </div>
+                            <div class="task-summary-row pending">
+                                <span class="summary-label">Pending</span>
+                                <span class="summary-value">
+                                    {{ selectedProject.totalTasks - selectedProject.doneTasks }}
+                                </span>
+                            </div>
+                            <div class="task-summary-row done">
+                                <span class="summary-label">Done</span>
+                                <span class="summary-value">{{ selectedProject.doneTasks }}</span>
+                            </div>
+                            <div class="progress-wrap" style="margin-top: 12px">
+                                <div class="progress-bar" [style.width.%]="selectedProject.progress"></div>
+                            </div>
+                            <span class="text-secondary" style="font-size: 11px">
+                                {{ selectedProject.doneTasks }}/{{ selectedProject.totalTasks }} tasks completed
+                            </span>
+                        </div>
+                    </div>
+    
+                </div>
+            </div>
+    
+        </ng-container>
+    </ng-container>
+
+    <!-- ASSIGN MANAGER TAB -->
     <ng-container *ngFor="let tabId of getOpenTabIds()">
         <ng-container *ngIf="activeTabId === tabId">
             <div class="card" *ngIf="getTabData(tabId) as tab">
                 <div class="card-header">
-                    <h2>Assigner un Project Manager</h2>
+                    <h2>Assign Project Manager</h2>
                 </div>
-
                 <div class="card-body">
                     <div class="project-info-block">
-                        <span class="label">Projet</span>
+                        <span class="label">Project</span>
                         <span class="project-name">{{ getProjectName(tab.task?.projectId ?? '') }}</span>
                     </div>
-
                     <div class="managers-list" *ngIf="managers.length > 0">
                         <div class="manager-card" *ngFor="let m of managers"
                             [class.selected-manager]="tab.selectedManagerId === m.id"
@@ -75,28 +300,46 @@
                             </div>
                             <div class="manager-charge">
                                 <span class="charge-number">{{ m.projectCount }}</span>
-                                <span class="charge-label">projet(s)</span>
+                                <span class="charge-label">project(s)</span>
                             </div>
                             <div class="selected-check" *ngIf="tab.selectedManagerId === m.id">✓</div>
                         </div>
                     </div>
-
-                    <div class="empty" *ngIf="managers.length === 0">Aucun Project Manager disponible.</div>
-
-                    <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
-                    <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
-
+                    <div class="empty" *ngIf="managers.length === 0">No Project Managers available.</div>
                     <div class="bottom-actions">
-                        <button class="btn-danger" (click)="endTask(tabId)" *ngIf="successMessage">
-                            Terminer la tâche
-                        </button>
-                        <button class="btn-primary" (click)="assignManager(tabId)" [disabled]="!tab.selectedManagerId || loading">
-                            {{ loading ? 'Assignation...' : 'Assigner' }}
+                        <button class="btn-primary" (click)="assignManager(tabId)"
+                            [disabled]="!tab.selectedManagerId || loading">
+                            {{ loading ? 'Assigning...' : 'Assign' }}
                         </button>
                     </div>
                 </div>
             </div>
         </ng-container>
     </ng-container>
+
+    <!-- MODAL REASSIGN PM -->
+    <app-modal *ngIf="showReassignModal" title="Reassign PM — {{ reassignProjectName }}" width="400px"
+        (closed)="closeReassignModal()">
+        <div class="managers-list">
+            <div class="manager-card" *ngFor="let m of managers" [class.selected-manager]="selectedManagerId === m.id"
+                (click)="selectedManagerId = m.id">
+                <div class="manager-info">
+                    <span class="manager-name">{{ m.fullName }}</span>
+                    <span class="manager-email">{{ m.email }}</span>
+                </div>
+                <div class="manager-charge">
+                    <span class="charge-number">{{ m.projectCount }}</span>
+                    <span class="charge-label">project(s)</span>
+                </div>
+                <div class="selected-check" *ngIf="selectedManagerId === m.id">✓</div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-small" (click)="closeReassignModal()">Cancel</button>
+            <button class="btn-primary" (click)="reassignManager()" [disabled]="!selectedManagerId || loading">
+                {{ loading ? 'Saving...' : 'Save' }}
+            </button>
+        </div>
+    </app-modal>
 
 </div>
