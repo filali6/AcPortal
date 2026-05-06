@@ -47,8 +47,8 @@
                                 <th>Tool</th>
                                 <th>Status</th>
                                 <th>Date</th>
-                                <th></th>
-                                <th>Actions</th>
+            
+                                <th style="width:140px">Actions</th>
                                 
                             </tr>
                         </thead>
@@ -76,17 +76,12 @@
                                     </span>
                                 </td>
                                 <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy' }}</td>
-                                <td>
-                                    <button class="btn-open-tool" *ngIf="task.status !== 1 && task.toolName"
-                                        (click)="openTool(task); $event.stopPropagation()">
-                                        Open →
-                                    </button>
-                                    <span class="blocked-label" *ngIf="task.status === 1">Blocked</span>
-                                </td>
-                                <td>
+                                <td style="width:140px">
                                     <button class="btn-chat-sm" *ngIf="task.stepId" (click)="openTaskChat(task); $event.stopPropagation()">
-                                        💬
+                                        <lucide-icon [img]="MessageSquare" size="13"></lucide-icon>
+                                        Discuss task
                                     </button>
+                                    <span *ngIf="!task.stepId" style="display:inline-block; height:29px"></span>
                                 </td>
                             </tr>
                         </tbody>
@@ -180,7 +175,7 @@
             </div>
         </div>
     </ng-container>
-<app-chat-panel [isOpen]="chatOpen" [taskId]="chatTaskId" [streamId]="null" [title]="chatTitle">
+<app-chat-panel [isOpen]="chatOpen" [taskId]="chatTaskId" [streamId]="null" [title]="chatTitle" (closed)="closeChat()">
 </app-chat-panel>
 
 <div class="chat-overlay" *ngIf="chatOpen" (click)="closeChat()"></div>

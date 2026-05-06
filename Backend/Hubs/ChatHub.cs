@@ -1,4 +1,5 @@
 using Backend.Data;
+using Backend.Modules.Tasks.Models;
 using Backend.Modules.Chat.Services;
 using Backend.Modules.Notifications.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -79,6 +80,9 @@ public class ChatHub : Hub
         if (stream.TechnicalTeamLead?.KeycloakId != null && stream.TechnicalTeamLead.KeycloakId != keycloakId)
             await _notificationService.SendAsync(stream.TechnicalTeamLead.KeycloakId, notifMessage, null);
     }
+
+
+
     public async Task SendTaskMessage(string taskId, string content)
     {
         var keycloakId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
@@ -87,8 +91,7 @@ public class ChatHub : Hub
             ?? "Unknown";
 
         var message = await _chatService.SaveMessageAsync(
-            content, keycloakId, name,
-            null, Guid.Parse(taskId));
+            content, keycloakId, name, null, Guid.Parse(taskId));
 
         await Clients.Group($"task-{taskId}").SendAsync("ReceiveMessage", new
         {
@@ -98,13 +101,39 @@ public class ChatHub : Hub
             senderKeycloakId = message.SenderKeycloakId,
             createdAt = message.CreatedAt
         });
-        var task = await _db.AcpTasks.FindAsync(Guid.Parse(taskId));
-        if (task != null && task.AssignedTo != keycloakId)
+
+        var task = await _db.AcpTasks
+            .Include(t => t.StreamId)
+            .FirstOrDefaultAsync(t => t.Id == Guid.Parse(taskId));
+
+        if (task == null) return;
+
+        var notifMessage = $"{name}: {content}";
+
+        // Notifier le consultant assigné
+        if (task.AssignedTo != keycloakId)
+            await _notificationService.SendAsync(task.AssignedTo, notifMessage, null);
+
+        // Notifier les leads du stream
+        if (task.StreamId.HasValue)
         {
-            await _notificationService.SendAsync(
-                task.AssignedTo,
-                $"New message from {name} in task: {task.Title}",
-                null
-            );
-        }}
+            var stream = await _db.Streams
+                .Include(s => s.BusinessTeamLead)
+                .Include(s => s.TechnicalTeamLead)
+                .FirstOrDefaultAsync(s => s.Id == task.StreamId);
+
+            if (stream != null)
+            {
+                if (stream.BusinessTeamLead?.KeycloakId != null &&
+                    stream.BusinessTeamLead.KeycloakId != keycloakId)
+                    await _notificationService.SendAsync(
+                        stream.BusinessTeamLead.KeycloakId, notifMessage, null);
+
+                if (stream.TechnicalTeamLead?.KeycloakId != null &&
+                    stream.TechnicalTeamLead.KeycloakId != keycloakId)
+                    await _notificationService.SendAsync(
+                        stream.TechnicalTeamLead.KeycloakId, notifMessage, null);
+            }
+        }
+    }
 }

@@ -1,9 +1,15 @@
-<div class="chat-panel" [class.open]="isOpen">
-    <div class="chat-header">
+<div class="chat-panel" [class.open]="isOpen" [class.minimized]="minimized">
+    <div class="chat-header" (click)="minimized = !minimized">
         <span class="chat-title">{{ title }}</span>
+        <div class="chat-header-actions">
+            <button class="chat-action-btn" (click)="minimized = !minimized; $event.stopPropagation()">
+                {{ minimized ? '▲' : '▼' }}
+            </button>
+            <button class="chat-action-btn" (click)="close(); $event.stopPropagation()">✕</button>
+        </div>
     </div>
 
-    <div class="chat-messages">
+    <div class="chat-messages" *ngIf="!minimized">
         <div class="message-item" *ngFor="let msg of messages" [class.mine]="isMyMessage(msg)">
             <div class="msg-avatar" *ngIf="!isMyMessage(msg)">
                 {{ getInitials(msg.senderName) }}
@@ -20,7 +26,7 @@
         <div #messagesEnd></div>
     </div>
 
-    <div class="chat-input">
+    <div class="chat-input" *ngIf="!minimized">
         <input type="text" [(ngModel)]="newMessage" placeholder="Type a message..." (keyup.enter)="sendMessage()"
             class="msg-input">
         <button class="send-btn" (click)="sendMessage()" [disabled]="!newMessage.trim()">

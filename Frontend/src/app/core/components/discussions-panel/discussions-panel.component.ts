@@ -18,14 +18,11 @@ export class DiscussionsPanelComponent implements OnInit {
 
   @Input() isOpen = false;
   @Output() closed = new EventEmitter<void>();
-
+  @Output() openChat = new EventEmitter<{streamId?: string, taskId?: string, title: string}>();
   streamDiscussions: any[] = [];
   taskDiscussions: any[] = [];
 
-  chatOpen = false;
-  chatStreamId: string | null = null;
-  chatTaskId: string | null = null;
-  chatTitle = '';
+ 
 
   private apiUrl = environment.apiUrl;
   currentUserId = '';
@@ -93,22 +90,20 @@ export class DiscussionsPanelComponent implements OnInit {
   }
 
   openStreamChat(discussion: any): void {
-    this.chatStreamId = discussion.id;
-    this.chatTaskId = null;
-    this.chatTitle = `${discussion.name} — Team Chat`;
-    this.chatOpen = true;
-  }
+  this.openChat.emit({
+    streamId: discussion.id,
+    title: `${discussion.name} — Team Chat`
+  });
+}
 
-  openTaskChat(discussion: any): void {
-    this.chatTaskId = discussion.id;
-    this.chatStreamId = null;
-    this.chatTitle = discussion.title;
-    this.chatOpen = true;
-  }
+openTaskChat(discussion: any): void {
+  this.openChat.emit({
+    taskId: discussion.id,
+    title: discussion.title
+  });
+}
 
-  closeChat(): void {
-    this.chatOpen = false;
-  }
+   
 
   close(): void {
     this.closed.emit();

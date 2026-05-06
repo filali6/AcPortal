@@ -11,7 +11,7 @@ import { UtilsService } from '../../core/services/utils.service';
 import { ChartService } from '../../core/services/chart.service';
 import { TabsService } from '../../core/services/tabs.service';
 import { AuthService } from '../../core/services/auth.service';
-import { LucideAngularModule, ChevronRight, Layers } from 'lucide-angular';
+import { LucideAngularModule, ChevronRight, Layers,MessageSquare } from 'lucide-angular';
 import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
@@ -65,6 +65,7 @@ export class ConsultantComponent implements OnInit, OnDestroy {
 
   readonly ChevronRight = ChevronRight;
   readonly Layers = Layers;
+  readonly MessageSquare=MessageSquare;
 
   constructor(
     private tasksService: TasksService,

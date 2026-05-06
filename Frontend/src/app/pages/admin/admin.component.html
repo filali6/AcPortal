@@ -142,26 +142,29 @@
                     <h2>Create Project</h2>
                 </div>
                 <div class="card-body">
+                
+                    <!-- Contract Info — stylée -->
                     <div class="contract-info" *ngIf="tab.contractInfo">
-                        <div class="contract-header">
-                            <span class="contract-label">Signed Contract</span>
+                        <div class="contract-banner">
+                            <span class="contract-badge">📄 Signed Contract</span>
                             <span class="contract-client">{{ tab.contractInfo.clientName }}</span>
-                        </div>
-                        <p class="contract-desc" *ngIf="tab.contractInfo.description">
-                            {{ tab.contractInfo.description }}
-                        </p>
-                        <div class="files-list" *ngIf="tab.contractInfo.filesPaths?.length > 0">
-                            <a *ngFor="let f of tab.contractInfo.filesPaths" [href]="getFileUrl(f)" target="_blank"
-                                class="file-link">
-                                📄 {{ f }}
-                            </a>
+                            <p class="contract-desc" *ngIf="tab.contractInfo.description">
+                                {{ tab.contractInfo.description }}
+                            </p>
+                            <div class="files-list" *ngIf="tab.contractInfo.filesPaths?.length > 0">
+                                <a *ngFor="let f of tab.contractInfo.filesPaths" [href]="getFileUrl(f)" target="_blank"
+                                    class="file-link">
+                                    📄 {{ f | slice:0:40 }}{{ f.length > 40 ? '...' : '' }}
+                                </a>
+                            </div>
                         </div>
                     </div>
+                
+                    <!-- Form -->
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Project Name</label>
-                            <input type="text" [(ngModel)]="tab.projectName" placeholder="e.g. ACP Migration"
-                                class="form-input">
+                            <input type="text" [(ngModel)]="tab.projectName" placeholder="e.g. ACP Migration" class="form-input">
                         </div>
                         <div class="form-group">
                             <label>Description</label>
@@ -175,17 +178,14 @@
                         <div class="form-group">
                             <div class="label-row">
                                 <label>Portfolio</label>
-                                <button class="btn-add-small"
-                                    (click)="tab.showCreatePortfolio = !tab.showCreatePortfolio">
+                                <button class="btn-add-small" (click)="tab.showCreatePortfolio = !tab.showCreatePortfolio">
                                     + New Portfolio
                                 </button>
                             </div>
-                            <div *ngIf="portfolios.length === 0 && !tab.showCreatePortfolio"
-                                class="alert alert-warning">
+                            <div *ngIf="portfolios.length === 0 && !tab.showCreatePortfolio" class="alert alert-warning">
                                 No portfolios available.
                             </div>
-                            <select *ngIf="portfolios.length > 0" [(ngModel)]="tab.selectedPortfolioId"
-                                class="form-input">
+                            <select *ngIf="portfolios.length > 0" [(ngModel)]="tab.selectedPortfolioId" class="form-input">
                                 <option value="">-- Select a portfolio --</option>
                                 <option *ngFor="let p of portfolios" [value]="p.id">
                                     {{ p.name }} — {{ p.director?.fullName || 'No director' }}
@@ -200,8 +200,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Description</label>
-                                <input type="text" [(ngModel)]="tab.portfolioDescription" placeholder="Description"
-                                    class="form-input">
+                                <input type="text" [(ngModel)]="tab.portfolioDescription" placeholder="Description" class="form-input">
                             </div>
                             <div class="form-group">
                                 <label>Portfolio Director</label>
@@ -217,12 +216,13 @@
                             </button>
                         </div>
                     </div>
+                
                     <div class="bottom-actions">
-                        <button class="btn-primary" (click)="createProject(tabId)"
-                            [disabled]="loading || !tab.selectedPortfolioId">
+                        <button class="btn-primary" (click)="createProject(tabId)" [disabled]="loading || !tab.selectedPortfolioId">
                             {{ loading ? 'Creating...' : 'Create Project' }}
                         </button>
                     </div>
+                
                 </div>
             </div>
         </ng-container>

@@ -114,6 +114,9 @@ chatTitle = '';
     });
         this.loadProjects();
         this.refreshTasks();
+        this.myTasks.filter(t => t.stepId).forEach(task => {
+  this.chatService.joinTaskChat(task.id);
+});
         this.pluginBridge.getAllPlugins().subscribe({
           next: (plugins) => this.availablePlugins = plugins
         });
