@@ -46,7 +46,8 @@ export class LoginComponent implements OnInit {
     } else if (role === 'Consultant') {
       this.router.navigate(['/consultant']);
     } else if (role === 'DAF') {
-      this.router.navigate(['/daf']);
+      this.router.navigate(['/daf']);} else if (role === 'SuperAdmin') {
+    this.router.navigate(['/super-admin']);
     } else {
       this.keycloak.login();
     }

@@ -1,100 +1,129 @@
-<div class="toast-notif" *ngIf="toastVisible">
-     
-    <div class="toast-body">
-        <span class="toast-title">Nouvelle tâche</span>
-        <span class="toast-message">{{ toastMessage }}</span>
-    </div>
-    <button class="toast-close" (click)="closeToast()">✕</button>
-</div>
 <div *ngIf="showLayout" class="app-layout">
 
-    <!-- Sidebar -->
     <aside class="sidebar">
+
+        <!-- Logo -->
         <div class="sidebar-logo">
-            
+            <div class="logo-icon-wrap">
+                <lucide-icon [img]="Briefcase" size="18" color="white"></lucide-icon>
+            </div>
             <span class="logo-text">ACPortal</span>
         </div>
 
+        <!-- Nav -->
         <nav class="sidebar-nav">
 
             <!-- HeadOfCDS -->
             <ng-container *ngIf="isAdmin()">
                 <a class="nav-item" [class.active]="isActive('admin')" (click)="navigate('/admin')">
-                    <span class="nav-icon"></span>
-                    <span>Mon Espace </span>
+                    <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
+                    <span>Dashboard</span>
                 </a>
                 <a class="nav-item" (click)="navigate('/admin', {view: 'projects'})">
-                    <span class="nav-icon"></span>
-                    <span>Projets</span>
+                    <lucide-icon [img]="FolderOpen" size="16" class="nav-icon"></lucide-icon>
+                    <span>Projects</span>
                 </a>
             </ng-container>
 
             <!-- PortfolioDirector -->
             <ng-container *ngIf="isDirector()">
                 <a class="nav-item" [class.active]="isActive('director')" (click)="navigate('/director')">
-                    <span class="nav-icon"></span>
-                    <span>Mon Espace</span>
+                    <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
+                    <span>Dashboard</span>
+                </a>
+            </ng-container>
+
+            <!-- ProjectManager -->
+            <ng-container *ngIf="isProjectManager()">
+                <a class="nav-item" [class.active]="isActive('project-manager')" (click)="navigate('/project-manager')">
+                    <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
+                    <span>Dashboard</span>
+                </a>
+            </ng-container>
+
+            <!-- TeamLead -->
+            <ng-container *ngIf="isTeamLead()">
+                <a class="nav-item" [class.active]="isActive('team-lead')" (click)="navigate('/team-lead')">
+                    <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" [class.active]="isActive('/tools-page')" (click)="navigate('/tools-page')">
+                    <lucide-icon [img]="Wrench" size="16" class="nav-icon"></lucide-icon>
+                    <span>Tools</span>
                 </a>
             </ng-container>
 
             <!-- Consultant -->
             <ng-container *ngIf="isConsultant()">
                 <a class="nav-item" [class.active]="isActive('/consultant')" (click)="navigate('/consultant')">
-                    <span class="nav-icon"></span>
-                    <span>Mon espace</span>
+                    <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
+                    <span>Dashboard</span>
                 </a>
-            
                 <a class="nav-item" [class.active]="isActive('/tools-page')" (click)="navigate('/tools-page')">
-                    <span class="nav-icon"></span>
+                    <lucide-icon [img]="Wrench" size="16" class="nav-icon"></lucide-icon>
                     <span>Tools</span>
                 </a>
-            
-                
-            
             </ng-container>
+
+            <!-- DAF -->
             <ng-container *ngIf="isDAF()">
                 <a class="nav-item" [class.active]="isActive('daf')" (click)="navigate('/daf')">
-                    <span class="nav-icon"></span>
-                    <span>Contrats</span>
+                    <lucide-icon [img]="FileText" size="16" class="nav-icon"></lucide-icon>
+                    <span>Contracts</span>
                 </a>
             </ng-container>
-            <!-- Team Lead -->
-            <ng-container *ngIf="isTeamLead()">
-                <a class="nav-item" [class.active]="isActive('team-lead')" (click)="navigate('/team-lead')">
-                    <span class="nav-icon"></span>
-                    <span>Mon Espace</span>
+            <!-- SuperAdmin -->
+            <ng-container *ngIf="isSuperAdmin()">
+                <a class="nav-item" [class.active]="isActive('super-admin')" (click)="navigate('/super-admin')">
+                    <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
+                    <span>Dashboard</span>
                 </a>
-                <a class="nav-item" [class.active]="isActive('/tools-page')" (click)="navigate('/tools-page')">
-                    <span class="nav-icon"></span>
+                <a class="nav-item" [class.active]="isActive('super-admin/users')" (click)="navigate('/super-admin/users')">
+                    <lucide-icon [img]="Users" size="16" class="nav-icon"></lucide-icon>
+                    <span>Users</span>
+                </a>
+                <a class="nav-item" [class.active]="isActive('super-admin/tools')" (click)="navigate('/super-admin/tools')">
+                    <lucide-icon [img]="Wrench" size="16" class="nav-icon"></lucide-icon>
                     <span>Tools</span>
                 </a>
-            </ng-container>
-            
-            <!-- Chef d'Équipe -->
-            <!-- <ng-container *ngIf="isChefEquipe()">
-                <a class="nav-item" [class.active]="isActive('chef-equipe')" (click)="navigate('/chef-equipe')">
-                    <span class="nav-icon">⚙️</span>
-                    <span>Steps</span>
+                <a class="nav-item" [class.active]="isActive('super-admin/workflow')" (click)="navigate('/super-admin/workflow')">
+                    <lucide-icon [img]="GitBranch" size="16" class="nav-icon"></lucide-icon>
+                    <span>Workflow</span>
                 </a>
-            </ng-container> -->
-            
-           
+            </ng-container>
 
         </nav>
-         
 
+        <!-- Footer -->
         <div class="sidebar-footer">
+
+            <!-- Notifications -->
+            <app-notifications-dropdown></app-notifications-dropdown>
+        
+            <!-- Discussions -->
+            <a class="nav-item sidebar-action" (click)="toggleDiscussions()">
+                <lucide-icon [img]="MessageSquare" size="16" class="nav-icon"></lucide-icon>
+                <span>Discussions</span>
+            </a>
+           
+            <!-- Divider -->
+            <div class="sidebar-divider"></div>
+
+            <!-- User -->
             <div class="user-badge">
-                 
+                <div class="user-avatar">{{ getUserInitials() }}</div>
                 <div class="user-details">
                     <span class="user-name">{{ userInfo?.name }}</span>
-                    <span class="user-role">{{ userRole }}</span>
+                    <span class="user-role">{{ getRoleLabel() }}</span>
                 </div>
             </div>
-            <a class="nav-item mt-8" (click)="logout()">
-                <span class="nav-icon">⏻</span>
+
+            <!-- Logout -->
+            <a class="nav-item logout-item" (click)="logout()">
+                <lucide-icon [img]="LogOut" size="16" class="nav-icon"></lucide-icon>
                 <span>Log out</span>
             </a>
+
         </div>
     </aside>
 
@@ -102,14 +131,26 @@
     <div class="main-wrapper">
         <app-tabs-bar></app-tabs-bar>
         <app-toast></app-toast>
+       
         <main class="main-content">
             <router-outlet />
         </main>
     </div>
-
+<app-discussions-panel *ngIf="discussionsOpen" [isOpen]="discussionsOpen" (closed)="discussionsOpen = false">
+</app-discussions-panel>
 </div>
 
-<!-- Sans layout → login ou plugins -->
+<!-- Toast -->
+<div class="toast-notif" *ngIf="toastVisible">
+    <div class="toast-body">
+        <span class="toast-title">New notification</span>
+        <span class="toast-message">{{ toastMessage }}</span>
+    </div>
+    <button class="toast-close" (click)="closeToast()">✕</button>
+</div>
+ 
+
+<!-- Sans layout -->
 <div *ngIf="!showLayout">
     <router-outlet />
 </div>

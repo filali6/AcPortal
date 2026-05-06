@@ -1,0 +1,62 @@
+<div class="discussions-overlay" *ngIf="isOpen" (click)="close()"></div>
+
+<div class="discussions-panel" [class.open]="isOpen">
+
+    <div class="panel-header">
+        <span class="panel-title">Discussions</span>
+        <button class="close-btn" (click)="close()">✕</button>
+    </div>
+
+    <div class="panel-body">
+
+        <!-- Stream Discussions -->
+        <div class="section-label">Stream Discussions</div>
+        <div class="discussion-item" *ngFor="let d of streamDiscussions" (click)="openStreamChat(d)">
+            <div class="disc-avatar stream-avatar">
+                {{ d.name.slice(0,2).toUpperCase() }}
+            </div>
+            <div class="disc-info">
+                <div class="disc-header">
+                    <span class="disc-name">{{ d.name }}</span>
+                    <span class="disc-time">{{ getTimeAgo(d.lastMessageTime) }}</span>
+                </div>
+                <span class="disc-project">{{ d.projectName }}</span>
+                <p class="disc-last">
+                    <span *ngIf="d.senderName">{{ d.senderName }}: </span>
+                    {{ d.lastMessage }}
+                </p>
+            </div>
+        </div>
+        <div class="empty-section" *ngIf="streamDiscussions.length === 0">
+            No stream discussions
+        </div>
+
+        <!-- Task Discussions -->
+        <div class="section-label" style="margin-top: 16px">Task Discussions</div>
+        <div class="discussion-item" *ngFor="let d of taskDiscussions" (click)="openTaskChat(d)">
+            <div class="disc-avatar task-avatar">
+                {{ d.title.slice(0,2).toUpperCase() }}
+            </div>
+            <div class="disc-info">
+                <div class="disc-header">
+                    <span class="disc-name">{{ d.title }}</span>
+                    <span class="disc-time">{{ getTimeAgo(d.lastMessageTime) }}</span>
+                </div>
+                <p class="disc-last">
+                    <span *ngIf="d.senderName">{{ d.senderName }}: </span>
+                    {{ d.lastMessage }}
+                </p>
+            </div>
+        </div>
+        <div class="empty-section" *ngIf="taskDiscussions.length === 0">
+            No task discussions
+        </div>
+
+    </div>
+
+    <!-- Chat panel embedded -->
+    <app-chat-panel [isOpen]="chatOpen" [streamId]="chatStreamId" [taskId]="chatTaskId" [title]="chatTitle">
+    </app-chat-panel>
+    <div class="chat-overlay-inner" *ngIf="chatOpen" (click)="closeChat()"></div>
+
+</div>

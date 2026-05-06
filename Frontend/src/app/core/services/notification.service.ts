@@ -42,7 +42,7 @@ export class NotificationService {
       })
       .catch(err => console.error('SignalR error:', err));
 
-    // Écouter les nouvelles notifications
+    //Écouter les nouvelles notifications
     this.hubConnection.on('NewNotification', (data) => {
       const current = this.notifications$.value;
       this.notifications$.next([data, ...current]);

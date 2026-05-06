@@ -10,4 +10,6 @@ public class PluginDefinition
     public string BaseUrlEnvKey { get; set; } = string.Empty;
     public string AdapterType { get; set; } = string.Empty;
     public bool SsoEnabled { get; set; }
+    public bool IsActive { get; set; } = true;
+    public List<string> AllowedRoles { get; set; } = new();
 }

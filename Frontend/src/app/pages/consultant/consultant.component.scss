@@ -103,9 +103,7 @@
         }
     }
 
-    tr.task-done td {
-        opacity: 0.4;
-    }
+    
 
     tr.task-blocked td {
         opacity: 0.5;
@@ -390,4 +388,23 @@
     text-align: center;
     color: var(--text-secondary);
     font-size: 13px;
+}
+.btn-chat-sm {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 14px;
+
+    &:hover {
+        background: #f3f4f6;
+    }
+}
+
+.chat-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+    z-index: 199;
 }

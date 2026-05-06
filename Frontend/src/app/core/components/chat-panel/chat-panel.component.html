@@ -1,0 +1,30 @@
+<div class="chat-panel" [class.open]="isOpen">
+    <div class="chat-header">
+        <span class="chat-title">{{ title }}</span>
+    </div>
+
+    <div class="chat-messages">
+        <div class="message-item" *ngFor="let msg of messages" [class.mine]="isMyMessage(msg)">
+            <div class="msg-avatar" *ngIf="!isMyMessage(msg)">
+                {{ getInitials(msg.senderName) }}
+            </div>
+            <div class="msg-bubble">
+                <span class="msg-sender" *ngIf="!isMyMessage(msg)">{{ msg.senderName }}</span>
+                <p class="msg-content">{{ msg.content }}</p>
+                <span class="msg-time">{{ getTime(msg.createdAt) }}</span>
+            </div>
+        </div>
+        <div class="empty-chat" *ngIf="messages.length === 0">
+            No messages yet. Start the conversation!
+        </div>
+        <div #messagesEnd></div>
+    </div>
+
+    <div class="chat-input">
+        <input type="text" [(ngModel)]="newMessage" placeholder="Type a message..." (keyup.enter)="sendMessage()"
+            class="msg-input">
+        <button class="send-btn" (click)="sendMessage()" [disabled]="!newMessage.trim()">
+            →
+        </button>
+    </div>
+</div>

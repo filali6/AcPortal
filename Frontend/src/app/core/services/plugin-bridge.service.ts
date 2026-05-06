@@ -12,6 +12,8 @@ export interface Plugin {
   ssoEnabled: boolean;
   accessUrl: string;
   addedAt?: string;
+  isActive: boolean;
+  allowedRoles: string[];
 }
 
 @Injectable({ providedIn: 'root' })

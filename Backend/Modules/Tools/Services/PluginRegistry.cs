@@ -11,11 +11,11 @@ public class PluginRegistry
 
     public PluginRegistry()
     {
-        // Enregistrer les adapters
+        
         Register(new GiteaAdapter());
         Register(new BudibaseAdapter());
 
-        // Lire les fichiers JSON
+         
         LoadDefinitions();
     }
 
@@ -46,4 +46,16 @@ public class PluginRegistry
 
     public IPluginAdapter? GetAdapter(string pluginId) =>
         _adapters.TryGetValue(pluginId, out var adapter) ? adapter : null;
+
+    public void AddDefinition(PluginDefinition definition)
+    {
+        
+        _definitions.RemoveAll(d => d.Id == definition.Id);
+        _definitions.Add(definition);
+    }
+
+    public void RemoveDefinition(string pluginId)
+    {
+        _definitions.RemoveAll(d => d.Id == pluginId);
+    }
 }

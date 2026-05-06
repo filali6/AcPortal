@@ -46,4 +46,37 @@ export class UsersService {
   getConsultants(users: User[]): User[] {
     return users.filter(u => u.role === 'Consultant');
   }
+  getAllForAdmin(): Observable<User[]> {
+  return this.http.get<User[]>(`${this.apiUrl}/auth/users/all`);
+}
+
+createUser(data: { fullName: string, email: string, password: string, role: string }): Observable<any> {
+  return this.http.post(`${this.apiUrl}/auth/users`, {
+    fullName: data.fullName,
+    email: data.email,
+    password: data.password,
+    role: this.getRoleNumber(data.role)
+  });
+}
+
+updateUser(id: string, data: { fullName?: string, role?: string }): Observable<any> {
+  return this.http.patch(`${this.apiUrl}/auth/users/${id}`, data);
+}
+
+deleteUser(id: string): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/auth/users/${id}`);
+}
+private getRoleNumber(role: string): number {
+  const roles: { [key: string]: number } = {
+    'HeadOfCDS': 0,
+    'PortfolioDirector': 1,
+    'ProjectManager': 2,
+    'BusinessTeamLead': 3,
+    'TechnicalTeamLead': 4,
+    'Consultant': 5,
+    'DAF': 6,
+    'SuperAdmin': 7
+  };
+  return roles[role] ?? 5;
+}
 }

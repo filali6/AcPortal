@@ -17,11 +17,13 @@ import { Subscription } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import { TeamFilterPipe } from '../../core/pipes/team-filter.pipe';
 Chart.register(...registerables);
-
+import { ChatPanelComponent } from '../../core/components/chat-panel/chat-panel.component';
+import { KeycloakService } from 'keycloak-angular';
+import { ChatService } from '../../core/services/chat.service';
 @Component({
   selector: 'app-consultant',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, TeamFilterPipe],
+  imports: [CommonModule, FormsModule, LucideAngularModule, TeamFilterPipe,ChatPanelComponent],
   templateUrl: './consultant.component.html',
   styleUrl: './consultant.component.scss'
 })
@@ -43,6 +45,11 @@ export class ConsultantComponent implements OnInit, OnDestroy {
   filterStatus = 'all';
   selectedProjectId = '';
   filterStreamId = '';
+
+//chat 
+  chatOpen = false;
+  chatTaskId: string | null = null;
+  chatTitle = '';
 
   private donutChart: Chart | null = null;
   private barChart: Chart | null = null;
@@ -69,7 +76,10 @@ export class ConsultantComponent implements OnInit, OnDestroy {
     public utils: UtilsService,
     private chartService: ChartService,
     public tabsService: TabsService,
-    private authService: AuthService
+    private authService: AuthService,
+    private keycloak:KeycloakService,
+    private chatService:ChatService,
+
   ) {}
 
   ngOnInit(): void {
@@ -96,6 +106,14 @@ export class ConsultantComponent implements OnInit, OnDestroy {
     this.http.get<any[]>(`${this.apiUrl}/streams/my`).subscribe({
       next: (streams) => {
         this.myStreams = streams;
+        const token = this.keycloak.getKeycloakInstance().token || '';
+    this.chatService.startConnection(token).then(() => {
+      streams.forEach((s: any) => {
+        this.chatService.joinStreamChat(s.id);
+      });
+    });
+
+       
         this.statsBottom.activeStreams = streams.length;
       }
     });
@@ -264,4 +282,13 @@ export class ConsultantComponent implements OnInit, OnDestroy {
       });
     });
   }
+  openTaskChat(task: any): void {
+  this.chatTaskId = task.id;
+  this.chatTitle = task.title;
+  this.chatOpen = true;
+}
+
+closeChat(): void {
+  this.chatOpen = false;
+}
 }

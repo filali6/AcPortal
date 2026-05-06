@@ -8,12 +8,16 @@ import { filter } from 'rxjs/operators';
 import { NotificationService } from './core/services/notification.service';
 import { TabsBarComponent } from './core/components/tabs-bar/tabs-bar.component';
 import { ToastComponent } from './core/components/toast/toast.component';
-
+import { NotificationsDropdownComponent } from './core/components/notifications-dropdown/notifications-dropdown.component';
+import { LucideAngularModule, LayoutDashboard, FolderOpen, FileText, Wrench, Bell, MessageSquare, LogOut, User, ChevronRight, Briefcase,Users,GitBranch,Settings } from 'lucide-angular';
+import { ChatService } from './core/services/chat.service';
+import { KeycloakService } from 'keycloak-angular';
+import { DiscussionsPanelComponent } from './core/components/discussions-panel/discussions-panel.component';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet,TabsBarComponent,ToastComponent],
-  templateUrl: './app.component.html',
+imports: [CommonModule, RouterOutlet, TabsBarComponent, ToastComponent, NotificationsDropdownComponent, LucideAngularModule,DiscussionsPanelComponent],
+templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
@@ -31,30 +35,52 @@ private toastTimeout: any;
   myTools: { toolId: string; toolName: string; roles: string[] }[] = [];
   isChefInAnyProject = false;
   notifications: { message: string, projectId: string }[] = [];
-
+  discussionsOpen=false;
   private apiUrl = environment.apiUrl;
+  readonly LayoutDashboard = LayoutDashboard;
+readonly FolderOpen = FolderOpen;
+readonly FileText = FileText;
+readonly Wrench = Wrench;
+readonly Bell = Bell;
+readonly MessageSquare = MessageSquare;
+readonly LogOut = LogOut;
+readonly User = User;
+readonly ChevronRight = ChevronRight;
+readonly Briefcase = Briefcase;
+readonly Users=Users;
+readonly GitBranch=GitBranch;
+readonly Settings=Settings;
 
   constructor(
     private router: Router,
     private authService: AuthService,
     private http: HttpClient,
     private notificationService:NotificationService,
+    private keycloak:KeycloakService,
+    private chatService:ChatService
     
   ) {}
 
   ngOnInit(): void {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        this.showLayout = false;
-        this.userRole = '';
-        this.userInfo = null;
-    } else {
-        this.userInfo = this.authService.getUserInfo();
-        this.userRole = this.userInfo?.role || '';
-        if (this.userInfo?.id){
-          this.notificationService.startConnection(this.userInfo.id);
+   
+   
+  if (this.keycloak.isLoggedIn()) {
+    this.userInfo = this.authService.getUserInfo();
+    console.log('userInfo:', this.userInfo);
+    console.log('userRole:', this.userInfo?.role);
+    this.userRole = this.userInfo?.role || '';
+    this.showLayout=true;
+    
+    if (this.userInfo?.id) {
+      this.notificationService.startConnection(this.userInfo.id);
+      this.initChatConnection();
     }
-    }
+  } else {
+    this.showLayout = false;
+    this.userRole = '';
+    this.userInfo = null;
+  }
+    
     this.notificationService.toast$.subscribe(message => {
   this.toastMessage = message;
   this.toastVisible = true;
@@ -67,6 +93,8 @@ private toastTimeout: any;
     this.router.events.pipe(
       filter(e => e instanceof NavigationEnd)
     ).subscribe((e: any) => {
+      
+      console.log('navigation url ', e.url);
       this.showLayout = !e.url.includes('login') 
     && !e.url.includes('plugins/axe-iam')
     && !e.url.includes('plugins/axe-bpm')
@@ -106,6 +134,7 @@ private toastTimeout: any;
     });
   }
 
+
   getToolRoute(toolName: string): string {
     const routes: { [key: string]: string } = {
       'axeIAM': '/plugins/axe-iam',
@@ -114,6 +143,11 @@ private toastTimeout: any;
     };
     return routes[toolName] || '/tools';
   }
+  private initChatConnection(): void {
+  // pas async — on utilise .then()
+  const token = this.keycloak.getKeycloakInstance().token || '';
+  this.chatService.startConnection(token);
+}
 
   navigate(path: string, queryParams?: any): void {
     this.router.navigate([path], queryParams ? { queryParams } : {});
@@ -138,11 +172,14 @@ private toastTimeout: any;
     return this.userRole === 'DAF';
 }
 
-  isChefEquipe(): boolean {
-      return this.isChefInAnyProject;
-  }
+  isProjectManager(): boolean {
+  return this.userRole === 'ProjectManager';
+}
   isTeamLead(): boolean {
     return this.userRole === 'BusinessTeamLead' || this.userRole === 'TechnicalTeamLead';
+}
+isSuperAdmin(): boolean {
+  return this.userRole === 'SuperAdmin';
 }
   closeToast(): void {
   this.toastVisible = false;
@@ -156,4 +193,25 @@ private toastTimeout: any;
     this.userInfo = null;
     this.showLayout = false;
   }
+  getUserInitials(): string {
+  const name = this.userInfo?.name || '';
+  return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2) || 'U';
+}
+
+getRoleLabel(): string {
+  const labels: { [key: string]: string } = {
+    'HeadOfCDS': 'Head of CDS',
+    'PortfolioDirector': 'Portfolio Director',
+    'ProjectManager': 'Project Manager',
+    'BusinessTeamLead': 'Business Team Lead',
+    'TechnicalTeamLead': 'Technical Team Lead',
+    'Consultant': 'Consultant',
+    'DAF': 'DAF',
+    'SuperAdmin': 'Super Admin'
+  };
+  return labels[this.userRole] || this.userRole;
+}
+toggleDiscussions():void{
+  this.discussionsOpen=!this.discussionsOpen;
+}
 }

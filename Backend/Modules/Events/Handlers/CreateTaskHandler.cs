@@ -5,7 +5,7 @@ using Backend.Modules.Tasks.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Backend.Hubs;
-
+using Backend.Modules.Notifications.Services;
 namespace Backend.Modules.Events.Handlers;
 
 public class CreateTaskHandler : IActionHandler
@@ -13,16 +13,16 @@ public class CreateTaskHandler : IActionHandler
     public string ActionType => "CREATE_TASK";
 
     private readonly AppDbContext _db;
-    private readonly IHubContext<NotificationHub> _hubContext;
+    private readonly NotificationService _notificationService; 
     private readonly ILogger<CreateTaskHandler> _logger;
 
     public CreateTaskHandler(
         AppDbContext db,
-        IHubContext<NotificationHub> hubContext,
+        NotificationService notificationService,
         ILogger<CreateTaskHandler> logger)
     {
         _db = db;
-        _hubContext = hubContext;
+        _notificationService=notificationService;
         _logger = logger;
     }
 
@@ -123,14 +123,11 @@ public class CreateTaskHandler : IActionHandler
         _db.AcpTasks.Add(task);
         await _db.SaveChangesAsync();
 
-        await _hubContext.Clients
-            .Group(user.KeycloakId)
-            .SendAsync("NewNotification", new
-            {
-                message = title,
-                projectId = projectId,
-                contractId=contractId
-            });
+        await _notificationService.SendAsync(
+    user.KeycloakId,
+    title,
+    projectId.HasValue ? $"/projects/{projectId}" : null
+);
 
         _logger.LogInformation(
             "Tâche créée : {Title} → {User}",

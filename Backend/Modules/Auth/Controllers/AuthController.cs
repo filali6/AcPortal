@@ -77,7 +77,7 @@ public class AuthController : ControllerBase
             .ToListAsync();
         return Ok(managers);
     }
-    // Dans AuthController — ajoute cet endpoint
+     
     [HttpGet("users/leads")]
     [Authorize]
     public async Task<IActionResult> GetLeads()
@@ -98,6 +98,75 @@ public class AuthController : ControllerBase
             .ToListAsync();
         return Ok(leads);
     }
+
+    [HttpGet("users/all")]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> GetAllForAdmin()
+    {
+        var users = await _db.Users
+            .OrderBy(u => u.Role)
+            .ThenBy(u => u.FullName)
+            .Select(u => new
+            {
+                u.Id,
+                u.FullName,
+                u.Email,
+                u.KeycloakId,
+                role = u.Role.ToString(),
+                u.CreatedAt
+            })
+            .ToListAsync();
+        return Ok(users);
+    }
+
+    [HttpPost("users")]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> CreateUser([FromBody] RegisterRequest request)
+    {
+        // Réutilise RegisterAsync qui existe déjà
+        var user = await _authService.RegisterAsync(
+            request.FullName, request.Email, request.Password, request.Role);
+        if (user == null)
+            return BadRequest(new { message = "Error creating user" });
+        return Ok(user);
+    }
+
+    [HttpPatch("users/{id:guid}")]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user == null) return NotFound();
+
+        if (!string.IsNullOrEmpty(request.FullName))
+            user.FullName = request.FullName;
+
+        if (!string.IsNullOrEmpty(request.Role) &&
+            Enum.TryParse<GlobalRole>(request.Role, out var role))
+        {
+           
+            await _authService.UpdateUserRoleAsync(
+                user.KeycloakId, user.Role.ToString(), role.ToString());
+            user.Role = role;
+        }
+
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "User updated" });
+    }
+
+    [HttpDelete("users/{id:guid}")]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> DeleteUser(Guid id)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user == null) return NotFound();
+
+         
+        await _authService.DeleteUserAsync(user.KeycloakId);
+        _db.Users.Remove(user);
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "User deleted" });
+    }
     public class RegisterRequest
     {
         [Required(ErrorMessage ="FullName is required")]
@@ -113,5 +182,14 @@ public class AuthController : ControllerBase
         public GlobalRole Role{get;set;}=GlobalRole.Consultant;
     }
    
-    
+
+    public class UpdateUserRequest
+    {
+        public string? FullName { get; set; }
+        public string? Role { get; set; }
+    }
+
+
+
+
 }
