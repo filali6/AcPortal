@@ -136,8 +136,13 @@
             <router-outlet />
         </main>
     </div>
-<app-discussions-panel *ngIf="discussionsOpen" [isOpen]="discussionsOpen" (closed)="discussionsOpen = false">
+<app-discussions-panel *ngIf="discussionsOpen" [isOpen]="discussionsOpen" (closed)="discussionsOpen = false"
+    (openChat)="onOpenChat($event)">
 </app-discussions-panel>
+
+<app-chat-panel *ngIf="chatOpen" [isOpen]="chatOpen" [streamId]="chatStreamId" [taskId]="chatTaskId" [title]="chatTitle"
+    (closed)="chatOpen = false">
+</app-chat-panel>
 </div>
 
 <!-- Toast -->

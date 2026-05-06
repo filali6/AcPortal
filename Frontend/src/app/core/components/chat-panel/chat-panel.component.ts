@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewChecked , Output, EventEmitter} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService, ChatMessage } from '../../services/chat.service';
@@ -20,9 +20,12 @@ export class ChatPanelComponent implements OnInit, OnChanges, AfterViewChecked {
 
   @ViewChild('messagesEnd') messagesEnd!: ElementRef;
 
+  @Output() closed=new EventEmitter<void>();
+
   messages: ChatMessage[] = [];
   newMessage = '';
   currentUserId = '';
+  minimized=false;
 
   constructor(
     private chatService: ChatService,
@@ -105,4 +108,5 @@ export class ChatPanelComponent implements OnInit, OnChanges, AfterViewChecked {
   const token = this.keycloak.getKeycloakInstance().token || '';
   await this.chatService.startConnection(token);
 }
+close():void{this.closed.emit();}
 }

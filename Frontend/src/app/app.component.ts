@@ -13,10 +13,11 @@ import { LucideAngularModule, LayoutDashboard, FolderOpen, FileText, Wrench, Bel
 import { ChatService } from './core/services/chat.service';
 import { KeycloakService } from 'keycloak-angular';
 import { DiscussionsPanelComponent } from './core/components/discussions-panel/discussions-panel.component';
+import { ChatPanelComponent } from './core/components/chat-panel/chat-panel.component';
 @Component({
   selector: 'app-root',
   standalone: true,
-imports: [CommonModule, RouterOutlet, TabsBarComponent, ToastComponent, NotificationsDropdownComponent, LucideAngularModule,DiscussionsPanelComponent],
+imports: [CommonModule, RouterOutlet, TabsBarComponent, ToastComponent, NotificationsDropdownComponent, LucideAngularModule,DiscussionsPanelComponent, ChatPanelComponent],
 templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -29,6 +30,12 @@ export class AppComponent implements OnInit {
   toastMessage = '';
 toastVisible = false;
 private toastTimeout: any;
+
+
+chatOpen = false;
+chatStreamId: string | null = null;
+chatTaskId: string | null = null;
+chatTitle = '';
 
 
   // Outils accessibles au consultant
@@ -213,5 +220,11 @@ getRoleLabel(): string {
 }
 toggleDiscussions():void{
   this.discussionsOpen=!this.discussionsOpen;
+}
+onOpenChat(data: {streamId?: string, taskId?: string, title: string}): void {
+  this.chatStreamId = data.streamId || null;
+  this.chatTaskId = data.taskId || null;
+  this.chatTitle = data.title;
+  this.chatOpen = true;
 }
 }
