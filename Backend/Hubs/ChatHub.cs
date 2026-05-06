@@ -1,6 +1,9 @@
+using Backend.Data;
 using Backend.Modules.Chat.Services;
+using Backend.Modules.Notifications.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace Backend.Hubs;
@@ -10,11 +13,14 @@ public class ChatHub : Hub
 {
     private readonly ChatService _chatService;
     private readonly ILogger<ChatHub> _logger;
-
-    public ChatHub(ChatService chatService, ILogger<ChatHub> logger)
+    private readonly NotificationService _notificationService;
+    private readonly AppDbContext _db;
+    public ChatHub(ChatService chatService, ILogger<ChatHub> logger,NotificationService notificationService,AppDbContext db)
     {
         _chatService = chatService;
         _logger = logger;
+        _notificationService=notificationService;
+        _db=db;
     }
 
     public async Task JoinStreamChat(string streamId)
@@ -37,8 +43,7 @@ public class ChatHub : Hub
             ?? "Unknown";
 
         var message = await _chatService.SaveMessageAsync(
-            content, keycloakId, name,
-            Guid.Parse(streamId), null);
+            content, keycloakId, name, Guid.Parse(streamId), null);
 
         await Clients.Group($"stream-{streamId}").SendAsync("ReceiveMessage", new
         {
@@ -48,8 +53,32 @@ public class ChatHub : Hub
             senderKeycloakId = message.SenderKeycloakId,
             createdAt = message.CreatedAt
         });
-    }
 
+        // Notifier les membres du stream
+        var stream = await _db.Streams
+            .Include(s => s.Members).ThenInclude(m => m.Consultant)
+            .Include(s => s.BusinessTeamLead)
+            .Include(s => s.TechnicalTeamLead)
+            .FirstOrDefaultAsync(s => s.Id == Guid.Parse(streamId));
+
+        if (stream == null) return;
+
+        var notifMessage = $"{name}: {content}";
+
+        // Membres consultants
+        foreach (var member in stream.Members.Where(m => m.Consultant.KeycloakId != keycloakId))
+        {
+            await _notificationService.SendAsync(member.Consultant.KeycloakId, notifMessage, null);
+        }
+
+        // BTL
+        if (stream.BusinessTeamLead?.KeycloakId != null && stream.BusinessTeamLead.KeycloakId != keycloakId)
+            await _notificationService.SendAsync(stream.BusinessTeamLead.KeycloakId, notifMessage, null);
+
+        // TTL
+        if (stream.TechnicalTeamLead?.KeycloakId != null && stream.TechnicalTeamLead.KeycloakId != keycloakId)
+            await _notificationService.SendAsync(stream.TechnicalTeamLead.KeycloakId, notifMessage, null);
+    }
     public async Task SendTaskMessage(string taskId, string content)
     {
         var keycloakId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
@@ -69,5 +98,13 @@ public class ChatHub : Hub
             senderKeycloakId = message.SenderKeycloakId,
             createdAt = message.CreatedAt
         });
-    }
+        var task = await _db.AcpTasks.FindAsync(Guid.Parse(taskId));
+        if (task != null && task.AssignedTo != keycloakId)
+        {
+            await _notificationService.SendAsync(
+                task.AssignedTo,
+                $"New message from {name} in task: {task.Title}",
+                null
+            );
+        }}
 }

@@ -59,7 +59,7 @@ public class PortfoliosController : ControllerBase
 
     // Lister tous les portfolios
     [HttpGet]
-    [Authorize(Roles = "HeadOfCDS,PortfolioDirector")]
+    [Authorize(Roles = "HeadOfCDS,PortfolioDirector,SuperAdmin")]
     public async Task<IActionResult> GetAll()
     {
         var portfolios = await _db.Portfolios

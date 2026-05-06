@@ -41,7 +41,7 @@ public class ProjectsController : ControllerBase
 
     
     [HttpGet]
-    [Authorize(Roles = "HeadOfCDS,PortfolioDirector,Consultant,ProjectManager,BusinessTeamLead,TechnicalTeamLead,Consultant")]
+    [Authorize(Roles = "HeadOfCDS,PortfolioDirector,Consultant,ProjectManager,BusinessTeamLead,TechnicalTeamLead,Consultant,SuperAdmin")]
     public async Task<IActionResult> GetAll()
     {
         var projects = await _projectsService.GetAllAsync();

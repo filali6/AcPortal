@@ -21,24 +21,37 @@ public class PluginBridgeController : ControllerBase
         _db = db;
     }
 
-   
+
     [HttpGet]
     public IActionResult GetAll()
     {
-        var plugins = _registry.GetAll().Select(p => new
-        {
-            p.Id,
-            p.Name,
-            p.Description,
-            p.Category,
-            p.Icon,
-            p.SsoEnabled,
-            accessUrl = _registry.GetAdapter(p.Id)?.GetAccessUrl()
-        });
+        var plugins = _registry.GetAll()
+           .Where(p => p.IsActive && p.AllowedRoles.Count > 0)
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.Category,
+                p.Icon,
+                p.SsoEnabled,
+                p.IsActive,
+                p.AllowedRoles,
+                accessUrl = _registry.GetAdapter(p.Id)?.GetAccessUrl()
+            });
+        return Ok(plugins);
+    }
+    [HttpGet("all")]
+    [Authorize(Roles = "SuperAdmin")]
+    public IActionResult GetAllForAdmin()
+    {
+        // Pour SuperAdmin — tous les tools sans filtre
+        var plugins = _registry.GetAll()
+            .Select(p => new { p.Id, p.Name, p.Description, p.Category, p.Icon, p.SsoEnabled, p.IsActive, p.AllowedRoles, accessUrl = _registry.GetAdapter(p.Id)?.GetAccessUrl() });
         return Ok(plugins);
     }
 
-   
+
     [HttpGet("{pluginId}")]
     public IActionResult GetById(string pluginId)
     {
@@ -136,5 +149,72 @@ public class PluginBridgeController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(new { message = "Plugin retiré avec succès" });
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "SuperAdmin")]
+    public IActionResult CreateTool([FromBody] PluginDefinition dto)
+    {
+       
+        if (_registry.GetById(dto.Id) != null)
+            return BadRequest(new { message = "Tool already exists" });
+
+         
+        var pluginsPath = Path.Combine(Directory.GetCurrentDirectory(), "plugins");
+        if (!Directory.Exists(pluginsPath))
+            Directory.CreateDirectory(pluginsPath);
+
+        var json = System.Text.Json.JsonSerializer.Serialize(dto,
+            new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        System.IO.File.WriteAllText(
+            Path.Combine(pluginsPath, $"{dto.Id}.json"), json);
+
+        
+        _registry.AddDefinition(dto);
+
+        return Ok(dto);
+    }
+
+    [HttpPut("{pluginId}")]
+    [Authorize(Roles = "SuperAdmin")]
+    public IActionResult UpdateTool(string pluginId, [FromBody] PluginDefinition dto)
+    {
+        var existing = _registry.GetById(pluginId);
+        if (existing == null) return NotFound();
+
+        dto.Id = pluginId;
+        dto.BaseUrlEnvKey = existing.BaseUrlEnvKey;
+        dto.AdapterType = existing.AdapterType;
+
+        var pluginsPath = Path.Combine(Directory.GetCurrentDirectory(), "plugins");
+        var json = System.Text.Json.JsonSerializer.Serialize(dto,
+            new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            });
+        System.IO.File.WriteAllText(
+            Path.Combine(pluginsPath, $"{pluginId}.json"), json);
+
+        _registry.AddDefinition(dto);
+        return Ok(dto);
+    }
+    [HttpDelete("{pluginId}")]
+    [Authorize(Roles = "SuperAdmin")]
+    public IActionResult DeleteTool(string pluginId)
+    {
+        if (_registry.GetById(pluginId) == null)
+            return NotFound();
+
+        
+        var pluginsPath = Path.Combine(Directory.GetCurrentDirectory(), "plugins");
+        var file = Path.Combine(pluginsPath, $"{pluginId}.json");
+        if (System.IO.File.Exists(file))
+            System.IO.File.Delete(file);
+
+        
+        _registry.RemoveDefinition(pluginId);
+
+        return Ok(new { message = "Tool deleted" });
     }
 }

@@ -10,17 +10,19 @@ import { ToastService } from '../../core/services/toast.service';
 import { UtilsService } from '../../core/services/utils.service';
 import { ChartService } from '../../core/services/chart.service';
 import { PluginBridgeService } from '../../core/services/plugin-bridge.service';
-import { LucideAngularModule, ChevronRight, Layers } from 'lucide-angular';
+import { LucideAngularModule, ChevronRight, Layers, MessageSquare } from 'lucide-angular';
 import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 import { TeamFilterPipe } from '../../core/pipes/team-filter.pipe';
-
+import { ChatPanelComponent } from '../../core/components/chat-panel/chat-panel.component';
+import { ChatService } from '../../core/services/chat.service';
+import { KeycloakService } from 'keycloak-angular';
 @Component({
   selector: 'app-team-lead',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule,TeamFilterPipe],
+  imports: [CommonModule, FormsModule, LucideAngularModule,TeamFilterPipe,ChatPanelComponent],
   templateUrl: './team-lead.component.html',
   styleUrl: './team-lead.component.scss'
 })
@@ -59,8 +61,15 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
     nextDelivery: { name: '', date: '' }
   };
 
+  //chat 
+  chatOpen = false;
+chatStreamId: string | null = null;
+chatTaskId: string | null = null;
+chatTitle = '';
+
   readonly ChevronRight = ChevronRight;
   readonly Layers = Layers;
+  readonly MessageSquare=MessageSquare;
 
   constructor(
     private http: HttpClient,
@@ -71,7 +80,10 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     public utils: UtilsService,
     private chartService: ChartService,
-    private pluginBridge: PluginBridgeService
+    private pluginBridge: PluginBridgeService,
+    private chatService:ChatService,
+    private keycloak:KeycloakService
+
   ) {}
 
   ngOnInit(): void {
@@ -94,6 +106,12 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
     this.http.get<any[]>(`${this.api}/streams/my`).subscribe({
       next: (streams) => {
         this.myStreams = streams;
+        const token = this.keycloak.getKeycloakInstance().token || '';
+    this.chatService.startConnection(token).then(() => {
+      streams.forEach((s: any) => {
+        this.chatService.joinStreamChat(s.id);
+      });
+    });
         this.loadProjects();
         this.refreshTasks();
         this.pluginBridge.getAllPlugins().subscribe({
@@ -329,5 +347,22 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
     title: stream.name,
     type: 'create-project'
   });
+}
+openStreamChat(stream: any): void {
+  this.chatStreamId = stream.id;
+  this.chatTaskId = null;
+  this.chatTitle = `${stream.name} — Team Chat`;
+  this.chatOpen = true;
+}
+
+openTaskChat(task: any): void {
+  this.chatTaskId = task.id;
+  this.chatStreamId = null;
+  this.chatTitle = `${task.title}`;
+  this.chatOpen = true;
+}
+
+closeChat(): void {
+  this.chatOpen = false;
 }
 }

@@ -13,6 +13,8 @@ using Backend.Modules.Auth;
 using System.Security.Claims;
 using Dapr.Messaging.PublishSubscribe.Extensions;  
 using Backend.Modules.Contracts.Services;
+using Backend.Modules.Notifications.Services;
+using Backend.Modules.Chat.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,6 +49,9 @@ builder.Services.AddScoped<EventPublisher>();
 
 builder.Services.AddScoped<IClaimsTransformation, KeycloakRoleTransformer>();
 builder.Services.AddScoped<ContractsService>();
+
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<ChatService>();
 
 builder.Services.AddSignalR();
 builder.Services.AddHttpClient();
@@ -122,10 +127,11 @@ using (var scope = app.Services.CreateScope())
 app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();
-// ❌ SUPPRIMÉ : app.UseCloudEvents();
-// ❌ SUPPRIMÉ : app.MapSubscribeHandler();
+
 app.MapControllers();
 app.MapHub<Backend.Hubs.NotificationHub>("/hubs/notifications");
+
+app.MapHub<Backend.Hubs.ChatHub>("/hubs/chat");
 
 var workflowRulesService = app.Services.GetRequiredService<WorkflowRulesService>();
 

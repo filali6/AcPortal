@@ -52,6 +52,21 @@ export const routes: Routes = [
       import('./pages/consultant/consultant.component')
         .then(m => m.ConsultantComponent)
   },
+  {
+    path: 'consultant',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/consultant/consultant.component')
+        .then(m => m.ConsultantComponent)
+  },
+  {
+  path: 'super-admin',
+  canActivate: [authGuard],
+  loadComponent: () =>
+    import('./pages/super-admin/super-admin.component')
+      .then(m => m.SuperAdminComponent)
+},
+
 
   // Plugins → sans sidebar
   {

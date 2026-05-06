@@ -48,6 +48,8 @@
                                 <th>Status</th>
                                 <th>Date</th>
                                 <th></th>
+                                <th>Actions</th>
+                                
                             </tr>
                         </thead>
                         <tbody>
@@ -80,6 +82,11 @@
                                         Open →
                                     </button>
                                     <span class="blocked-label" *ngIf="task.status === 1">Blocked</span>
+                                </td>
+                                <td>
+                                    <button class="btn-chat-sm" *ngIf="task.stepId" (click)="openTaskChat(task); $event.stopPropagation()">
+                                        💬
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -173,5 +180,8 @@
             </div>
         </div>
     </ng-container>
+<app-chat-panel [isOpen]="chatOpen" [taskId]="chatTaskId" [streamId]="null" [title]="chatTitle">
+</app-chat-panel>
 
+<div class="chat-overlay" *ngIf="chatOpen" (click)="closeChat()"></div>
 </div>

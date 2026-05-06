@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Backend.Hubs;
 using Backend.Modules.Projects.Models;
+using Backend.Modules.Notifications.Services;
 
 namespace Backend.Modules.Events.Handlers;
 
@@ -13,16 +14,15 @@ public class CreateTasksFromStepsHandler : IActionHandler
     public string ActionType => "CREATE_TASKS_FROM_STEPS";
 
     private readonly AppDbContext _db;
-    private readonly IHubContext<NotificationHub> _hubContext;
-    private readonly ILogger<CreateTasksFromStepsHandler> _logger;
+    private readonly NotificationService _notificationService; private readonly ILogger<CreateTasksFromStepsHandler> _logger;
 
     public CreateTasksFromStepsHandler(
         AppDbContext db,
-        IHubContext<NotificationHub> hubContext,
+        NotificationService notificationService,
         ILogger<CreateTasksFromStepsHandler> logger)
     {
         _db = db;
-        _hubContext = hubContext;
+        _notificationService=notificationService;
         _logger = logger;
     }
 
@@ -67,12 +67,12 @@ public class CreateTasksFromStepsHandler : IActionHandler
 
             if (assignedKeycloakId != null)
             {
-                await _hubContext.Clients.Group(assignedKeycloakId)
-                    .SendAsync("NewNotification", new
-                    {
-                        message = $"New task: {step.StepName}",
-                        projectId = projectId
-                    });
+                await _notificationService.SendAsync(
+   assignedKeycloakId,
+   $"New task: {step.StepName}",
+   projectId.HasValue ? $"/projects/{projectId}" : null
+);
+
             }
         }
 

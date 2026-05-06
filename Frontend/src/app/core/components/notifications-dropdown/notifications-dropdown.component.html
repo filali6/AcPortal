@@ -1,0 +1,40 @@
+<div class="notif-wrapper">
+ 
+    <a class="nav-item notif-trigger" (click)="toggleDropdown()">
+        <lucide-icon [img]="Bell" size="16" class="nav-icon"></lucide-icon>
+        <span>Notifications</span>
+        <span class="notif-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+    </a>
+
+    <div class="notif-dropdown" *ngIf="isOpen">
+        <div class="notif-header">
+            <div class="notif-title">
+                <span>Notifications</span>
+                <span class="new-badge" *ngIf="unreadCount > 0">{{ unreadCount }} NEW</span>
+            </div>
+            <button class="mark-all-btn" (click)="markAllAsRead()" *ngIf="unreadCount > 0">
+                Mark all read
+            </button>
+        </div>
+
+        <div class="notif-body">
+            <ng-container *ngFor="let group of groupedNotifs">
+                <div class="notif-date-label">{{ group.label }}</div>
+                <div class="notif-item" *ngFor="let notif of group.items" [class.unread]="!notif.isRead"
+                    (click)="markAsRead(notif.id)">
+                    <div class="notif-avatar">
+                        <span>{{ getInitials('ACP') }}</span>
+                    </div>
+                    <div class="notif-content">
+                        <p class="notif-message">{{ notif.message }}</p>
+                        <span class="notif-time">{{ getTimeAgo(notif.createdAt) }}</span>
+                    </div>
+                    <div class="unread-dot" *ngIf="!notif.isRead"></div>
+                </div>
+            </ng-container>
+            <div class="empty-notif" *ngIf="notifications.length === 0">
+                No notifications yet
+            </div>
+        </div>
+    </div>
+</div>

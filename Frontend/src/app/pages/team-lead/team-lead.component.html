@@ -208,20 +208,25 @@
 <ng-container *ngIf="selectedStream && activeTabId === 'stream-detail-' + selectedStream.id">
 
     <!-- Header -->
-    <div class="card">
-        <div class="card-header">
-            <div class="project-header-info">
-                <h2>{{ selectedStream.name }}</h2>
-                <span class="project-tag">{{ selectedStream.projectName }}</span>
+<!-- Header -->
+<div class="card">
+    <div class="card-header">
+        <div class="project-header-info">
+            <h2>{{ selectedStream.name }}</h2>
+            <span class="project-tag">{{ selectedStream.projectName }}</span>
+        </div>
+        <div class="progress-header">
+            <div class="progress-wrap" style="width:160px">
+                <div class="progress-bar" [style.width.%]="selectedStream.streamProgress"></div>
             </div>
-            <div class="progress-header">
-                <div class="progress-wrap" style="width:160px">
-                    <div class="progress-bar" [style.width.%]="selectedStream.streamProgress"></div>
-                </div>
-                <span class="progress-pct">{{ selectedStream.streamProgress }}%</span>
-            </div>
+            <span class="progress-pct">{{ selectedStream.streamProgress }}%</span>
+            <button class="btn-open-chat" (click)="openStreamChat(selectedStream)">
+                <lucide-icon [img]="MessageSquare" size="14"></lucide-icon>
+                Team Chat
+            </button>
         </div>
     </div>
+</div>
 
     <!-- 2 colonnes -->
     <div class="detail-grid">
@@ -337,5 +342,9 @@
             </div>
         </ng-container>
     </ng-container>
+    <app-chat-panel [isOpen]="chatOpen" [streamId]="chatStreamId" [taskId]="chatTaskId" [title]="chatTitle">
+    </app-chat-panel>
+    <div class="chat-overlay" *ngIf="chatOpen" (click)="closeChat()"></div>
+     
 
 </div>

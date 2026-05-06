@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
-    --sidebar-bg: #0f1117;
-    --sidebar-text: #8b8fa8;
+    --sidebar-bg: #1a1f2e;
+    --sidebar-hover: rgba(255, 255, 255, 0.08);
+    --sidebar-text: rgba(255, 255, 255, 0.7);
     --sidebar-active: #ffffff;
-    --sidebar-hover: #1e2130;
     --sidebar-width: 220px;
 
     --header-height: 60px;

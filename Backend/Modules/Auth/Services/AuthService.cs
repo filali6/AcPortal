@@ -159,4 +159,53 @@ public class AuthService
             new StringContent($"[{roleJson}]", Encoding.UTF8, "application/json")
         );
     }
+    public async Task<bool> UpdateUserRoleAsync(
+    string keycloakId, string oldRole, string newRole)
+    {
+        var token = await GetAdminTokenAsync();
+        if (token == null) return false;
+
+        var http = _httpClientFactory.CreateClient();
+        var baseUrl = _config["Keycloak:BaseUrl"];
+        var realm = _config["Keycloak:Realm"];
+
+        http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        // 1. Supprimer l'ancien rôle
+        var oldRoleResponse = await http.GetAsync(
+            $"{baseUrl}/admin/realms/{realm}/roles/{oldRole}");
+        if (oldRoleResponse.IsSuccessStatusCode)
+        {
+            var oldRoleJson = await oldRoleResponse.Content.ReadAsStringAsync();
+            await http.SendAsync(new HttpRequestMessage(HttpMethod.Delete,
+                $"{baseUrl}/admin/realms/{realm}/users/{keycloakId}/role-mappings/realm")
+            {
+                Content = new StringContent(
+                    $"[{oldRoleJson}]", Encoding.UTF8, "application/json")
+            });
+        }
+
+        // 2. Assigner le nouveau rôle — réutilise AssignRoleAsync existant
+        await AssignRoleAsync(http, baseUrl!, realm!, keycloakId, newRole);
+        return true;
+    }
+
+    public async Task<bool> DeleteUserAsync(string keycloakId)
+    {
+        var token = await GetAdminTokenAsync();
+        if (token == null) return false;
+
+        var http = _httpClientFactory.CreateClient();
+        var baseUrl = _config["Keycloak:BaseUrl"];
+        var realm = _config["Keycloak:Realm"];
+
+        http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var response = await http.DeleteAsync(
+            $"{baseUrl}/admin/realms/{realm}/users/{keycloakId}");
+
+        return response.IsSuccessStatusCode;
+    }
 }
