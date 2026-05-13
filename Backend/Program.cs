@@ -15,7 +15,7 @@ using Dapr.Messaging.PublishSubscribe.Extensions;
 using Backend.Modules.Contracts.Services;
 using Backend.Modules.Notifications.Services;
 using Backend.Modules.Chat.Services;
-
+using Backend.Modules.AI.Configurators;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -52,6 +52,17 @@ builder.Services.AddScoped<ContractsService>();
 
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ChatService>();
+builder.Services.AddScoped<IPdfTextExtractor, PdfPigTextExtractor>();
+builder.Services.AddScoped<IContractSummaryService, ContractSummaryService>();
+builder.Services.AddScoped<IActionHandler, SummarizeContractHandler>();
+builder.Services.AddScoped<IContractSummaryService, ContractSummaryService>();
+
+var kernelBuilder = builder.Services.AddKernel();
+var provider = builder.Configuration["AI:Provider"]!;
+
+var configurators = new List<IKernelConfigurator> { new GeminiKernelConfigurator() };
+var factory = new KernelConfiguratorFactory(configurators);
+factory.Get(provider).Configure(kernelBuilder, builder.Configuration);
 
 builder.Services.AddSignalR();
 builder.Services.AddHttpClient();

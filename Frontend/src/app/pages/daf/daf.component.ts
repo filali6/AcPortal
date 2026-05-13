@@ -11,11 +11,12 @@ import { UtilsService } from '../../core/services/utils.service';
 import { ModalComponent } from '../../core/components/modal/modal.component';
 Chart.register(...registerables);
 import { ChartService } from '../../core/services/chart.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-daf',
   standalone: true,
-  imports: [CommonModule, FormsModule,ModalComponent],
+  imports: [CommonModule, FormsModule,ModalComponent,TranslateModule],
   templateUrl: './daf.component.html',
   styleUrl: './daf.component.scss'
 })

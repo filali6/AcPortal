@@ -12,10 +12,11 @@ import { LucideAngularModule, Users, Wrench, GitBranch, LayoutDashboard, Plus, T
 import { Subscription } from 'rxjs';
 import { ProjectsService } from '../../core/services/projects.service';
 import { TasksService } from '../../core/services/tasks.service';
+import { TranslateModule ,TranslateService} from '@ngx-translate/core';
 @Component({
   selector: 'app-super-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, ModalComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule, ModalComponent,TranslateModule],
   templateUrl: './super-admin.component.html',
   styleUrl: './super-admin.component.scss'
 })

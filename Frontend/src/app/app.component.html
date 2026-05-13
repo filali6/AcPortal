@@ -17,11 +17,11 @@
             <ng-container *ngIf="isAdmin()">
                 <a class="nav-item" [class.active]="isActive('admin')" (click)="navigate('/admin')">
                     <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
-                    <span>Dashboard</span>
+                    <span>{{ 'SIDEBAR.DASHBOARD' | translate }}</span>
                 </a>
                 <a class="nav-item" (click)="navigate('/admin', {view: 'projects'})">
                     <lucide-icon [img]="FolderOpen" size="16" class="nav-icon"></lucide-icon>
-                    <span>Projects</span>
+                    <span>{{ 'SIDEBAR.PROJECTS' | translate }}</span>
                 </a>
             </ng-container>
 
@@ -29,7 +29,7 @@
             <ng-container *ngIf="isDirector()">
                 <a class="nav-item" [class.active]="isActive('director')" (click)="navigate('/director')">
                     <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
-                    <span>Dashboard</span>
+                    <span>{{ 'SIDEBAR.DASHBOARD' | translate }}</span>
                 </a>
             </ng-container>
 
@@ -37,7 +37,7 @@
             <ng-container *ngIf="isProjectManager()">
                 <a class="nav-item" [class.active]="isActive('project-manager')" (click)="navigate('/project-manager')">
                     <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
-                    <span>Dashboard</span>
+                    <span>{{ 'SIDEBAR.DASHBOARD' | translate }}</span>
                 </a>
             </ng-container>
 
@@ -45,11 +45,11 @@
             <ng-container *ngIf="isTeamLead()">
                 <a class="nav-item" [class.active]="isActive('team-lead')" (click)="navigate('/team-lead')">
                     <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
-                    <span>Dashboard</span>
+                    <span>{{ 'SIDEBAR.DASHBOARD' | translate }}</span>
                 </a>
                 <a class="nav-item" [class.active]="isActive('/tools-page')" (click)="navigate('/tools-page')">
                     <lucide-icon [img]="Wrench" size="16" class="nav-icon"></lucide-icon>
-                    <span>Tools</span>
+                    <span>{{ 'TOOLS.TITLE' | translate }}</span>
                 </a>
             </ng-container>
 
@@ -57,11 +57,11 @@
             <ng-container *ngIf="isConsultant()">
                 <a class="nav-item" [class.active]="isActive('/consultant')" (click)="navigate('/consultant')">
                     <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
-                    <span>Dashboard</span>
+                    <span>{{ 'SIDEBAR.DASHBOARD' | translate }}</span>
                 </a>
                 <a class="nav-item" [class.active]="isActive('/tools-page')" (click)="navigate('/tools-page')">
                     <lucide-icon [img]="Wrench" size="16" class="nav-icon"></lucide-icon>
-                    <span>Tools</span>
+                    <span>{{ 'TOOLS.TITLE' | translate }}</span>
                 </a>
             </ng-container>
 
@@ -69,26 +69,30 @@
             <ng-container *ngIf="isDAF()">
                 <a class="nav-item" [class.active]="isActive('daf')" (click)="navigate('/daf')">
                     <lucide-icon [img]="FileText" size="16" class="nav-icon"></lucide-icon>
-                    <span>Contracts</span>
+                    <span>{{ 'CONTRACTS.TITLE' | translate }}</span>
                 </a>
             </ng-container>
+
             <!-- SuperAdmin -->
             <ng-container *ngIf="isSuperAdmin()">
                 <a class="nav-item" [class.active]="isActive('super-admin')" (click)="navigate('/super-admin')">
                     <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
-                    <span>Dashboard</span>
+                    <span>{{ 'SIDEBAR.DASHBOARD' | translate }}</span>
                 </a>
-                <a class="nav-item" [class.active]="isActive('super-admin/users')" (click)="navigate('/super-admin/users')">
+                <a class="nav-item" [class.active]="isActive('super-admin/users')"
+                    (click)="navigate('/super-admin/users')">
                     <lucide-icon [img]="Users" size="16" class="nav-icon"></lucide-icon>
-                    <span>Users</span>
+                    <span>{{ 'USERS.TITLE' | translate }}</span>
                 </a>
-                <a class="nav-item" [class.active]="isActive('super-admin/tools')" (click)="navigate('/super-admin/tools')">
+                <a class="nav-item" [class.active]="isActive('super-admin/tools')"
+                    (click)="navigate('/super-admin/tools')">
                     <lucide-icon [img]="Wrench" size="16" class="nav-icon"></lucide-icon>
-                    <span>Tools</span>
+                    <span>{{ 'TOOLS.TITLE' | translate }}</span>
                 </a>
-                <a class="nav-item" [class.active]="isActive('super-admin/workflow')" (click)="navigate('/super-admin/workflow')">
+                <a class="nav-item" [class.active]="isActive('super-admin/workflow')"
+                    (click)="navigate('/super-admin/workflow')">
                     <lucide-icon [img]="GitBranch" size="16" class="nav-icon"></lucide-icon>
-                    <span>Workflow</span>
+                    <span>{{ 'WORKFLOW.TITLE' | translate }}</span>
                 </a>
             </ng-container>
 
@@ -99,13 +103,13 @@
 
             <!-- Notifications -->
             <app-notifications-dropdown></app-notifications-dropdown>
-        
+
             <!-- Discussions -->
             <a class="nav-item sidebar-action" (click)="toggleDiscussions()">
                 <lucide-icon [img]="MessageSquare" size="16" class="nav-icon"></lucide-icon>
-                <span>Discussions</span>
+                <span>{{ 'SIDEBAR.DISCUSSIONS' | translate }}</span>
             </a>
-           
+
             <!-- Divider -->
             <div class="sidebar-divider"></div>
 
@@ -118,10 +122,19 @@
                 </div>
             </div>
 
+            <!-- Lang Switcher -->
+            <div class="lang-switcher">
+                <button *ngFor="let lang of languageService.availableLanguages"
+                    [class.active]="languageService.getCurrentLang() === lang"
+                    (click)="languageService.switchLanguage(lang)">
+                    {{ lang.toUpperCase() }}
+                </button>
+            </div>
+
             <!-- Logout -->
             <a class="nav-item logout-item" (click)="logout()">
                 <lucide-icon [img]="LogOut" size="16" class="nav-icon"></lucide-icon>
-                <span>Log out</span>
+                <span>{{ 'AUTH.LOGOUT' | translate }}</span>
             </a>
 
         </div>
@@ -131,18 +144,19 @@
     <div class="main-wrapper">
         <app-tabs-bar></app-tabs-bar>
         <app-toast></app-toast>
-       
+
         <main class="main-content">
             <router-outlet />
         </main>
     </div>
-<app-discussions-panel *ngIf="discussionsOpen" [isOpen]="discussionsOpen" (closed)="discussionsOpen = false"
-    (openChat)="onOpenChat($event)">
-</app-discussions-panel>
 
-<app-chat-panel *ngIf="chatOpen" [isOpen]="chatOpen" [streamId]="chatStreamId" [taskId]="chatTaskId" [title]="chatTitle"
-    (closed)="chatOpen = false">
-</app-chat-panel>
+    <app-discussions-panel *ngIf="discussionsOpen" [isOpen]="discussionsOpen" (closed)="discussionsOpen = false"
+        (openChat)="onOpenChat($event)">
+    </app-discussions-panel>
+
+    <app-chat-panel *ngIf="chatOpen" [isOpen]="chatOpen" [streamId]="chatStreamId" [taskId]="chatTaskId"
+        [title]="chatTitle" (closed)="chatOpen = false">
+    </app-chat-panel>
 </div>
 
 <!-- Toast -->
@@ -153,7 +167,6 @@
     </div>
     <button class="toast-close" (click)="closeToast()">✕</button>
 </div>
- 
 
 <!-- Sans layout -->
 <div *ngIf="!showLayout">

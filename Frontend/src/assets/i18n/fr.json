@@ -1,0 +1,140 @@
+{
+  "COMMON": {
+    "SAVE": "Enregistrer",
+    "CANCEL": "Annuler",
+    "DELETE": "Supprimer",
+    "EDIT": "Modifier",
+    "LOADING": "Chargement...",
+    "NO_DATA": "Aucune donnée",
+    "CONFIRM": "Confirmer",
+    "SEARCH": "Rechercher",
+    "ADD": "Ajouter",
+    "ACTIONS": "Actions",
+    "STATUS": "Statut",
+    "DATE": "Date",
+    "NAME": "Nom",
+    "DESCRIPTION": "Description",
+    "CLOSE": "Fermer",
+    "SELECT": "séléctionné(s)" 
+  },
+  "AUTH": {
+    "LOGOUT": "Se déconnecter"
+  },
+  "SIDEBAR": {
+    "DASHBOARD": "Tableau de bord",
+    "PROJECTS": "Projets",
+    "NOTIFICATIONS": "Notifications",
+    "DISCUSSIONS": "Discussions"
+  },
+  "TASKS": {
+    "TITLE": "Mes tâches",
+    "PENDING": "En attente",
+    "BLOCKED": "Bloquée",
+    "DONE": "Terminée",
+    "ALL_STATUSES": "Tous les statuts",
+    "ALL_PROJECTS": "Tous les projets",
+    "ALL_STREAMS": "Tous les streams",
+    "MARK_DONE": "Marquer terminé",
+    "DISCUSS": "Discuter la tâche",
+    "NO_TASKS": "Aucune tâche assignée",
+    "TOOL": "Outil",
+    "SEARCH": "Rechercher les tâches...",
+    "WORKFLOW_TASKS": "Tâches workflow",
+    "ASSIGNED_TASKS": "Tâches assignées",
+    "STREAM": "Stream"
+  },
+  "PROJECTS": {
+    "TITLE": "Projets",
+    "CREATE": "Créer un projet",
+    "NAME": "Nom du projet",
+    "DESCRIPTION": "Description",
+    "TARGET_DATE": "Date de livraison",
+    "PORTFOLIO": "Portfolio",
+    "NO_PORTFOLIO": "Aucun portfolio disponible",
+    "SELECT_PORTFOLIO": "-- Sélectionner un portfolio --",
+    "NEW_PORTFOLIO": "+ Nouveau portfolio",
+    "CREATING": "Création en cours..."
+  },
+  "CONTRACTS": {
+    "TITLE": "Contrats",
+    "NEW": "Nouveau contrat",
+    "CLIENT": "Nom du client",
+    "SIGNED": "Signé",
+    "IN_PROGRESS": "En cours",
+    "PROJECT_CREATED": "Projet créé",
+    "SIGNED_CONTRACT": "Contrat signé"
+  },
+  "TOOLS": {
+    "TITLE": "Outils",
+    "ACTIVE": "Actif",
+    "INACTIVE": "Inactif",
+    "ALLOWED_ROLES": "Rôles autorisés",
+    "STATUS": "Statut",
+    "EDIT": "Modifier l'outil"
+  },
+  "USERS": {
+    "TITLE": "Utilisateurs",
+    "ADD": "Ajouter un utilisateur",
+    "FULL_NAME": "Nom complet",
+    "EMAIL": "Email",
+    "PASSWORD": "Mot de passe",
+    "ROLE": "Rôle",
+    "CREATED": "Créé le"
+  },
+  "WORKFLOW": {
+    "TITLE": "Règles workflow",
+    "ADD_RULE": "Ajouter une règle",
+    "EVENT": "Événement",
+    "ACTION": "Action",
+    "TARGET_TYPE": "Type de cible",
+    "TARGET_VALUES": "Valeurs cibles",
+    "TASK_TITLE": "Titre de la tâche"
+  },
+  "DASHBOARD": {
+    "TOTAL_USERS": "Total utilisateurs",
+    "TOTAL_PROJECTS": "Total projets",
+    "TOTAL_PORTFOLIOS": "Total portfolios",
+    "WORKFLOW_RULES": "Règles workflow",
+    "TASKS_OVERVIEW": "Aperçu des tâches",
+    "SYSTEM_STATUS": "État du système",
+    "USERS_BY_ROLE": "Utilisateurs par rôle",
+    "MANAGE_USERS": "Gérer les utilisateurs",
+    "MANAGE_TOOLS": "Gérer les outils",
+    "MANAGE_WORKFLOW": "Gérer le workflow"
+  },
+  "DISCUSSIONS": {
+    "TITLE": "Discussions",
+    "STREAM_DISCUSSIONS": "Discussions de stream",
+    "TASK_DISCUSSIONS": "Discussions de tâche",
+    "NO_STREAM": "Aucune discussion de stream",
+    "NO_TASK": "Aucune discussion de tâche",
+    "TYPE_MESSAGE": "Écrire un message...",
+    "NO_MESSAGES": "Aucun message. Commencez la conversation !"
+  },
+  "STREAMS": {
+  "TITLE": "Mes streams",
+  "MY_STREAMS": "Mes streams",
+  "DETAIL": "Détail du stream",
+  "TEAM": "Équipe",
+  "STEPS_TASKS": "Étapes & Tâches",
+  "DEFINE_STEPS": "Définir les étapes",
+  "TEAM_CHAT": "Chat équipe",
+  "NOT_ASSIGNED": "Non assigné",
+  "NO_STEPS": "Aucune étape définie",
+  "STEP_NAME": "Nom de l'étape",
+  "SELECT_TOOL": "Sélectionner un outil",
+  "ADD_STEP": "+ Ajouter une étape",
+  "SAVE_STEPS": "Enregistrer les étapes",
+  "SAVING": "Enregistrement...",
+  "ACTIVE": "Streams actifs",
+  "NEXT_DELIVERY": "Prochaine livraison",
+  "COMPLETION_RATE": "Taux de complétion",
+  "PENDING_TASKS": "Tâches en attente"
+},
+"CHARTS": {
+  "TASK_DISTRIBUTION": "Répartition des tâches",
+  "TASKS_PER_MONTH": "Tâches par mois",
+  "STATISTICS": "Statistiques",
+  "PROJECTS_PER_MONTH": "Projets par mois"
+}
+}

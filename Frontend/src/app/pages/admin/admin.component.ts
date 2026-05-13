@@ -19,10 +19,11 @@ import { ProjectsTabComponent } from './projects-tab/projects-tab.component';
 import { ContractsTabComponent } from './contracts-tab/contracts-tab.component';
 import { ChartService } from '../../core/services/chart.service';
 import { UtilsService } from '../../core/services/utils.service';
+import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-admin',
   standalone: true,
- imports: [CommonModule, FormsModule, LucideAngularModule, PortfoliosTabComponent, ProjectsTabComponent, ContractsTabComponent],
+ imports: [CommonModule, FormsModule, LucideAngularModule, PortfoliosTabComponent, ProjectsTabComponent, ContractsTabComponent,TranslateModule],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })

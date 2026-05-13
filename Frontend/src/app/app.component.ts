@@ -14,10 +14,12 @@ import { ChatService } from './core/services/chat.service';
 import { KeycloakService } from 'keycloak-angular';
 import { DiscussionsPanelComponent } from './core/components/discussions-panel/discussions-panel.component';
 import { ChatPanelComponent } from './core/components/chat-panel/chat-panel.component';
+import { LanguageService } from './core/services/language.service';
+import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-root',
   standalone: true,
-imports: [CommonModule, RouterOutlet, TabsBarComponent, ToastComponent, NotificationsDropdownComponent, LucideAngularModule,DiscussionsPanelComponent, ChatPanelComponent],
+imports: [CommonModule, RouterOutlet, TabsBarComponent, ToastComponent, NotificationsDropdownComponent, LucideAngularModule,DiscussionsPanelComponent, ChatPanelComponent,TranslateModule],
 templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -64,13 +66,14 @@ readonly Settings=Settings;
     private http: HttpClient,
     private notificationService:NotificationService,
     private keycloak:KeycloakService,
-    private chatService:ChatService
+    private chatService:ChatService,
+    public languageService:LanguageService
     
   ) {}
 
   ngOnInit(): void {
    
-   
+  this.languageService.init();
   if (this.keycloak.isLoggedIn()) {
     this.userInfo = this.authService.getUserInfo();
     console.log('userInfo:', this.userInfo);

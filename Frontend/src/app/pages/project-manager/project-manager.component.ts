@@ -17,10 +17,11 @@ import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 import { TeamFilterPipe } from '../../core/pipes/team-filter.pipe';
 import { ModalComponent } from '../../core/components/modal/modal.component';
+import { TranslateModule,TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-project-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, ModalComponent, TeamFilterPipe],
+  imports: [CommonModule, FormsModule, LucideAngularModule, ModalComponent, TeamFilterPipe,TranslateModule],
   templateUrl: './project-manager.component.html',
   styleUrl: './project-manager.component.scss'
 })
@@ -82,7 +83,8 @@ showEditLeadsModal = false;
     public tabsService: TabsService,
     private toastService: ToastService,
     public utils: UtilsService,
-    private chartService: ChartService
+    private chartService: ChartService,
+    private translate:TranslateService,
   ) {}
 
   ngOnInit(): void {

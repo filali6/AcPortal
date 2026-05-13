@@ -157,6 +157,18 @@
                                     📄 {{ f | slice:0:40 }}{{ f.length > 40 ? '...' : '' }}
                                 </a>
                             </div>
+                            <div class="summary-section" *ngIf="tab.contractInfo?.summary">
+                                <span class="summary-badge"> AI Summary</span>
+                                <p class="summary-text">{{ tab.contractInfo.summary }}</p>
+                            </div>
+                            
+                            <div class="summary-pending" *ngIf="!tab.contractInfo?.summary && tab.contractInfo?.summaryStatus === 1">
+                                <span> AI Summary is being generated...</span>
+                            </div>
+                            
+                            <div class="summary-failed" *ngIf="tab.contractInfo?.summaryStatus === 3">
+                                <span> Summary generation failed.</span>
+                            </div>
                         </div>
                     </div>
                 

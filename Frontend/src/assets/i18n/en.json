@@ -1,0 +1,139 @@
+{
+  "COMMON": {
+    "SAVE": "Save",
+    "CANCEL": "Cancel",
+    "DELETE": "Delete",
+    "EDIT": "Edit",
+    "LOADING": "Loading...",
+    "NO_DATA": "No data",
+    "CONFIRM": "Confirm",
+    "SEARCH": "Search",
+    "ADD": "Add",
+    "ACTIONS": "Actions",
+    "STATUS": "Status",
+    "DATE": "Date",
+    "NAME": "Name",
+    "DESCRIPTION": "Description",
+    "CLOSE": "Close",
+    "SELECTED": "selected" 
+  },
+  "AUTH": {
+    "LOGOUT": "Log out"
+  },
+  "SIDEBAR": {
+    "DASHBOARD": "Dashboard",
+    "PROJECTS": "Projects",
+    "NOTIFICATIONS": "Notifications",
+    "DISCUSSIONS": "Discussions"
+  },
+  "TASKS": {
+    "TITLE": "My Tasks",
+    "PENDING": "Pending",
+    "BLOCKED": "Blocked",
+    "DONE": "Done",
+    "ALL_STATUSES": "All statuses",
+    "ALL_PROJECTS": "All projects",
+    "ALL_STREAMS": "All streams",
+    "MARK_DONE": "Mark Done",
+    "DISCUSS": "Discuss task",
+    "NO_TASKS": "No tasks assigned",
+    "TOOL": "Tool",
+    "SEARCH": "Search tasks...",
+    "WORKFLOW_TASKS": "Workflow Tasks",
+    "ASSIGNED_TASKS": "Assigned Tasks",
+    "STREAM": "Stream"
+  },
+  "PROJECTS": {
+    "TITLE": "Projects",
+    "CREATE": "Create Project",
+    "NAME": "Project Name",
+    "DESCRIPTION": "Description",
+    "TARGET_DATE": "Target Delivery Date",
+    "PORTFOLIO": "Portfolio",
+    "NO_PORTFOLIO": "No portfolios available",
+    "SELECT_PORTFOLIO": "-- Select a portfolio --",
+    "NEW_PORTFOLIO": "+ New Portfolio",
+    "CREATING": "Creating..."
+  },
+  "CONTRACTS": {
+    "TITLE": "Contracts",
+    "NEW": "New Contract",
+    "CLIENT": "Client Name",
+    "SIGNED": "Signed",
+    "IN_PROGRESS": "In Progress",
+    "PROJECT_CREATED": "Project Created",
+    "SIGNED_CONTRACT": "Signed Contract"
+  },
+  "TOOLS": {
+    "TITLE": "Tools",
+    "ACTIVE": "Active",
+    "INACTIVE": "Inactive",
+    "ALLOWED_ROLES": "Allowed Roles",
+    "STATUS": "Status",
+    "EDIT": "Edit Tool"
+  },
+  "USERS": {
+    "TITLE": "Users",
+    "ADD": "Add User",
+    "FULL_NAME": "Full Name",
+    "EMAIL": "Email",
+    "PASSWORD": "Password",
+    "ROLE": "Role",
+    "CREATED": "Created"
+  },
+  "WORKFLOW": {
+    "TITLE": "Workflow Rules",
+    "ADD_RULE": "Add Rule",
+    "EVENT": "Event",
+    "ACTION": "Action",
+    "TARGET_TYPE": "Target Type",
+    "TARGET_VALUES": "Target Values",
+    "TASK_TITLE": "Task Title"
+  },
+  "DASHBOARD": {
+    "TOTAL_USERS": "Total Users",
+    "TOTAL_PROJECTS": "Total Projects",
+    "TOTAL_PORTFOLIOS": "Total Portfolios",
+    "WORKFLOW_RULES": "Workflow Rules",
+    "TASKS_OVERVIEW": "Tasks Overview",
+    "SYSTEM_STATUS": "System Status",
+    "USERS_BY_ROLE": "Users by Role",
+    "MANAGE_USERS": "Manage Users",
+    "MANAGE_TOOLS": "Manage Tools",
+    "MANAGE_WORKFLOW": "Manage Workflow"
+  },
+  "DISCUSSIONS": {
+    "TITLE": "Discussions",
+    "STREAM_DISCUSSIONS": "Stream Discussions",
+    "TASK_DISCUSSIONS": "Task Discussions",
+    "NO_STREAM": "No stream discussions",
+    "NO_TASK": "No task discussions",
+    "TYPE_MESSAGE": "Type a message...",
+    "NO_MESSAGES": "No messages yet. Start the conversation!"
+  },
+  "STREAMS": {
+  "TITLE": "My Streams",
+  "MY_STREAMS": "My Streams",
+  "DETAIL": "Stream Detail",
+  "TEAM": "Team",
+  "STEPS_TASKS": "Steps & Tasks",
+  "DEFINE_STEPS": "Define Steps",
+  "TEAM_CHAT": "Team Chat",
+  "NOT_ASSIGNED": "Not assigned yet",
+  "NO_STEPS": "No steps defined yet.",
+  "STEP_NAME": "Step name",
+  "SELECT_TOOL": "Select tool",
+  "ADD_STEP": "+ Add Step",
+  "SAVE_STEPS": "Save Steps",
+  "SAVING": "Saving...",
+  "ACTIVE": "Active Streams",
+  "NEXT_DELIVERY": "Next Delivery",
+  "COMPLETION_RATE": "Completion Rate",
+  "PENDING_TASKS": "Pending Tasks"
+  },"CHARTS": {
+  "TASK_DISTRIBUTION": "Task Distribution",
+  "TASKS_PER_MONTH": "Tasks per Month",
+  "STATISTICS": "Statistics",
+  "PROJECTS_PER_MONTH": "Projects per Month"
+}
+}
