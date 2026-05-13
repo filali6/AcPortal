@@ -15,11 +15,12 @@ import { LucideAngularModule, ChevronRight, Briefcase } from 'lucide-angular';
 import { Subscription } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-director',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, ModalComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule, ModalComponent,TranslateModule],
   templateUrl: './director.component.html',
   styleUrl: './director.component.scss'
 })

@@ -19,10 +19,12 @@ import { TeamFilterPipe } from '../../core/pipes/team-filter.pipe';
 import { ChatPanelComponent } from '../../core/components/chat-panel/chat-panel.component';
 import { ChatService } from '../../core/services/chat.service';
 import { KeycloakService } from 'keycloak-angular';
+import { TranslateModule ,TranslateService} from '@ngx-translate/core';
+
 @Component({
   selector: 'app-team-lead',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule,TeamFilterPipe,ChatPanelComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule,TeamFilterPipe,ChatPanelComponent,TranslateModule],
   templateUrl: './team-lead.component.html',
   styleUrl: './team-lead.component.scss'
 })
@@ -82,7 +84,8 @@ chatTitle = '';
     private chartService: ChartService,
     private pluginBridge: PluginBridgeService,
     private chatService:ChatService,
-    private keycloak:KeycloakService
+    private keycloak:KeycloakService,
+    private translate:TranslateService
 
   ) {}
 
@@ -171,7 +174,11 @@ chatTitle = '';
   renderCharts(): void {
     this.donutChart = this.chartService.createDoughnut(
       'tlDonutChart',
-      ['Pending', 'Blocked', 'Done'],
+      [
+      this.translate.instant('TASKS.PENDING'),
+      this.translate.instant('TASKS.BLOCKED'),
+      this.translate.instant('TASKS.DONE')
+    ],
       [
         this.myTasks.filter(t => t.status === 0).length,
         this.myTasks.filter(t => t.status === 1).length,

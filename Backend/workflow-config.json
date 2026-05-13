@@ -9,6 +9,15 @@
       "targetValues": ["HeadOfCDS"]
     },
     {
+  "eventCode": "ContratSigné",
+  "actionType": "SUMMARIZE_CONTRACT",
+  "targetType": "",
+  "targetValues": [],
+  "config": {
+    "prompt": "You are a senior legal and financial analyst. Generate a clear fluent narrative summary of this contract for a Head of CDS. Cover: nature and purpose, parties involved and their roles, key obligations of each party, financial terms and amounts, key dates, sensitive clauses and potential risks. Write in flowing prose, no bullet points."
+  }
+},
+    {
       "eventCode": "ProjetCréé",
       "actionType": "CREATE_TASK",
       "taskTitle": "Nouveau projet \"{projectName}\" : Assigner un chef de projet",
@@ -40,5 +49,6 @@
       "targetType": "BEST_CONSULTANT",
       "targetValues": ["StreamId"]
     }
+
   ]
 }

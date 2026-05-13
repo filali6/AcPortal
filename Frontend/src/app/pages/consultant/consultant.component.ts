@@ -20,10 +20,11 @@ Chart.register(...registerables);
 import { ChatPanelComponent } from '../../core/components/chat-panel/chat-panel.component';
 import { KeycloakService } from 'keycloak-angular';
 import { ChatService } from '../../core/services/chat.service';
+import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-consultant',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, TeamFilterPipe,ChatPanelComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule, TeamFilterPipe,ChatPanelComponent,TranslateModule],
   templateUrl: './consultant.component.html',
   styleUrl: './consultant.component.scss'
 })
