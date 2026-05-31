@@ -16,6 +16,7 @@ using Backend.Modules.Contracts.Services;
 using Backend.Modules.Notifications.Services;
 using Backend.Modules.Chat.Services;
 using Backend.Modules.AI.Configurators;
+using Backend.Modules.Dashboard.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -43,7 +44,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProjectsService>();
  
 builder.Services.AddScoped<ToolsService>();
-builder.Services.AddSingleton<PluginRegistry>();
+builder.Services.AddScoped<PluginRegistry>();
 
 builder.Services.AddScoped<EventPublisher>();
 
@@ -56,6 +57,8 @@ builder.Services.AddScoped<IPdfTextExtractor, PdfPigTextExtractor>();
 builder.Services.AddScoped<IContractSummaryService, ContractSummaryService>();
 builder.Services.AddScoped<IActionHandler, SummarizeContractHandler>();
 builder.Services.AddScoped<IContractSummaryService, ContractSummaryService>();
+builder.Services.AddScoped<BriefingService>();
+builder.Services.AddMemoryCache();
 
 var kernelBuilder = builder.Services.AddKernel();
 var provider = builder.Configuration["AI:Provider"]!;

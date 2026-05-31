@@ -8,7 +8,7 @@ export interface PluginDto {
   name: string;
   description: string;
   category: string;
-  accessUrl: string;
+  url: string;
   icon: string;
   ssoEnabled: boolean;
   isActive: boolean;
@@ -26,10 +26,18 @@ export class PluginsAdminService {
     return this.http.get<PluginDto[]>(`${this.apiUrl}/plugins/all`);
 }
 
+create(plugin: PluginDto): Observable<any> {
+    return this.http.post(`${this.apiUrl}/plugins`, plugin);
+  }
+
  
 
   update(id: string, plugin: PluginDto): Observable<any> {
     return this.http.put(`${this.apiUrl}/plugins/${id}`, plugin);
+  }
+
+  delete(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/plugins/${id}`);
   }
 
   

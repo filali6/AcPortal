@@ -7,7 +7,8 @@ import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { KeycloakService } from 'keycloak-angular';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
-
+import { LanguageService } from './core/services/language.service';
+import { provideMarkdown } from 'ngx-markdown';
 export class CustomTranslateLoader implements TranslateLoader {
   constructor(private http: HttpClient) {}
   getTranslation(lang: string): Observable<any> {
@@ -18,7 +19,9 @@ export class CustomTranslateLoader implements TranslateLoader {
 export function HttpLoaderFactory(http: HttpClient) {
   return new CustomTranslateLoader(http);
 }
-
+export function initApp(languageService: LanguageService): () => Promise<void> {
+  return () => languageService.init();
+}
 function initializeKeycloak(keycloak: KeycloakService) {
   return () =>
     keycloak.init({
@@ -42,12 +45,19 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimations(),
+    provideMarkdown(),
     KeycloakService,
     {
       provide: APP_INITIALIZER,
       useFactory: initializeKeycloak,
       multi: true,
       deps: [KeycloakService]
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initApp,
+      multi: true,
+      deps: [LanguageService]
     },
     importProvidersFrom(
       TranslateModule.forRoot({

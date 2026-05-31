@@ -1,36 +1,64 @@
-<div class="chat-panel" [class.open]="isOpen" [class.minimized]="minimized">
-    <div class="chat-header" (click)="minimized = !minimized">
-        <span class="chat-title">{{ title }}</span>
-        <div class="chat-header-actions">
-            <button class="chat-action-btn" (click)="minimized = !minimized; $event.stopPropagation()">
-                {{ minimized ? '▲' : '▼' }}
-            </button>
-            <button class="chat-action-btn" (click)="close(); $event.stopPropagation()">✕</button>
+<div class="chat-drawer" [class.open]="isOpen">
+
+    <!-- Drawer Header -->
+    <div class="drawer-head">
+        <button class="drawer-close" (click)="close()">✕</button>
+        <div class="drawer-task-name">{{ title }}</div>
+        <div class="drawer-badges" *ngIf="taskStatus">
+            <span class="status-badge" [style.background]="getStatusColor(taskStatus) + '20'"
+                [style.color]="getStatusColor(taskStatus)">
+                {{ getStatusLabel(taskStatus) }}
+            </span>
+            <span class="tool-badge" *ngIf="toolName">{{ toolName }}</span>
+        </div>
+        <div class="drawer-tabs">
+            <div class="drawer-tab active" id="tab-discussion">{{ 'CHAT.TAB_DISCUSSION' | translate }}</div>
         </div>
     </div>
+<div class="summary-bar">
+    <button class="summary-btn" (click)="summarizeChat()" [disabled]="summarizing">
+        {{ summarizing ? 'Summarizing...' : 'Summarize discussion' }}
+    </button>
+</div>
 
-    <div class="chat-messages" *ngIf="!minimized">
-        <div class="message-item" *ngFor="let msg of messages" [class.mine]="isMyMessage(msg)">
-            <div class="msg-avatar" *ngIf="!isMyMessage(msg)">
-                {{ getInitials(msg.senderName) }}
+<div class="summary-result" *ngIf="chatSummary">
+    <div class="summary-header" (click)="summaryOpen = !summaryOpen">
+        <span>AI Summary</span>
+        <span>{{ summaryOpen ? '▲' : '▼' }}</span>
+    </div>
+    <div class="summary-body" *ngIf="summaryOpen">
+        {{ chatSummary }}
+    </div>
+</div>
+    <!-- Messages -->
+    <div class="drawer-messages">
+        <ng-container *ngFor="let msg of messages">
+            <div class="message-item" [class.mine]="isMyMessage(msg)">
+                <div class="msg-avatar" *ngIf="!isMyMessage(msg)">
+                    {{ getInitials(msg.senderName) }}
+                </div>
+                <div class="msg-bubble">
+                    <span class="msg-sender" *ngIf="!isMyMessage(msg)">{{ msg.senderName }}</span>
+                    <p class="msg-content">{{ msg.content }}</p>
+                    <span class="msg-time">{{ getTime(msg.createdAt) }}</span>
+                </div>
             </div>
-            <div class="msg-bubble">
-                <span class="msg-sender" *ngIf="!isMyMessage(msg)">{{ msg.senderName }}</span>
-                <p class="msg-content">{{ msg.content }}</p>
-                <span class="msg-time">{{ getTime(msg.createdAt) }}</span>
-            </div>
-        </div>
+        </ng-container>
         <div class="empty-chat" *ngIf="messages.length === 0">
-            No messages yet. Start the conversation!
+            {{ 'DISCUSSIONS.NO_MESSAGES' | translate }}
         </div>
         <div #messagesEnd></div>
     </div>
 
-    <div class="chat-input" *ngIf="!minimized">
-        <input type="text" [(ngModel)]="newMessage" placeholder="Type a message..." (keyup.enter)="sendMessage()"
-            class="msg-input">
-        <button class="send-btn" (click)="sendMessage()" [disabled]="!newMessage.trim()">
-            →
-        </button>
+    <!-- Compose -->
+    <div class="drawer-compose">
+        <div class="compose-row">
+            <input type="text" [(ngModel)]="newMessage" [placeholder]="'DISCUSSIONS.TYPE_MESSAGE' | translate"
+                (keyup.enter)="sendMessage()" class="compose-input">
+            <button class="compose-send" (click)="sendMessage()" [disabled]="!newMessage.trim()">
+                →
+            </button>
+        </div>
     </div>
+
 </div>

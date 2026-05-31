@@ -21,10 +21,12 @@ import { ChatPanelComponent } from '../../core/components/chat-panel/chat-panel.
 import { KeycloakService } from 'keycloak-angular';
 import { ChatService } from '../../core/services/chat.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { DrawerService } from '../../core/services/drawer.service';
+import { BriefingCardComponent } from '../../core/components/briefing-card/briefing-card.component';
 @Component({
   selector: 'app-consultant',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, TeamFilterPipe,ChatPanelComponent,TranslateModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, ChatPanelComponent,TranslateModule,BriefingCardComponent],
   templateUrl: './consultant.component.html',
   styleUrl: './consultant.component.scss'
 })
@@ -47,6 +49,11 @@ export class ConsultantComponent implements OnInit, OnDestroy {
   selectedProjectId = '';
   filterStreamId = '';
 
+chatTaskStatus: number | null = null;
+chatToolName: string | null = null;
+
+  collapsedGroups: Set<string> = new Set();
+
 //chat 
   chatOpen = false;
   chatTaskId: string | null = null;
@@ -56,6 +63,7 @@ export class ConsultantComponent implements OnInit, OnDestroy {
   private barChart: Chart | null = null;
   private subs: Subscription[] = [];
   private apiUrl = environment.apiUrl;
+  unreadTaskIds: Set<string> = new Set();
 
   statsBottom = {
     pendingTasks: 0,
@@ -81,6 +89,7 @@ export class ConsultantComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private keycloak:KeycloakService,
     private chatService:ChatService,
+    private drawerService:DrawerService
 
   ) {}
 
@@ -91,7 +100,10 @@ export class ConsultantComponent implements OnInit, OnDestroy {
 
     this.subs.push(
       this.notificationService.notifications$.subscribe(() => this.loadTasks()),
-      this.tabsService.activeTabId.subscribe(id => this.activeTabId = id)
+      this.tabsService.activeTabId.subscribe(id => this.activeTabId = id),
+      this.chatService.getUnreadTaskIds().subscribe(ids => {
+        this.unreadTaskIds = ids;
+      })
     );
   }
 
@@ -113,6 +125,7 @@ export class ConsultantComponent implements OnInit, OnDestroy {
       streams.forEach((s: any) => {
         this.chatService.joinStreamChat(s.id);
       });
+       
     });
 
        
@@ -122,17 +135,22 @@ export class ConsultantComponent implements OnInit, OnDestroy {
   }
 
   loadTasks(): void {
-    this.loading = true;
-    this.tasksService.getMyTasks().subscribe({
-      next: (tasks) => {
-        this.tasks = tasks;
-        this.loading = false;
-        this.loadProjects();
-        this.computeStats();
-      },
-      error: () => this.loading = false
-    });
-  }
+  this.loading = true;
+  this.tasksService.getMyTasks().subscribe({
+    next: (tasks) => {
+      this.tasks = tasks;
+      this.loading = false;
+      this.loadProjects();
+      this.computeStats();
+
+      
+      tasks.filter(t => t.stepId).forEach(task => {
+        this.chatService.joinTaskChatSilent(task.id);
+      });
+    },
+    error: () => this.loading = false
+  });
+}
 
   loadProjects(): void {
     this.projects = [];
@@ -209,8 +227,8 @@ export class ConsultantComponent implements OnInit, OnDestroy {
   getTasksForProject(projectId: string): Task[] {
     let tasks = this.tasks.filter(t => t.projectId === projectId);
 
-    if (this.filterStreamId)
-      tasks = tasks.filter(t => t.streamId === this.filterStreamId);
+    // if (this.filterStreamId)
+    //   tasks = tasks.filter(t => t.streamId === this.filterStreamId);
 
     if (this.searchQuery)
       tasks = tasks.filter(t => t.title.toLowerCase().includes(this.searchQuery.toLowerCase()));
@@ -284,13 +302,33 @@ export class ConsultantComponent implements OnInit, OnDestroy {
       });
     });
   }
-  openTaskChat(task: any): void {
-  this.chatTaskId = task.id;
-  this.chatTitle = task.title;
-  this.chatOpen = true;
+ openTaskChat(task: any): void {
+    this.chatTaskId = task.id;
+    this.chatTitle = task.title;
+    this.chatTaskStatus = task.status;
+    this.chatToolName = task.toolName || null;
+    this.chatOpen = true;
+    this.drawerService.open(); 
+    this.chatService.markTaskAsRead(task.id);// ← add this
 }
 
 closeChat(): void {
-  this.chatOpen = false;
+    this.chatOpen = false;
+    this.drawerService.close(); // ← add this
 }
+hasUnread(taskId: string): boolean {
+  return this.unreadTaskIds.has(taskId);
+}
+toggleGroup(projectId: string): void {
+    if (this.collapsedGroups.has(projectId)) {
+        this.collapsedGroups.delete(projectId);
+    } else {
+        this.collapsedGroups.add(projectId);
+    }
+}
+
+isGroupCollapsed(projectId: string): boolean {
+    return this.collapsedGroups.has(projectId);
+}
+
 }

@@ -14,7 +14,7 @@
   "targetType": "",
   "targetValues": [],
   "config": {
-    "prompt": "You are a senior legal and financial analyst. Generate a clear fluent narrative summary of this contract for a Head of CDS. Cover: nature and purpose, parties involved and their roles, key obligations of each party, financial terms and amounts, key dates, sensitive clauses and potential risks. Write in flowing prose, no bullet points."
+    "prompt": "You are a senior legal and financial analyst. Extract and structure the key elements of this contract in a clear, scannable format for a Head of CDS.\n\nRespond ONLY in this exact markdown structure:\n\n## Parties\n- **Client:** [name]\n- **Provider:** [name]\n\n## Purpose\n[1 sentence max]\n\n## Financial Terms\n- **Total amount:** [value]\n- **Payment terms:** [details]\n- **Key dates:** [start / end / deadlines]\n\n## Key Risks & Sensitive Clauses\n- [risk or clause 1]\n- [risk or clause 2]\n\n## Main Obligations\n- **Client:** [obligation]\n- **Provider:** [obligation]\n\nBe precise, use exact values from the contract. No long paragraphs. No invented data."
   }
 },
     {

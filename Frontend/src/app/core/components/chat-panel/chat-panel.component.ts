@@ -4,10 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { ChatService, ChatMessage } from '../../services/chat.service';
 import { AuthService } from '../../services/auth.service';
 import { KeycloakService } from 'keycloak-angular';
+import { TranslateModule } from '@ngx-translate/core';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-chat-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,TranslateModule],
   templateUrl: './chat-panel.component.html',
   styleUrl: './chat-panel.component.scss'
 })
@@ -17,6 +20,8 @@ export class ChatPanelComponent implements OnInit, OnChanges, AfterViewChecked {
   @Input() taskId: string | null = null;
   @Input() title: string = 'Chat';
   @Input() isOpen: boolean = false;
+  @Input() taskStatus: number | null = null;
+@Input() toolName: string | null = null
 
   @ViewChild('messagesEnd') messagesEnd!: ElementRef;
 
@@ -26,11 +31,15 @@ export class ChatPanelComponent implements OnInit, OnChanges, AfterViewChecked {
   newMessage = '';
   currentUserId = '';
   minimized=false;
+  summarizing = false;
+chatSummary: string | null = null;
+summaryOpen = true;
 
   constructor(
     private chatService: ChatService,
     private authService: AuthService,
-    private keycloak:KeycloakService
+    private keycloak:KeycloakService,
+    private http: HttpClient
   ) {}
 
  ngOnInit(): void {
@@ -109,4 +118,39 @@ export class ChatPanelComponent implements OnInit, OnChanges, AfterViewChecked {
   await this.chatService.startConnection(token);
 }
 close():void{this.closed.emit();}
+getStatusColor(status: number): string {
+    const colors: { [key: number]: string } = {
+        0: '#f59e0b',
+        1: '#ef4444',
+        2: '#10b981'
+    };
+    return colors[status] || '#9ca3af';
+}
+
+getStatusLabel(status: number): string {
+    const labels: { [key: number]: string } = {
+        0: 'Pending',
+        1: 'Blocked',
+        2: 'Done'
+    };
+    return labels[status] || '—';
+}
+summarizeChat(): void {
+  this.summarizing = true;
+  this.chatSummary = null;
+
+  const body = this.streamId
+    ? { streamId: this.streamId }
+    : { taskId: this.taskId };
+
+  this.http.post<{ summary: string }>(`${environment.apiUrl}/chat/summarize`, body)
+    .subscribe({
+      next: (res) => {
+        this.chatSummary = res.summary;
+        this.summaryOpen = true;
+        this.summarizing = false;
+      },
+      error: () => this.summarizing = false
+    });
+}
 }

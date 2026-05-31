@@ -2,51 +2,52 @@
     position: relative;
 }
 
-.notif-bell {
+.notif-trigger {
     position: relative;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: white;
-    padding: 6px;
-    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.04);
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s ease;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(0, 128, 255, 0.08);
+        color: #0080FF;
     }
 }
 
 .notif-badge {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: -4px;
+    right: -4px;
     background: #ef4444;
     color: white;
-    border-radius: 50%;
-    width: 16px;
-    height: 16px;
+    border-radius: 10px;
+    padding: 1px 5px;
     font-size: 10px;
     font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    min-width: 16px;
+    text-align: center;
 }
 
- .notif-dropdown {
-     position: fixed;
-     bottom: 120px; // au lieu de top
-     left: 210px; // à droite de la sidebar
-     width: 320px;
-     background: white;
-     border: 1px solid #e5e7eb;
-     border-radius: 12px;
-     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-     z-index: 1000;
-     overflow: hidden;
- }
+.notif-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 320px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    overflow: hidden;
+}
 
 .notif-header {
     display: flex;
@@ -162,37 +163,4 @@
     text-align: center;
     color: #9ca3af;
     font-size: 13px;
-}
-.notif-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: white;
-    margin-left: 4px;
-}
-.notif-trigger {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 12px;
-    border-radius: 8px;
-    color: var(--sidebar-text);
-    cursor: pointer;
-    font-size: 13px;
-    position: relative;
-
-    &:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: white;
-    }
-}
-
-.notif-badge {
-    margin-left: auto;
-    background: #ef4444;
-    color: white;
-    border-radius: 10px;
-    padding: 1px 6px;
-    font-size: 10px;
-    font-weight: 700;
 }

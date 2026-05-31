@@ -1,16 +1,16 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { ChatService } from '../../services/chat.service';
-import { KeycloakService } from 'keycloak-angular';
+import { ChatService } from '../../services/chat.service';  // ← ajoute
+import { TranslateModule } from '@ngx-translate/core';
 import { environment } from '../../../../environments/environment';
-import { ChatPanelComponent } from '../chat-panel/chat-panel.component';
 
 @Component({
   selector: 'app-discussions-panel',
   standalone: true,
-  imports: [CommonModule, ChatPanelComponent],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './discussions-panel.component.html',
   styleUrl: './discussions-panel.component.scss'
 })
@@ -18,35 +18,60 @@ export class DiscussionsPanelComponent implements OnInit {
 
   @Input() isOpen = false;
   @Output() closed = new EventEmitter<void>();
-  @Output() openChat = new EventEmitter<{streamId?: string, taskId?: string, title: string}>();
+
   streamDiscussions: any[] = [];
   taskDiscussions: any[] = [];
 
- 
-
   private apiUrl = environment.apiUrl;
-  currentUserId = '';
 
   constructor(
     private http: HttpClient,
     private authService: AuthService,
-    private chatService: ChatService,
-    private keycloak: KeycloakService
+    private router: Router,
+    private chatService: ChatService  // ← ajoute
   ) {}
 
   ngOnInit(): void {
-    const userInfo = this.authService.getUserInfo();
-    this.currentUserId = userInfo?.sub || userInfo?.id || '';
     this.loadDiscussions();
+
+    // ← ajoute tout ça
+    this.chatService.getMessages().subscribe(messages => {
+      const last = messages[messages.length - 1];
+      if (!last) return;
+
+      if (last.streamId) {
+        const d = this.streamDiscussions.find(s => s.id === last.streamId);
+        if (d) {
+          d.lastMessage = last.content;
+          d.lastMessageTime = last.createdAt;
+          d.senderName = last.senderName;
+          d.hasNewMessage = true;
+          this.streamDiscussions.sort((a, b) =>
+            new Date(b.lastMessageTime || 0).getTime() - new Date(a.lastMessageTime || 0).getTime()
+          );
+        }
+      }
+
+      if (last.taskId) {
+        const d = this.taskDiscussions.find(t => t.id === last.taskId);
+        if (d) {
+          d.lastMessage = last.content;
+          d.lastMessageTime = last.createdAt;
+          d.senderName = last.senderName;
+          d.hasNewMessage = true;
+          this.taskDiscussions.sort((a, b) =>
+            new Date(b.lastMessageTime || 0).getTime() - new Date(a.lastMessageTime || 0).getTime()
+          );
+        }
+      }
+    });
   }
 
   loadDiscussions(): void {
-    // Charger streams
     this.http.get<any[]>(`${this.apiUrl}/streams/my`).subscribe({
-      next: async (streams) => {
+      next: (streams) => {
         this.streamDiscussions = [];
         for (const stream of streams) {
-          // Dernier message du stream
           this.http.get<any[]>(`${this.apiUrl}/chat/stream/${stream.id}`).subscribe({
             next: (messages) => {
               const last = messages[messages.length - 1];
@@ -54,32 +79,40 @@ export class DiscussionsPanelComponent implements OnInit {
                 id: stream.id,
                 name: stream.name,
                 projectName: stream.projectName || '',
-                lastMessage: last?.content || 'No messages yet',
+                lastMessage: last?.content || '',
                 lastMessageTime: last?.createdAt || null,
-                senderName: last?.senderName || ''
+                senderName: last?.senderName || '',
+                hasNewMessage: false
               });
+              this.streamDiscussions.sort((a, b) =>
+                new Date(b.lastMessageTime || 0).getTime() - new Date(a.lastMessageTime || 0).getTime()
+              );
             }
           });
-        }
-      }
-    });
 
-    // Charger tâches avec stepId
-    this.http.get<any[]>(`${this.apiUrl}/tasks/my`).subscribe({
-      next: (tasks) => {
-        const stepTasks = tasks.filter(t => t.stepId);
-        this.taskDiscussions = [];
-        for (const task of stepTasks) {
-          this.http.get<any[]>(`${this.apiUrl}/chat/task/${task.id}`).subscribe({
-            next: (messages) => {
-              if (messages.length > 0) {
-                const last = messages[messages.length - 1];
-                this.taskDiscussions.push({
-                  id: task.id,
-                  title: task.title,
-                  lastMessage: last.content,
-                  lastMessageTime: last.createdAt,
-                  senderName: last.senderName
+          this.http.get<any[]>(`${this.apiUrl}/tasks/stream/${stream.id}`).subscribe({
+            next: (tasks) => {
+              for (const task of tasks) {
+                this.http.get<any[]>(`${this.apiUrl}/chat/task/${task.id}`).subscribe({
+                  next: (messages) => {
+                    if (messages.length > 0) {
+                      const last = messages[messages.length - 1];
+                      const already = this.taskDiscussions.find(d => d.id === task.id);
+                      if (!already) {
+                        this.taskDiscussions.push({
+                          id: task.id,
+                          title: task.title,
+                          lastMessage: last?.content || '',
+                          lastMessageTime: last?.createdAt || null,
+                          senderName: last?.senderName || '',
+                          hasNewMessage: false
+                        });
+                        this.taskDiscussions.sort((a, b) =>
+                          new Date(b.lastMessageTime || 0).getTime() - new Date(a.lastMessageTime || 0).getTime()
+                        );
+                      }
+                    }
+                  }
                 });
               }
             }
@@ -89,21 +122,18 @@ export class DiscussionsPanelComponent implements OnInit {
     });
   }
 
-  openStreamChat(discussion: any): void {
-  this.openChat.emit({
-    streamId: discussion.id,
-    title: `${discussion.name} — Team Chat`
-  });
-}
-
-openTaskChat(discussion: any): void {
-  this.openChat.emit({
-    taskId: discussion.id,
-    title: discussion.title
-  });
-}
-
-   
+  openDiscussion(type: 'stream' | 'task', id: string): void {
+    // reset hasNewMessage
+    if (type === 'stream') {
+      const d = this.streamDiscussions.find(s => s.id === id);
+      if (d) d.hasNewMessage = false;
+    } else {
+      const d = this.taskDiscussions.find(t => t.id === id);
+      if (d) d.hasNewMessage = false;
+    }
+    this.close();
+    this.router.navigate(['/discussions'], { queryParams: { type, id } });
+  }
 
   close(): void {
     this.closed.emit();

@@ -102,6 +102,13 @@ public class TasksController : ControllerBase
         var tasks = await _tasksService.GetMyTasksAsync(user.KeycloakId);
         return Ok(tasks);
     }
+    [HttpGet("stream/{streamId:guid}")]
+    [Authorize]
+    public async Task<IActionResult> GetByStream(Guid streamId)
+    {
+        var tasks = await _tasksService.GetByStreamAsync(streamId);
+        return Ok(tasks);
+    }
 }
 
 public class UpdateStatusRequest

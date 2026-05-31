@@ -1,35 +1,35 @@
 <div class="pm-page">
+    <app-briefing-card />
 
     <!-- TASK INBOX -->
     <ng-container *ngIf="activeTabId === 'tasks'">
-
         <div class="card">
             <div class="card-header">
-                <h2>My Tasks ({{ myTasks.length }})</h2>
+                <h2>{{ 'TASKS.TITLE' | translate }} ({{ myTasks.length }})</h2>
             </div>
             <div class="search-bar">
-                <input type="text" [(ngModel)]="searchQuery" placeholder="Search tasks..."
+                <input type="text" [(ngModel)]="searchQuery" [placeholder]="'TASKS.SEARCH' | translate"
                     class="form-input search-input">
                 <select [(ngModel)]="filterStatus" class="form-input filter-select">
-                    <option value="all">All statuses</option>
-                    <option value="0">Pending</option>
-                    <option value="1">Blocked</option>
-                    <option value="2">Done</option>
+                    <option value="all">{{ 'TASKS.ALL_STATUSES' | translate }}</option>
+                    <option value="0">{{ 'TASKS.PENDING' | translate }}</option>
+                    <option value="1">{{ 'TASKS.BLOCKED' | translate }}</option>
+                    <option value="2">{{ 'TASKS.DONE' | translate }}</option>
                 </select>
             </div>
             <div class="action-bar" *ngIf="hasSelection">
-                <span class="selection-count">{{ selectedIds.size }} selected</span>
-                <button class="action-btn success" (click)="markDone()">✓ Mark Done</button>
+                <span class="selection-count">{{ selectedIds.size }} {{ 'COMMON.SELECTED' | translate }}</span>
+                <button class="action-btn success" (click)="markDone()">✓ {{ 'TASKS.MARK_DONE' | translate }}</button>
             </div>
             <div class="table-wrapper">
                 <table class="tasks-table" *ngIf="myTasks.length > 0">
                     <thead>
                         <tr>
                             <th style="width:40px"></th>
-                            <th>Title</th>
-                            <th>Project</th>
-                            <th>Status</th>
-                            <th>Date</th>
+                            <th>{{ 'COMMON.NAME' | translate }}</th>
+                            <th>{{ 'PROJECTS.TITLE' | translate }}</th>
+                            <th>{{ 'COMMON.STATUS' | translate }}</th>
+                            <th>{{ 'COMMON.DATE' | translate }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -54,24 +54,22 @@
                     </tbody>
                 </table>
             </div>
-            <div class="empty" *ngIf="myTasks.length === 0">No tasks assigned.</div>
+            <div class="empty" *ngIf="myTasks.length === 0">{{ 'TASKS.NO_TASKS' | translate }}</div>
         </div>
 
-        <!-- My Projects Card -->
         <div class="access-card" (click)="openProjectsTab()">
             <lucide-icon [img]="Layers" size="18" class="access-icon"></lucide-icon>
             <div class="access-info">
-                <span class="access-title">My Projects</span>
-                <span class="access-sub">{{ projects.length }} projects managed</span>
+                <span class="access-title">{{ 'PM.MY_PROJECTS' | translate }}</span>
+                <span class="access-sub">{{ projects.length }} {{ 'PM.PROJECTS_MANAGED' | translate }}</span>
             </div>
             <lucide-icon [img]="ChevronRight" size="16" class="access-arrow"></lucide-icon>
         </div>
 
-        <!-- Charts -->
         <div class="charts-grid">
             <div class="card chart-card">
                 <div class="card-header">
-                    <h2>Task Distribution</h2>
+                    <h2>{{ 'CHARTS.TASK_DISTRIBUTION' | translate }}</h2>
                 </div>
                 <div class="card-body chart-body">
                     <canvas id="pmDonutChart"></canvas>
@@ -79,7 +77,7 @@
             </div>
             <div class="card chart-card">
                 <div class="card-header">
-                    <h2>Projects per Month</h2>
+                    <h2>{{ 'CHARTS.PROJECTS_PER_MONTH' | translate }}</h2>
                 </div>
                 <div class="card-body chart-body">
                     <canvas id="pmBarChart"></canvas>
@@ -87,52 +85,161 @@
             </div>
             <div class="card chart-card">
                 <div class="card-header">
-                    <h2>Statistics</h2>
+                    <h2>{{ 'CHARTS.STATISTICS' | translate }}</h2>
                 </div>
                 <div class="card-body">
                     <div class="quick-stats">
                         <div class="qs-item" [class.qs-alert]="statsBottom.pendingTasks > 0">
-                            <span class="qs-label">Pending Tasks</span>
+                            <span class="qs-label">{{ 'STREAMS.PENDING_TASKS' | translate }}</span>
                             <span class="qs-value">{{ statsBottom.pendingTasks }}</span>
                         </div>
                         <div class="qs-item">
-                            <span class="qs-label">Completion Rate</span>
+                            <span class="qs-label">{{ 'STREAMS.COMPLETION_RATE' | translate }}</span>
                             <span class="qs-value">{{ statsBottom.completionRate }}%</span>
                         </div>
                         <div class="qs-item">
-                            <span class="qs-label">Active Projects</span>
+                            <span class="qs-label">{{ 'DIRECTOR.ACTIVE_PROJECTS' | translate }}</span>
                             <span class="qs-value">{{ statsBottom.activeProjects }}</span>
                         </div>
                         <div class="qs-item">
-                            <span class="qs-label">Next Delivery</span>
-                            <span class="qs-value qs-name">{{ statsBottom.nextDelivery.name }}</span>
-                            <span class="qs-sub">{{ statsBottom.nextDelivery.date }}</span>
+                            <span class="qs-label">{{ 'STREAMS.ACTIVE' | translate }}</span>
+                            <span class="qs-value">{{ statsBottom.activeStreams }}</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
     </ng-container>
 
     <!-- MY PROJECTS TAB -->
-    <!-- MY PROJECTS TAB -->
     <ng-container *ngIf="activeTabId === 'my-projects'">
-        <div class="card" *ngIf="!selectedProjectDetail">
+
+        <!-- Panel detail -->
+        <div class="project-detail-panel" *ngIf="selectedProjectDetail">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>{{ selectedProjectDetail.name }}</h2>
+                    <div class="panel-meta">
+                        
+                        <span class="tasks-count-badge">
+                            {{ selectedProjectDetail.doneTasks }}/{{ selectedProjectDetail.totalTasks }} {{
+                            'PROJECTS.TASKS_DONE' | translate }}
+                        </span>
+                    </div>
+                </div>
+                <div class="panel-header-right">
+                     
+                    <button class="panel-close-btn" (click)="selectedProjectDetail = null">✕</button>
+                </div>
+            </div>
+        
+            <div class="streams-list-detail">
+                <div class="stream-detail-card" *ngFor="let stream of selectedProjectDetail.streams">
+        
+                    <!-- Stream header -->
+                    <div class="stream-detail-header">
+                        <div class="stream-title-row">
+                            <span class="stream-detail-name">{{ stream.name }}</span>
+                            
+                        </div>
+                        <div class="stream-tasks-summary">
+                            <span class="task-sum-item done">{{ getStreamDone(stream) }} {{ 'TASKS.DONE' | translate }}</span>
+                            <span class="task-sum-item pending"> {{ getStreamPending(stream) }} {{ 'TASKS.PENDING' | translate }}</span>
+                            <span class="task-sum-item blocked" *ngIf="getStreamBlocked(stream) > 0">✕ {{ getStreamBlocked(stream) }} {{
+                                'TASKS.BLOCKED' | translate }}</span>
+                            <span class="task-sum-total">Total: {{ stream.streamTasks?.length || 0 }}</span>
+                        </div>
+                    </div>
+        
+                    <!-- Teams -->
+                    <div class="team-columns">
+                        <!-- Business -->
+                        <div class="team-column">
+                            <div class="team-column-header">
+                                <span class="team-type-label business">Business</span>
+                            </div>
+                            <div class="lead-row" *ngIf="stream.businessTeamLead">
+                                <span class="role-pill btl">BTL</span>
+                                <span class="member-name-sm">{{ stream.businessTeamLead.fullName }}</span>
+                            </div>
+                            <div class="member-row" *ngFor="let m of stream.members | teamFilter:'Business'">
+                                <span class="role-pill dev">DEV</span>
+                                <span class="member-name-sm">{{ m.fullName }}</span>
+                                <button class="remove-member-btn"
+                                    (click)="removeConsultant(stream.id, m.consultantId)">✕</button>
+                            </div>
+                            <span class="no-members"
+                                *ngIf="!(stream.members | teamFilter:'Business').length && !stream.businessTeamLead">
+                                {{ 'PM.NO_CONSULTANTS' | translate }}
+                            </span>
+                            <button class="btn-add-member-full" (click)="openAddConsultantModal(stream.id, 'business')">
+                                + {{ 'COMMON.ADD' | translate }}
+                            </button>
+                        </div>
+        
+                        <!-- Technical -->
+                        <div class="team-column">
+                            <div class="team-column-header">
+                                <span class="team-type-label technical">Technical</span>
+                            </div>
+                            <div class="lead-row" *ngIf="stream.technicalTeamLead">
+                                <span class="role-pill ttl">TTL</span>
+                                <span class="member-name-sm">{{ stream.technicalTeamLead.fullName }}</span>
+                            </div>
+                            <div class="member-row" *ngFor="let m of stream.members | teamFilter:'Technical'">
+                                <span class="role-pill dev">DEV</span>
+                                <span class="member-name-sm">{{ m.fullName }}</span>
+                                <button class="remove-member-btn"
+                                    (click)="removeConsultant(stream.id, m.consultantId)">✕</button>
+                            </div>
+                            <span class="no-members"
+                                *ngIf="!(stream.members | teamFilter:'Technical').length && !stream.technicalTeamLead">
+                                {{ 'PM.NO_CONSULTANTS' | translate }}
+                            </span>
+                            <button class="btn-add-member-full" (click)="openAddConsultantModal(stream.id, 'technical')">
+                                + {{ 'COMMON.ADD' | translate }}
+                            </button>
+                        </div>
+                    </div>
+        
+                    <!-- Edit leads -->
+                    <div class="stream-footer">
+                        <button class="btn-edit-leads-full" (click)="openEditLeadsModal(stream)">
+                            ✎ {{ 'PM.EDIT_LEADS' | translate }}
+                        </button>
+                    </div>
+        
+                </div>
+            </div>
+        
+            <div class="empty" *ngIf="!selectedProjectDetail.streams?.length">
+                {{ 'DIRECTOR.NO_STREAMS' | translate }}
+            </div>
+        </div>
+
+        <!-- Tableau -->
+        <div class="card">
             <div class="card-header">
-                <h2>My Projects ({{ projects.length }})</h2>
+                <h2>{{ 'PM.MY_PROJECTS' | translate }} ({{ projects.length }})</h2>
             </div>
             <div class="table-wrapper">
-                <table class="tasks-table">
+                <table class="tasks-table" style="border-collapse: separate; border-spacing: 0">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Target Date</th>
+                            <th style="position: sticky; top: 0; z-index: 2; background: #fafafa">
+                                {{ 'COMMON.NAME' | translate }}
+                            </th>
+                            <th style="position: sticky; top: 0; z-index: 2; background: #fafafa">
+                                {{ 'COMMON.DESCRIPTION' | translate }}
+                            </th>
+                            <th style="position: sticky; top: 0; z-index: 2; background: #fafafa">
+                                {{ 'PROJECTS.TARGET_DATE' | translate }}
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let p of projects" class="clickable-row" (click)="selectProjectDetail(p)">
+                        <tr *ngFor="let p of projects" class="clickable-row"
+                            [class.row-selected]="selectedProjectDetail?.id === p.id" (click)="selectProjectDetail(p)">
                             <td class="task-title">{{ p.name }}</td>
                             <td class="text-secondary">{{ p.description || '—' }}</td>
                             <td class="text-secondary">
@@ -142,87 +249,13 @@
                     </tbody>
                 </table>
             </div>
-            <div class="empty" *ngIf="projects.length === 0">No projects assigned.</div>
+            <div class="empty" *ngIf="projects.length === 0">{{ 'PM.NO_PROJECTS' | translate }}</div>
         </div>
-    </ng-container>
-    
-    <!-- PROJECT DETAIL TAB -->
-    <ng-container *ngIf="selectedProjectDetail && activeTabId === 'pm-project-' + selectedProjectDetail.id">
-    
-        <!-- Header -->
-        <div class="card">
-            <div class="card-header">
-                <button class="btn-back" (click)="selectedProjectDetail = null; tabsService.setActiveTab('my-projects')">←
-                    Projects</button>
-                <h2>{{ selectedProjectDetail.name }}</h2>
-                <div class="progress-header">
-                    <div class="progress-wrap" style="width:180px">
-                        <div class="progress-bar" [style.width.%]="selectedProjectDetail.progress"></div>
-                    </div>
-                    <span class="progress-pct">{{ selectedProjectDetail.progress }}%</span>
-                </div>
-            </div>
-        </div>
-    
-        <!-- Streams -->
-        <div class="card" *ngFor="let stream of selectedProjectDetail.streams">
-            <div class="card-header">
-                <h2>{{ stream.name }}</h2>
-                <div class="stream-actions">
-                    <span class="progress-label">{{ stream.streamProgress }}%</span>
-                    <button class="btn-small" (click)="openEditLeadsModal(stream)">Edit Leads</button>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="progress-wrap" style="margin-bottom: 12px">
-                    <div class="progress-bar" [style.width.%]="stream.streamProgress"></div>
-                </div>
-    
-                <!-- Business Team -->
-                <div class="team-section">
-                    <div class="team-header-row">
-                        <span class="team-label business">Business Team</span>
-                        <span class="lead-info-small" *ngIf="stream.businessTeamLead">
-                            Lead: {{ stream.businessTeamLead.fullName }}
-                        </span>
-                        <button class="btn-add-sm" (click)="openAddConsultantModal(stream.id, 'business')">+ Add</button>
-                    </div>
-                    <div class="members-row">
-                        <div class="member-tag" *ngFor="let m of stream.members | teamFilter:'Business'">
-                            <span>{{ m.fullName }}</span>
-                            <button class="remove-btn" (click)="removeConsultant(stream.id, m.consultantId)">✕</button>
-                        </div>
-                        <span class="text-secondary" *ngIf="!(stream.members | teamFilter:'Business').length">No
-                            consultants</span>
-                    </div>
-                </div>
-    
-                <!-- Technical Team -->
-                <div class="team-section" style="margin-top: 12px">
-                    <div class="team-header-row">
-                        <span class="team-label technical">Technical Team</span>
-                        <span class="lead-info-small" *ngIf="stream.technicalTeamLead">
-                            Lead: {{ stream.technicalTeamLead.fullName }}
-                        </span>
-                        <button class="btn-add-sm" (click)="openAddConsultantModal(stream.id, 'technical')">+ Add</button>
-                    </div>
-                    <div class="members-row">
-                        <div class="member-tag" *ngFor="let m of stream.members | teamFilter:'Technical'">
-                            <span>{{ m.fullName }}</span>
-                            <button class="remove-btn" (click)="removeConsultant(stream.id, m.consultantId)">✕</button>
-                        </div>
-                        <span class="text-secondary" *ngIf="!(stream.members | teamFilter:'Technical').length">No
-                            consultants</span>
-                    </div>
-                </div>
-    
-            </div>
-        </div>
-    
-        <!-- Modal Add Consultant -->
+
+        <!-- Modals -->
         <app-modal *ngIf="showAddConsultantModal"
-            [title]="'Add to ' + (addConsultantTeam === 'business' ? 'Business' : 'Technical') + ' Team'" width="400px"
-            (closed)="closeAddConsultantModal()">
+            [title]="('PM.ADD_TO' | translate) + ' ' + (addConsultantTeam === 'business' ? ('CONSULTANT.BUSINESS_TEAM' | translate) : ('CONSULTANT.TECHNICAL_TEAM' | translate))"
+            width="400px" (closed)="closeAddConsultantModal()">
             <div class="leads-list">
                 <div class="lead-card" *ngFor="let c of getAvailableConsultants(addConsultantStreamId)"
                     [class.selected-lead]="selectedAddConsultantId === c.id" (click)="selectedAddConsultantId = c.id">
@@ -234,63 +267,58 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-small" (click)="closeAddConsultantModal()">Cancel</button>
+                <button class="btn-small" (click)="closeAddConsultantModal()">{{ 'COMMON.CANCEL' | translate }}</button>
                 <button class="btn-primary" (click)="addConsultant()" [disabled]="!selectedAddConsultantId || loading">
-                    {{ loading ? 'Adding...' : 'Add' }}
+                    {{ loading ? ('COMMON.LOADING' | translate) : ('COMMON.ADD' | translate) }}
                 </button>
             </div>
         </app-modal>
-    
-        <!-- Modal Edit Leads -->
-        <app-modal *ngIf="showEditLeadsModal" title="Edit Stream Leads" width="400px" (closed)="closeEditLeadsModal()">
+
+        <app-modal *ngIf="showEditLeadsModal" [title]="'PM.EDIT_LEADS' | translate" width="400px"
+            (closed)="closeEditLeadsModal()">
             <div class="form-group">
-                <label>Business Team Lead</label>
+                <label>{{ 'PM.BIZ_LEAD' | translate }}</label>
                 <select [(ngModel)]="editingBizLeadId" class="form-input">
-                    <option value="">-- None --</option>
+                    <option value="">{{ 'PORTFOLIOS.SELECT_PLACEHOLDER' | translate }}</option>
                     <option *ngFor="let u of bizLeads" [value]="u.id">{{ u.fullName }}</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Technical Team Lead</label>
+                <label>{{ 'PM.TECH_LEAD' | translate }}</label>
                 <select [(ngModel)]="editingTechLeadId" class="form-input">
-                    <option value="">-- None --</option>
+                    <option value="">{{ 'PORTFOLIOS.SELECT_PLACEHOLDER' | translate }}</option>
                     <option *ngFor="let u of techLeads" [value]="u.id">{{ u.fullName }}</option>
                 </select>
             </div>
             <div class="modal-footer">
-                <button class="btn-small" (click)="closeEditLeadsModal()">Cancel</button>
+                <button class="btn-small" (click)="closeEditLeadsModal()">{{ 'COMMON.CANCEL' | translate }}</button>
                 <button class="btn-primary" (click)="saveLeads()" [disabled]="loading">
-                    {{ loading ? 'Saving...' : 'Save' }}
+                    {{ loading ? ('COMMON.LOADING' | translate) : ('COMMON.SAVE' | translate) }}
                 </button>
             </div>
         </app-modal>
-    
+
     </ng-container>
-   
 
     <!-- CREATE STREAM TAB -->
     <ng-container *ngFor="let tabId of getOpenTabIds()">
         <ng-container *ngIf="activeTabId === tabId">
             <div class="card" *ngIf="getTabData(tabId) as tab">
                 <div class="card-header">
-                    <h2>Create Stream</h2>
+                    <h2>{{ 'PM.CREATE_STREAM' | translate }}</h2>
                 </div>
                 <div class="card-body">
-
                     <div class="project-info-block">
-                        <span class="label">Project</span>
+                        <span class="label">{{ 'PROJECTS.TITLE' | translate }}</span>
                         <span class="project-name">{{ getProjectName(tab.task?.projectId ?? '') }}</span>
                     </div>
-
                     <div class="form-group">
-                        <label>Stream Name *</label>
+                        <label>{{ 'PM.STREAM_NAME' | translate }} *</label>
                         <input type="text" [(ngModel)]="tab.streamName" placeholder="e.g. Functional Stream 1"
                             class="form-input">
                     </div>
-
-                    <!-- Business Team Lead -->
                     <div class="form-group">
-                        <label>Business Team Lead</label>
+                        <label>{{ 'PM.BIZ_LEAD' | translate }}</label>
                         <div class="leads-list">
                             <div class="lead-card" *ngFor="let u of bizLeads"
                                 [class.selected-lead]="tab.selectedBizLeadId === u.id"
@@ -301,17 +329,15 @@
                                 </div>
                                 <div class="lead-charge">
                                     <span class="charge-number">{{ u.streamCount ?? 0 }}</span>
-                                    <span class="charge-label">stream(s)</span>
+                                    <span class="charge-label">{{ 'PM.STREAMS_COUNT' | translate }}</span>
                                 </div>
                                 <div class="selected-check" *ngIf="tab.selectedBizLeadId === u.id">✓</div>
                             </div>
-                            <div class="empty" *ngIf="bizLeads.length === 0">No Business Team Lead available.</div>
+                            <div class="empty" *ngIf="bizLeads.length === 0">{{ 'PM.NO_BIZ_LEAD' | translate }}</div>
                         </div>
                     </div>
-
-                    <!-- Business Team Consultants -->
                     <div class="form-group" *ngIf="tab.selectedBizLeadId">
-                        <label class="team-label business">Business Team Consultants</label>
+                        <label class="team-label business">{{ 'PM.BIZ_CONSULTANTS' | translate }}</label>
                         <div class="leads-list">
                             <div class="lead-card" *ngFor="let c of consultants"
                                 [class.selected-lead]="isConsultantSelected(tabId, c.id, 'business')"
@@ -322,17 +348,15 @@
                                 </div>
                                 <div class="lead-charge">
                                     <span class="charge-number">{{ c.streamCount ?? 0 }}</span>
-                                    <span class="charge-label">stream(s)</span>
+                                    <span class="charge-label">{{ 'PM.STREAMS_COUNT' | translate }}</span>
                                 </div>
                                 <div class="selected-check" *ngIf="isConsultantSelected(tabId, c.id, 'business')">✓
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Technical Team Lead -->
                     <div class="form-group">
-                        <label>Technical Team Lead</label>
+                        <label>{{ 'PM.TECH_LEAD' | translate }}</label>
                         <div class="leads-list">
                             <div class="lead-card" *ngFor="let u of techLeads"
                                 [class.selected-lead]="tab.selectedTechLeadId === u.id"
@@ -343,17 +367,17 @@
                                 </div>
                                 <div class="lead-charge">
                                     <span class="charge-number">{{ u.streamCount ?? 0 }}</span>
-                                    <span class="charge-label">stream(s)</span>
+                                    <span class="charge-label">{{ 'PM.STREAMS_COUNT' | translate }}</span>
                                 </div>
                                 <div class="selected-check" *ngIf="tab.selectedTechLeadId === u.id">✓</div>
                             </div>
-                            <div class="empty" *ngIf="techLeads.length === 0">No Technical Team Lead available.</div>
+                            <div class="empty" *ngIf="techLeads.length === 0">
+                                {{ 'PM.NO_TECH_LEAD' | translate }}
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Technical Team Consultants -->
                     <div class="form-group" *ngIf="tab.selectedTechLeadId">
-                        <label class="team-label technical">Technical Team Consultants</label>
+                        <label class="team-label technical">{{ 'PM.TECH_CONSULTANTS' | translate }}</label>
                         <div class="leads-list">
                             <div class="lead-card" *ngFor="let c of consultants"
                                 [class.selected-lead]="isConsultantSelected(tabId, c.id, 'technical')"
@@ -364,21 +388,19 @@
                                 </div>
                                 <div class="lead-charge">
                                     <span class="charge-number">{{ c.streamCount ?? 0 }}</span>
-                                    <span class="charge-label">stream(s)</span>
+                                    <span class="charge-label">{{ 'PM.STREAMS_COUNT' | translate }}</span>
                                 </div>
                                 <div class="selected-check" *ngIf="isConsultantSelected(tabId, c.id, 'technical')">✓
                                 </div>
                             </div>
                         </div>
                     </div>
-
                     <div class="bottom-actions">
                         <button class="btn-primary" (click)="createStream(tabId)"
                             [disabled]="!tab.streamName || loading">
-                            {{ loading ? 'Creating...' : 'Create Stream' }}
+                            {{ loading ? ('COMMON.LOADING' | translate) : ('PM.CREATE_STREAM' | translate) }}
                         </button>
                     </div>
-
                 </div>
             </div>
         </ng-container>

@@ -16,6 +16,8 @@ import { DiscussionsPanelComponent } from './core/components/discussions-panel/d
 import { ChatPanelComponent } from './core/components/chat-panel/chat-panel.component';
 import { LanguageService } from './core/services/language.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { DrawerService } from './core/services/drawer.service';
+import { TabsService } from './core/services/tabs.service';
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -38,6 +40,11 @@ chatOpen = false;
 chatStreamId: string | null = null;
 chatTaskId: string | null = null;
 chatTitle = '';
+
+isDrawerOpen = false;
+userMenuOpen = false;
+unreadDiscussionsCount = 0;
+
 
 
   // Outils accessibles au consultant
@@ -67,7 +74,10 @@ readonly Settings=Settings;
     private notificationService:NotificationService,
     private keycloak:KeycloakService,
     private chatService:ChatService,
-    public languageService:LanguageService
+    public languageService:LanguageService,
+    private drawerService: DrawerService,
+    public tabsService:TabsService
+    
     
   ) {}
 
@@ -84,6 +94,11 @@ readonly Settings=Settings;
     if (this.userInfo?.id) {
       this.notificationService.startConnection(this.userInfo.id);
       this.initChatConnection();
+       this.chatService.setCurrentUser(this.userInfo?.sub || this.userInfo?.id || '');  
+      this.chatService.getUnreadDiscussionsCount().subscribe(count => {
+  this.unreadDiscussionsCount = count;
+});
+   
     }
   } else {
     this.showLayout = false;
@@ -97,8 +112,10 @@ readonly Settings=Settings;
   clearTimeout(this.toastTimeout);
   this.toastTimeout = setTimeout(() => this.toastVisible = false, 4000);
 });
-   
- 
+
+ this.drawerService.isOpen$.subscribe(open => {
+    this.isDrawerOpen = open;
+});
 
     this.router.events.pipe(
       filter(e => e instanceof NavigationEnd)
@@ -134,7 +151,10 @@ readonly Settings=Settings;
     && !currentUrl.includes('plugins/axe-gui');
     this.currentRoute = currentUrl;
   }
-
+onSwitchLang(lang: string): void {
+  this.languageService.switchLanguage(lang);
+  window.location.reload();
+}
   loadMyTools(): void {
     this.http.get<any[]>(`${this.apiUrl}/tools/my-roles`).subscribe({
       next: (tools) => {
@@ -229,5 +249,11 @@ onOpenChat(data: {streamId?: string, taskId?: string, title: string}): void {
   this.chatTaskId = data.taskId || null;
   this.chatTitle = data.title;
   this.chatOpen = true;
+}
+toggleUserMenu(): void {
+    this.userMenuOpen = !this.userMenuOpen;
+}
+openDiscussions(): void {
+    this.router.navigate(['/discussions']);
 }
 }

@@ -47,4 +47,7 @@ export class ContractsService {
 deleteFile(contractId: string, fileName: string): Observable<any> {
   return this.http.delete(`${this.api}/contracts/${contractId}/files/${encodeURIComponent(fileName)}`);
 }
+getAll(): Observable<any[]> {
+  return this.http.get<any[]>(`${this.api}/contracts/all`);
+}
 }
