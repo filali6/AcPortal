@@ -41,7 +41,7 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
   editingTool: PluginDto | null = null;
   toolForm: PluginDto = {
     id: '', name: '', description: '',
-    category: '', accessUrl: '', icon: '', ssoEnabled: false,isActive: true, allowedRoles: []
+    category: '', url: '', icon: '', ssoEnabled: false,isActive: true, allowedRoles: []
   };
 
   // Workflow
@@ -228,24 +228,59 @@ confirmAction: (() => void) | null = null;
     this.toolForm = { ...tool };
     this.showToolModal = true;
   }
-
-  saveTool(): void {
-  if (!this.toolForm.name) {
-    this.toastService.show('Name is required', 'error');
-    return;
-  }
-  this.loading = true;
-  this.pluginsAdminService.update(this.editingTool!.id, this.toolForm).subscribe({
-    next: () => {
-      this.toastService.show('Tool updated!', 'success');
-      this.loading = false;
-      this.showToolModal = false;
-      this.loadTools();
-    },
-    error: () => { this.toastService.show('Error updating tool', 'error'); this.loading = false; }
+  openCreateToolModal(): void {
+  this.editingTool = null;
+  this.toolForm = {
+    id: '', name: '', description: '',
+    category: '', url: '', icon: '',
+    ssoEnabled: false, isActive: true, allowedRoles: []
+  };
+  this.showToolModal = true;
+}
+deleteTool(tool: PluginDto): void {
+  this.openConfirm(`Delete ${tool.name}?`, () => {
+    this.pluginsAdminService.delete(tool.id).subscribe({
+      next: () => { this.toastService.show('Tool deleted!', 'success'); this.loadTools(); },
+      error: () => this.toastService.show('Error deleting tool', 'error')
+    });
   });
 }
 
+saveTool(): void {
+  if (!this.toolForm.name || (!this.editingTool && !this.toolForm.id)) {
+    this.toastService.show('ID and Name are required', 'error');
+    return;
+  }
+  this.loading = true;
+
+  const payload = {
+    ...this.toolForm,
+    allowedRoles: JSON.stringify(this.toolForm.allowedRoles)
+  };
+
+  if (this.editingTool) {
+    this.pluginsAdminService.update(this.editingTool.id, payload as any).subscribe({
+      next: () => {
+        this.toastService.show('Tool updated!', 'success');
+        this.loading = false;
+        this.showToolModal = false;
+        this.loadTools();
+      },
+      error: () => { this.toastService.show('Error updating tool', 'error'); this.loading = false; }
+    });
+  } else {
+    this.pluginsAdminService.create(payload as any).subscribe({
+      next: () => {
+        this.toastService.show('Tool created!', 'success');
+        this.loading = false;
+        this.showToolModal = false;
+        this.loadTools();
+      },
+      error: () => { this.toastService.show('Error creating tool', 'error'); this.loading = false; }
+    });
+  }
+}
+  
  
 
   // ===== WORKFLOW =====

@@ -1,88 +1,92 @@
 <div class="tab-content">
 
-    <!-- Liste contrats -->
-    <ng-container *ngIf="!selectedContract">
-        <div class="card">
-            <div class="card-header">
-                <h2>Contracts ({{ contracts.length }})</h2>
-            </div>
-            <div *ngIf="loading" class="empty">Loading...</div>
-            <div class="table-wrapper" *ngIf="!loading">
-                <table class="contracts-table">
-                    <thead>
-                        <tr>
-                            <th>Client</th>
-                            <th>Status</th>
-                            <th>Files</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let c of contracts" (click)="selectContract(c)" class="clickable">
-                            <td class="item-name">{{ c.clientName }}</td>
-                            <td>
-                                <span class="status-badge" [style.background]="utils.getContractStatusColor(c.status) + '20'"
-                                    [style.color]="utils.getContractStatusColor(c.status)">
-                                    {{ utils.getContractStatusLabel(c.status) }}
-                                </span>
-                            </td>
-                            <td class="text-secondary">{{ c.filesPaths?.length || 0 }} file(s)</td>
-                            <td class="text-secondary">{{ c.createdAt | date:'dd/MM/yyyy' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="empty" *ngIf="!loading && contracts.length === 0">No contracts found.</div>
+    <!-- Panel detail -->
+    <div class="inline-panel" *ngIf="selectedContract">
+        <div class="inline-panel-header">
+            <h2>{{ selectedContract.clientName }}</h2>
+            <button class="panel-close" (click)="selectedContract = null">✕</button>
         </div>
-    </ng-container>
 
-    <!-- Détail contrat -->
-    <ng-container *ngIf="selectedContract">
-        <div class="card">
-            <div class="card-header">
-                <button class="btn-back" (click)="selectedContract = null">← Contracts</button>
-                <h2>{{ selectedContract.clientName }}</h2>
-                <span class="status-badge" [style.background]="utils.getContractStatusColor(selectedContract.status) + '20'"
-                    [style.color]="utils.getContractStatusColor(selectedContract.status)">
-                    {{ utils.getContractStatusLabel(selectedContract.status)}}
+        <div class="info-grid">
+            <div class="info-block">
+                <span class="info-label">{{ 'CONTRACTS.CLIENT' | translate }}</span>
+                <span class="info-value">{{ selectedContract.clientName }}</span>
+            </div>
+            <div class="info-block">
+                <span class="info-label">{{ 'COMMON.DESCRIPTION' | translate }}</span>
+                <span class="info-value">{{ selectedContract.description || '—' }}</span>
+            </div>
+            <div class="info-block">
+                <span class="info-label">{{ 'CONTRACTS.SIGNED_DATE' | translate }}</span>
+                <span class="info-value">{{ selectedContract.createdAt | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="info-block">
+                <span class="info-label">{{ 'CONTRACTS.PROJECT' | translate }}</span>
+                <span class="project-badge" *ngIf="selectedContract.projectId">
+                    {{ 'CONTRACTS.PROJECT_CREATED' | translate }}
+                </span>
+                <span class="project-pending" *ngIf="!selectedContract.projectId">
+                    {{ 'CONTRACTS.PENDING' | translate }}
                 </span>
             </div>
-            <div class="card-body">
-                <div class="info-grid">
-                    <div class="info-block">
-                        <span class="info-label">Client</span>
-                        <span class="info-value">{{ selectedContract.clientName }}</span>
-                    </div>
-                    <div class="info-block">
-                        <span class="info-label">Description</span>
-                        <span class="info-value">{{ selectedContract.description || '—' }}</span>
-                    </div>
-                    <div class="info-block">
-                        <span class="info-label">Date</span>
-                        <span class="info-value">{{ selectedContract.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
-                    </div>
-                    <div class="info-block">
-                        <span class="info-label">Project</span>
-                        <span class="info-value">
-                            <span class="project-badge" *ngIf="selectedContract.projectId">Created</span>
-                            <span class="project-pending" *ngIf="!selectedContract.projectId">Pending</span>
-                        </span>
-                    </div>
-                </div>
+        </div>
 
-                <!-- Files -->
-                <div class="files-section" *ngIf="selectedContract.filesPaths?.length > 0">
-                    <span class="info-label">Attached Files</span>
-                    <div class="files-list">
-                        <a *ngFor="let f of selectedContract.filesPaths" [href]="getFileUrl(f)" target="_blank"
-                            class="file-link">
-                            📄 {{ getFileName(f) }}
-                        </a>
-                    </div>
-                </div>
-
+        <!-- Files -->
+        <div class="files-section" *ngIf="selectedContract.filesPaths?.length > 0">
+            <span class="info-label">{{ 'CONTRACTS.ATTACHED_FILES' | translate }}</span>
+            <div class="files-list">
+                <a *ngFor="let f of selectedContract.filesPaths" [href]="getFileUrl(f)" target="_blank"
+                    class="file-link">
+                    📄 {{ getFileName(f) }}
+                </a>
             </div>
         </div>
-    </ng-container>
+
+        <!-- AI Summary -->
+        <div class="summary-section" *ngIf="selectedContract.summary">
+        <th>{{ 'CONTRACTS.DELAY' | translate }}</th>
+            <p class="summary-text">{{ selectedContract.summary }}</p>
+        </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="card">
+        <div class="card-header">
+            <h2>{{ 'CONTRACTS.TITLE' | translate }} ({{ contracts.length }})</h2>
+        </div>
+        <div *ngIf="loading" class="empty">{{ 'COMMON.LOADING' | translate }}</div>
+        <div class="table-wrapper" *ngIf="!loading">
+            <table class="contracts-table">
+                <thead>
+                    <tr>
+                        <th>{{ 'CONTRACTS.CLIENT' | translate }}</th>
+                        <th>{{ 'CONTRACTS.SIGNED_DATE' | translate }}</th>
+                        <th>{{ 'CONTRACTS.PROJECT' | translate }}</th>
+                        <th>{{ 'AI.SUMMARY' | translate }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let c of contracts" class="clickable"
+                        [class.row-selected]="selectedContract?.id === c.id" (click)="selectContract(c)">
+                        <td class="item-name">{{ c.clientName }}</td>
+                        <td class="text-secondary">{{ c.createdAt | date:'dd/MM/yyyy' }}</td>
+                        <td>
+                            <span class="project-badge" *ngIf="c.projectId">
+                                {{ 'CONTRACTS.PROJECT_CREATED' | translate }}
+                            </span>
+                            <span class="project-pending" *ngIf="!c.projectId">
+                                {{ 'CONTRACTS.PENDING' | translate }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="alert-badge" *ngIf="isDelayed(c)">{{ 'CONTRACTS.DELAYED' | translate }}</span>
+                            <span class="text-secondary" *ngIf="!isDelayed(c)">—</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty" *ngIf="!loading && contracts.length === 0">{{ 'CONTRACTS.EMPTY' | translate }}</div>
+    </div>
 
 </div>

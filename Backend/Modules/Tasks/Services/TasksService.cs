@@ -101,4 +101,27 @@ public class TasksService
             })
             .ToListAsync();
     }
+    public async Task<List<object>> GetByStreamAsync(Guid streamId)
+    {
+        return await _db.AcpTasks
+            .Where(t => t.StreamId == streamId ||
+                _db.ProjectSteps.Any(s => s.Id == t.StepId && s.StreamId == streamId))
+            .OrderByDescending(t => t.CreatedAt)
+            .Select(t => (object)new
+            {
+                t.Id,
+                t.Title,
+                t.Description,
+                t.Status,
+                t.AssignedTo,
+                t.CreatedAt,
+                t.ProjectId,
+                t.StepId,
+                StreamId = t.StreamId ?? _db.ProjectSteps
+                    .Where(s => s.Id == t.StepId)
+                    .Select(s => s.StreamId)
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
+    }
 }

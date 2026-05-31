@@ -1,65 +1,78 @@
+// Overlay
 .discussions-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.2);
+    background: transparent;
     z-index: 299;
 }
 
+// Panel — same positioning as notif-dropdown
 .discussions-panel {
-    position: fixed;
-    left: var(--sidebar-width);
-    top: 0;
-    height: 100vh;
-    width: 300px;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 320px;
+    max-height: 480px;
     background: white;
-    border-right: 1px solid #e5e7eb;
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    z-index: 300;
-    transform: translateX(-110%);
-    transition: transform 0.3s ease;
+    transform: translateY(-8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
 
     &.open {
-        transform: translateX(0);
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: all;
     }
 }
 
+// Header — same as notif-header
 .panel-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
+    padding: 14px 16px;
     border-bottom: 1px solid #f3f4f6;
-    background: #0080FF;
-    color: white;
 }
 
 .panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 14px;
     font-weight: 600;
+    color: #1e293b;
 }
 
 .close-btn {
     background: none;
     border: none;
-    color: white;
+    font-size: 12px;
+    color: var(--accent);
     cursor: pointer;
-    font-size: 14px;
 
     &:hover {
-        opacity: 0.7;
+        text-decoration: underline;
     }
 }
 
+// Body — same as notif-body
 .panel-body {
-    flex: 1;
+    max-height: 400px;
     overflow-y: auto;
-    padding: 12px 0;
+    flex: 1;
 }
 
+// Section labels — same as notif-date-label
 .section-label {
-    padding: 6px 16px;
+    padding: 8px 16px 4px;
     font-size: 10px;
     font-weight: 700;
     color: #9ca3af;
@@ -67,23 +80,26 @@
     letter-spacing: 0.5px;
 }
 
+// Items — same as notif-item
 .discussion-item {
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    padding: 10px 16px;
+    padding: 12px 16px;
     cursor: pointer;
     transition: background 0.15s;
+    position: relative;
 
     &:hover {
         background: #f8fafc;
     }
 }
 
+// Avatars — same as notif-avatar
 .disc-avatar {
     width: 36px;
     height: 36px;
-    border-radius: 8px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -94,7 +110,7 @@
 }
 
 .stream-avatar {
-    background: #0080FF;
+    background: var(--accent);
 }
 
 .task-avatar {
@@ -123,7 +139,7 @@
 }
 
 .disc-time {
-    font-size: 10px;
+    font-size: 11px;
     color: #9ca3af;
     white-space: nowrap;
     flex-shrink: 0;
@@ -131,7 +147,7 @@
 
 .disc-project {
     font-size: 11px;
-    color: #0080FF;
+    color: var(--accent);
     display: block;
     margin-bottom: 2px;
 }
@@ -146,14 +162,39 @@
 }
 
 .empty-section {
-    padding: 12px 16px;
-    font-size: 12px;
+    padding: 24px;
+    text-align: center;
     color: #9ca3af;
-    font-style: italic;
+    font-size: 13px;
+}
+.discussion-item {
+    &.unread {
+        background: #eff6ff;
+
+        .disc-name {
+            color: #0080FF;
+            font-weight: 700;
+        }
+
+        .disc-last {
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        &:hover {
+            background: #dbeafe;
+        }
+    }
 }
 
-.chat-overlay-inner {
-    position: fixed;
-    inset: 0;
-    z-index: 398;
+.unread-dot {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #0080FF;
+    flex-shrink: 0;
 }

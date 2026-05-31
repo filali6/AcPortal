@@ -120,6 +120,13 @@ export const routes: Routes = [
         import('./pages/team-lead/team-lead.component')
             .then(m => m.TeamLeadComponent)
 },
+{
+    path: 'discussions',
+    canActivate: [authGuard],
+    loadComponent: () =>
+        import('./pages/discussions/discussions.component')
+            .then(m => m.DiscussionsComponent)
+},
 
   // Route inconnue
   {

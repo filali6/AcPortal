@@ -29,6 +29,7 @@ public class AppDbContext : DbContext
     public DbSet<ToolRole> ToolRoles => Set<ToolRole>();
     public DbSet<ConsultantToolRole> ConsultantToolRoles => Set<ConsultantToolRole>();
     public DbSet<UserPlugin> UserPlugins => Set<UserPlugin>();
+    public DbSet<PluginDefinition> PluginDefinitions => Set<PluginDefinition>();
     public DbSet<Contract> Contracts => Set<Contract>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
@@ -164,6 +165,12 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<ChatMessage>()
             .HasIndex(m => m.TaskId);
+        modelBuilder.Entity<PluginDefinition>()
+    .HasKey(p => p.DbId);
+
+        modelBuilder.Entity<PluginDefinition>()
+            .HasIndex(p => p.Id)
+            .IsUnique();
 
     }
 }

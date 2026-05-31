@@ -49,3 +49,4 @@ secrets.json
 *.sqlite
 
 .dapr/
+.uploads/

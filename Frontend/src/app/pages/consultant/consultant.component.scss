@@ -6,6 +6,7 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    
 }
 
 .card {
@@ -14,6 +15,26 @@
     border-radius: 8px;
     overflow: hidden;
     box-shadow: var(--shadow-sm);
+
+    /* ← add this */
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 280px);
+}
+
+/* ← add this new class */
+.card-scrollable-body {
+    overflow-y: auto;
+    flex: 1;
+
+    &::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 4px;
+    }
 }
 
 .card-header {
@@ -54,9 +75,9 @@
     }
 }
 
-.table-wrapper {
-    overflow-x: auto;
-}
+// .table-wrapper {
+//     overflow-x: auto;
+// }
 
 .group-label {
     padding: 8px 20px;
@@ -415,4 +436,120 @@
         border-color: var(--accent);
         color: var(--accent);
     }
+}
+.project-group {
+    border-bottom: 1px solid var(--border);
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.group-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+
+    &:hover {
+        background: #f1f5f9;
+    }
+}
+
+.group-toggle {
+    font-size: 10px;
+    color: var(--accent);
+    width: 12px;
+    flex-shrink: 0;
+}
+
+.group-name {
+    flex: 1;
+}
+
+.group-count {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.group-content {
+    overflow: hidden;
+}
+
+/* Fixed height table with scroll */
+.table-scroll-wrapper {
+    max-height: 250px;
+    /* ← fixed height, scroll after this */
+    overflow-y: auto;
+    overflow-x: auto;
+    position: relative;
+
+    &::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 4px;
+    }
+}
+
+/* Sticky header inside scroll */
+.tasks-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #fafafa;
+}
+.btn-discuss {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    background: none;
+    border: 1px solid var(--border);
+    color: #94a3b8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+
+    &:hover {
+        background: rgba(0, 128, 255, 0.08);
+        border-color: #0080FF;
+        color: #0080FF;
+    }
+
+    &.has-messages {
+        border-color: #0080FF;
+        color: #0080FF;
+        background: rgba(0, 128, 255, 0.06);
+    }
+}
+
+.unread-dot {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 8px;
+    height: 8px;
+    background: #ef4444;
+    border-radius: 50%;
+    border: 1.5px solid white;
 }

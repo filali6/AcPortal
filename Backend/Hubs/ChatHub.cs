@@ -52,7 +52,8 @@ public class ChatHub : Hub
             content = message.Content,
             senderName = message.SenderName,
             senderKeycloakId = message.SenderKeycloakId,
-            createdAt = message.CreatedAt
+            createdAt = message.CreatedAt,
+            streamId=streamId
         });
 
         // Notifier les membres du stream
@@ -99,7 +100,8 @@ public class ChatHub : Hub
             content = message.Content,
             senderName = message.SenderName,
             senderKeycloakId = message.SenderKeycloakId,
-            createdAt = message.CreatedAt
+            createdAt = message.CreatedAt,
+            taskId=taskId
         });
 
         var task = await _db.AcpTasks

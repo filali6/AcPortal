@@ -1,4 +1,5 @@
-<div class="tl-page">
+<div class="tl-page"  >
+    <app-briefing-card />
 
     <!-- TASK INBOX -->
     <ng-container *ngIf="activeTabId === 'tasks'">
@@ -317,8 +318,9 @@
         </ng-container>
     </ng-container>
 
-    <app-chat-panel [isOpen]="chatOpen" [streamId]="chatStreamId" [taskId]="chatTaskId" [title]="chatTitle">
-    </app-chat-panel>
-    <div class="chat-overlay" *ngIf="chatOpen" (click)="closeChat()"></div>
+<app-chat-panel [isOpen]="chatOpen" [streamId]="chatStreamId" [taskId]="chatTaskId" [title]="chatTitle"
+    (closed)="closeChat()">
+</app-chat-panel>
+     
 
 </div>

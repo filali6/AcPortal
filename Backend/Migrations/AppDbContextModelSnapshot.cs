@@ -493,6 +493,60 @@ namespace Backend.Migrations
                     b.ToTable("ConsultantToolRoles");
                 });
 
+            modelBuilder.Entity("Backend.Modules.Tools.Models.PluginDefinition", b =>
+                {
+                    b.Property<Guid>("DbId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AdapterType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("AllowedRoles")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("SsoEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("DbId");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.ToTable("PluginDefinitions");
+                });
+
             modelBuilder.Entity("Backend.Modules.Tools.Models.ToolRole", b =>
                 {
                     b.Property<Guid>("Id")

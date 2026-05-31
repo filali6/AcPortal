@@ -18,10 +18,11 @@ Chart.register(...registerables);
 import { TeamFilterPipe } from '../../core/pipes/team-filter.pipe';
 import { ModalComponent } from '../../core/components/modal/modal.component';
 import { TranslateModule,TranslateService } from '@ngx-translate/core';
+import { BriefingCardComponent } from '../../core/components/briefing-card/briefing-card.component';
 @Component({
   selector: 'app-project-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, ModalComponent, TeamFilterPipe,TranslateModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, ModalComponent, TeamFilterPipe,TranslateModule,BriefingCardComponent],
   templateUrl: './project-manager.component.html',
   styleUrl: './project-manager.component.scss'
 })
@@ -63,12 +64,12 @@ showEditLeadsModal = false;
   private barChart: Chart | null = null;
   private subs: Subscription[] = [];
 
-  statsBottom = {
-    pendingTasks: 0,
-    completionRate: 0,
-    activeProjects: 0,
-    nextDelivery: { name: '', date: '' }
-  };
+ statsBottom = {
+  pendingTasks: 0,
+  completionRate: 0,
+  activeProjects: 0,
+  activeStreams: 0
+};
 
   readonly ChevronRight = ChevronRight;
   readonly Layers = Layers;
@@ -131,23 +132,14 @@ showEditLeadsModal = false;
   }
 
   computeStats(): void {
-    this.statsBottom.pendingTasks = this.myTasks.filter(t => t.status === 0).length;
-    this.statsBottom.completionRate = this.myTasks.length
-      ? Math.round((this.myTasks.filter(t => t.status === 2).length / this.myTasks.length) * 100)
-      : 0;
-    this.statsBottom.activeProjects = this.projects.length;
-
-    const upcoming = this.projects
-      .filter((p: any) => p.targetDate)
-      .sort((a: any, b: any) => new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime());
-
-    this.statsBottom.nextDelivery = upcoming[0]
-      ? { name: upcoming[0].name, date: new Date(upcoming[0].targetDate).toLocaleDateString('en-GB') }
-      : { name: '—', date: '—' };
-
-    setTimeout(() => this.renderCharts(), 100);
-  }
-
+  this.statsBottom.pendingTasks = this.myTasks.filter(t => t.status === 0).length;
+  this.statsBottom.completionRate = this.myTasks.length
+    ? Math.round((this.myTasks.filter(t => t.status === 2).length / this.myTasks.length) * 100)
+    : 0;
+  this.statsBottom.activeProjects = this.projects.length;
+  this.statsBottom.activeStreams = this.projects.reduce((sum, p) => sum + (p.streamCount || 0), 0);
+  setTimeout(() => this.renderCharts(), 100);
+}
   renderCharts(): void {
     this.donutChart = this.chartService.createDoughnut(
       'pmDonutChart',
@@ -290,16 +282,28 @@ showEditLeadsModal = false;
     });
   }
   selectProjectDetail(project: any): void {
+  if (this.selectedProjectDetail?.id === project.id) {
+    this.selectedProjectDetail = null;
+    return;
+  }
   this.projectsService.getDetails(project.id).subscribe({
-    next: (d) => {
-      this.selectedProjectDetail = d;
-      this.tabsService.openTab({
-        id: `pm-project-${project.id}`,
-        title: project.name,
-        type: 'create-project'
-      });
-    }
+    next: (d) => this.selectedProjectDetail = d
   });
+}
+getProgressColor(progress: number): string {
+    if (progress >= 70) return '#10b981';
+    if (progress >= 40) return '#f59e0b';
+    return '#ef4444';
+}
+
+getStreamDone(stream: any): number {
+    return stream.streamTasks?.filter((t: any) => t.status === 2).length || 0;
+}
+getStreamPending(stream: any): number {
+    return stream.streamTasks?.filter((t: any) => t.status === 0).length || 0;
+}
+getStreamBlocked(stream: any): number {
+    return stream.streamTasks?.filter((t: any) => t.status === 1).length || 0;
 }
 
 openAddConsultantModal(streamId: string, team: 'business' | 'technical'): void {
@@ -393,4 +397,5 @@ getAvailableConsultants(streamId: string): any[] {
   const assignedIds = stream.members?.map((m: any) => m.consultantId) || [];
   return this.consultants.filter(c => !assignedIds.includes(c.id));
 }
+
 }

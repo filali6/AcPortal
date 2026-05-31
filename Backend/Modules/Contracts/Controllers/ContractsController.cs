@@ -169,7 +169,9 @@ public class ContractsController : ControllerBase
                 c.Status,
                 c.CreatedAt,
                 c.ProjectId,
-                c.FilesPaths
+                c.FilesPaths,
+                c.Summary,        // ← ajoute
+                c.SummaryStatus
             })
             .ToListAsync();
         return Ok(contracts);
