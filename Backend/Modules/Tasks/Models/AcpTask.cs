@@ -32,6 +32,7 @@ public class AcpTask
     public Guid? StreamId { get; set; }
 
     public Guid? ContractId { get; set; }
+    public ICollection<TaskComment> Comments { get; set; } = new List<TaskComment>();
 
 
 }

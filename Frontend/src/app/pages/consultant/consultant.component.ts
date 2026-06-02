@@ -59,6 +59,8 @@ chatToolName: string | null = null;
   chatTaskId: string | null = null;
   chatTitle = '';
 
+  chatStreamId: string | null = null;
+
   private donutChart: Chart | null = null;
   private barChart: Chart | null = null;
   private subs: Subscription[] = [];
@@ -307,9 +309,10 @@ chatToolName: string | null = null;
     this.chatTitle = task.title;
     this.chatTaskStatus = task.status;
     this.chatToolName = task.toolName || null;
+    this.chatStreamId = task.streamId || null; // ← ADD
     this.chatOpen = true;
-    this.drawerService.open(); 
-    this.chatService.markTaskAsRead(task.id);// ← add this
+    this.drawerService.open();
+    this.chatService.markTaskAsRead(task.id);
 }
 
 closeChat(): void {

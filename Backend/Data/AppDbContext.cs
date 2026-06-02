@@ -33,6 +33,7 @@ public class AppDbContext : DbContext
     public DbSet<Contract> Contracts => Set<Contract>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<TaskComment> TaskComments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -172,5 +173,22 @@ public class AppDbContext : DbContext
             .HasIndex(p => p.Id)
             .IsUnique();
 
+        modelBuilder.Entity<TaskComment>(entity =>
+            {
+                entity.HasOne(c => c.Task)
+                    .WithMany(t=>t.Comments)
+                    .HasForeignKey(c => c.TaskId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(c => c.ParentComment)
+                    .WithMany(c => c.Replies)
+                    .HasForeignKey(c => c.ParentCommentId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(c => c.Mentions)
+                    .HasColumnType("jsonb");
+            });
+
     }
+    
 }

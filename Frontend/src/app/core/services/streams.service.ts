@@ -30,6 +30,9 @@ export class StreamsService {
    getByProject(projectId: string): Observable<any[]> {
   return this.http.get<any[]>(`${this.apiUrl}/streams/project/${projectId}`);
 }
+getMembers(streamId: string): Observable<any[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/streams/${streamId}/members`);
+}
 
   // POST /api/streams → créer un stream
   create(

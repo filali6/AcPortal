@@ -58,6 +58,11 @@ builder.Services.AddScoped<IContractSummaryService, ContractSummaryService>();
 builder.Services.AddScoped<IActionHandler, SummarizeContractHandler>();
 builder.Services.AddScoped<IContractSummaryService, ContractSummaryService>();
 builder.Services.AddScoped<BriefingService>();
+
+builder.Services.AddScoped<TaskCommentsService>();
+builder.Services.AddHttpClient<TeamsNotificationService>();
+builder.Services.AddScoped<TeamsNotificationService>();
+
 builder.Services.AddMemoryCache();
 
 var kernelBuilder = builder.Services.AddKernel();

@@ -46,6 +46,7 @@ export class AuthService {
     const decoded = JSON.parse(atob(payload));
     
     console.log('Token décodé :', decoded);
+    console.log('TOKEN:', this.keycloak.getKeycloakInstance().token);
 
     return {
       id: decoded.sub,                          // l'ID Keycloak

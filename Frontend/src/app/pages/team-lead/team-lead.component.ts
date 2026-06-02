@@ -117,7 +117,7 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
           streams.forEach((s: any) => {
             this.chatService.joinStreamChat(s.id);
 
-            // ✅ rejoindre les groupes SignalR de toutes les tâches du stream
+            
             this.tasksService.getByStream(s.id).subscribe({
   next: (tasks: Task[]) => tasks.forEach(t => this.chatService.joinTaskChatSilent(t.id))
 });
@@ -347,12 +347,15 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
     this.drawerService.open();
   }
 
-  openTaskChat(task: any): void {
+  openTaskComments(task: any, streamId: string): void {
+    console.log('task:', task);
+    console.log('streamId:', streamId);
     this.chatTaskId = task.id;
-    this.chatStreamId = null;
-    this.chatTitle = task.title;
+    this.chatStreamId = streamId;
+    this.chatTitle = task.title || task.stepName;
     this.chatOpen = true;
-  }
+    this.drawerService.open();
+}
 
   closeChat(): void {
     this.chatOpen = false;

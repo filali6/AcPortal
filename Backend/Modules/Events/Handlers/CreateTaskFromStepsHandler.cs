@@ -60,7 +60,9 @@ public class CreateTasksFromStepsHandler : IActionHandler
                 Status = status,
                 CreatedAt = DateTime.UtcNow,
                 ProjectId = projectId,
-                StepId = step.Id
+                StepId = step.Id,
+                StreamId=step.StreamId
+            
             };
 
             _db.AcpTasks.Add(task);

@@ -2,6 +2,7 @@ import { Component, Input, OnInit, OnChanges, SimpleChanges, ViewChild, ElementR
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService, ChatMessage } from '../../services/chat.service';
+import { TaskCommentsService } from '../../services/task-comments.service';
 import { AuthService } from '../../services/auth.service';
 import { KeycloakService } from 'keycloak-angular';
 import { TranslateModule } from '@ngx-translate/core';
@@ -35,10 +36,23 @@ export class ChatPanelComponent implements OnInit, OnChanges, AfterViewChecked {
 chatSummary: string | null = null;
 summaryOpen = true;
 
+// Comments
+comments: any[] = [];
+newComment = '';
+replyingTo: any = null;
+mentions: string[] = [];
+
+// @mention
+showMentions = false;
+mentionQuery = '';
+streamMembers: any[] = [];
+filteredMembers: any[] = [];
+
   constructor(
     private chatService: ChatService,
     private authService: AuthService,
     private keycloak:KeycloakService,
+    private taskCommentsService:TaskCommentsService,
     private http: HttpClient
   ) {}
 
@@ -65,10 +79,16 @@ summaryOpen = true;
   });
 }
   ngOnChanges(changes: SimpleChanges): void {
-    if ((changes['streamId'] || changes['taskId']) && (this.streamId || this.taskId)) {
-      this.loadMessages();
-    }
+  if ((changes['streamId'] || changes['taskId']) && (this.streamId || this.taskId)) {
+    this.loadMessages();
   }
+  if (changes['taskId'] && this.taskId) {
+    this.loadComments();
+  }
+  if (changes['streamId'] && this.streamId) {
+    this.loadStreamMembers();
+  }
+}
 
   ngAfterViewChecked(): void {
     this.scrollToBottom();
@@ -152,5 +172,85 @@ summarizeChat(): void {
       },
       error: () => this.summarizing = false
     });
+}
+loadComments(): void {
+  if (!this.taskId) return;
+  this.taskCommentsService.getComments(this.taskId)
+    .subscribe({ next: (data) => this.comments = data });
+}
+
+loadStreamMembers(): void {
+  if (!this.streamId) return;
+  this.http.get<any[]>(`${environment.apiUrl}/streams/${this.streamId}/members`)
+    .subscribe({ next: (data) => this.streamMembers = data });
+}
+
+postComment(): void {
+  if (!this.newComment.trim() || !this.taskId) return;
+  this.taskCommentsService.addComment(
+    this.taskId,
+    this.newComment.trim(),
+    this.replyingTo?.id ?? null,
+    this.mentions
+  ).subscribe({
+    next: (comment) => {
+      if (this.replyingTo) {
+        const parent = this.comments.find(c => c.id === this.replyingTo.id);
+        if (parent) parent.replies = [...(parent.replies || []), comment];
+      } else {
+        this.comments = [...this.comments, { ...comment, replies: [] }];
+      }
+      this.newComment = '';
+      this.replyingTo = null;
+      this.mentions = [];
+    }
+  });
+}
+
+onCommentInput(event: Event): void {
+  const value = (event.target as HTMLInputElement).value;
+  const atIndex = value.lastIndexOf('@');
+  if (atIndex !== -1) {
+    this.mentionQuery = value.slice(atIndex + 1).toLowerCase();
+    this.filteredMembers = this.streamMembers.filter(m =>
+      m.fullName.toLowerCase().includes(this.mentionQuery)
+    );
+    this.showMentions = this.filteredMembers.length > 0;
+  } else {
+    this.showMentions = false;
+  }
+}
+
+selectMention(member: any): void {
+  const atIndex = this.newComment.lastIndexOf('@');
+  this.newComment = this.newComment.slice(0, atIndex) + '@' + member.fullName + ' ';
+  this.mentions.push(member.keycloakId);
+  this.showMentions = false;
+}
+
+setReply(comment: any): void {
+  this.replyingTo = comment;
+}
+
+cancelReply(): void {
+  this.replyingTo = null;
+}
+
+getInitialsFrom(name: string): string {
+  return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+deleteComment(commentId: string): void {
+  if (!this.taskId) return;
+  this.taskCommentsService.deleteComment(this.taskId, commentId)
+    .subscribe({
+      next: () => {
+        this.comments = this.comments.filter(c => c.id !== commentId);
+      }
+    });
+}
+highlightMentions(content: string): string {
+  return content.replace(/@([A-Za-zÀ-ÿ]+(?: [A-Za-zÀ-ÿ]+)*)/g,
+    '<span class="mention-highlight">@$1</span>');
 }
 }
