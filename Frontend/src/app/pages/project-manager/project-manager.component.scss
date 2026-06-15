@@ -12,7 +12,7 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 8px;
-    overflow: hidden;
+    overflow: visible;
     box-shadow: var(--shadow-sm);
 }
 
@@ -313,7 +313,20 @@
         border-color: var(--accent);
     }
 }
+select.form-input {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 32px;
+    cursor: pointer;
+    background-color: #fff;
+    background-image: none;
 
+    &:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+}
+ 
 .team-label {
     font-size: 12px;
     font-weight: 700;
@@ -414,8 +427,8 @@
 
 .btn-primary {
     padding: 8px 18px;
-    background: var(--accent);
-    color: white;
+    background: #0080ff;
+    color: #ffffff;
     border: none;
     border-radius: 6px;
     font-size: 13px;
@@ -880,4 +893,262 @@
     font-size: 12px;
     color: #64748b;
     margin-left: auto;
+}
+// ── Stream diagram layout ──────────────────────────────────────
+
+.stream-diagram {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.diagram-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.diagram-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    overflow:visible;
+}
+
+.diagram-col-header {
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+// ── Selected lead display ──────────────────────────────────────
+
+.selected-lead-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--accent-light);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+}
+
+.lead-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+
+    &.av-biz {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    &.av-tech {
+        background: #ede9fe;
+        color: #7c3aed;
+    }
+
+    &.av-cons {
+        background: #f1f5f9;
+        color: #475569;
+    }
+}
+
+.stream-count-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    margin-left: auto;
+    flex-shrink: 0;
+
+    i {
+        font-size: 11px;
+        color: var(--accent);
+    }
+
+    span {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--accent);
+        line-height: 1;
+    }
+
+    small {
+        font-size: 9px;
+        color: var(--text-secondary);
+        text-align: center;
+        line-height: 1.2;
+    }
+}
+
+// ── Consultant section ─────────────────────────────────────────
+
+.consultant-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+}
+
+.consultant-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.consultant-nodes {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 160px;  
+    overflow-y: auto; 
+
+    &::-webkit-scrollbar {
+        width: 3px;
+    }
+
+    // ← ADD THIS
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    // ← ADD THIS
+    &::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 4px;
+    }
+
+    // ← ADD THIS
+}
+
+.empty-consultants {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 8px 0;
+    opacity: 0.7;
+}
+
+.consultant-node {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fafafa;
+    transition: border-color 0.15s;
+
+    &:hover {
+        border-color: var(--accent);
+    }
+}
+
+.c-node-name {
+    font-size: 13px;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.c-remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    opacity: 0.6;
+    transition: opacity 0.15s, color 0.15s;
+    font-size: 11px;
+
+    &:hover {
+        opacity: 1;
+        color: #dc2626;
+    }
+}
+
+// ── Add consultant dropdown ────────────────────────────────────
+
+.add-consultant-wrap {
+    position: relative;
+}
+
+.add-consultant-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+    &:hover {
+        background: var(--accent-light);
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+}
+
+.consultant-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    z-index: 200;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    overflow-y: auto;  
+    max-height: 200px;  
+}
+
+.consultant-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.12s;
+
+    &:hover:not(.used) {
+        background: var(--accent-light);
+    }
+
+    &.used {
+        opacity: 0.38;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+}
+
+.used-badge {
+    margin-left: auto;
+    font-size: 10px;
+    background: #f1f5f9;
+    color: var(--text-secondary);
+    padding: 1px 6px;
+    border-radius: 4px;
 }

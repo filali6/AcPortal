@@ -19,17 +19,7 @@
         <!-- Right : Actions -->
         <div class="header-actions">
 
-            <!-- Discussions -->
-            <div class="dropdown-wrapper"*ngIf="isConsultant() || isTeamLead()">
-                <button class="header-btn" (click)="toggleDiscussions(); unreadDiscussionsCount = 0" title="Discussions">
-                    <lucide-icon [img]="MessageSquare" size="16"></lucide-icon>
-                    <span class="notif-badge" *ngIf="unreadDiscussionsCount > 0">
-                        {{ unreadDiscussionsCount }}
-                    </span>
-                </button>
-                <app-discussions-panel [isOpen]="discussionsOpen" (closed)="discussionsOpen = false">
-                </app-discussions-panel>
-            </div>
+            
 
             <!-- Notifications — icon only -->
             <app-notifications-dropdown></app-notifications-dropdown>

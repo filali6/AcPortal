@@ -13,4 +13,6 @@ public class TaskComment
     public ICollection<TaskComment> Replies { get; set; } = new List<TaskComment>();
     public List<string> Mentions { get; set; } = new List<string>();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string? TeamsMessageId { get; set; }   
+    public bool FromTeams { get; set; } = false;  
 }

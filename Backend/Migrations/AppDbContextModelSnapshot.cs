@@ -281,6 +281,15 @@ namespace Backend.Migrations
                     b.Property<DateTime?>("TargetDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("TeamsSetupFailed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TeamsTeamId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TeamsTeamUrl")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PortfolioId");
@@ -304,6 +313,12 @@ namespace Backend.Migrations
 
                     b.Property<Guid?>("DependsOnStepId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("LastCommitAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastCommitHash")
+                        .HasColumnType("text");
 
                     b.Property<int>("Order")
                         .HasColumnType("integer");
@@ -331,6 +346,40 @@ namespace Backend.Migrations
                     b.ToTable("ProjectSteps");
                 });
 
+            modelBuilder.Entity("Backend.Modules.Projects.Models.StepConfigFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CommitHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("StepId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UploadedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StepId");
+
+                    b.ToTable("StepConfigFiles");
+                });
+
             modelBuilder.Entity("Backend.Modules.Projects.Models.Stream", b =>
                 {
                     b.Property<Guid>("Id")
@@ -343,12 +392,21 @@ namespace Backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("GitRepoUrl")
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("TeamsChannelId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TeamsChannelUrl")
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("TechnicalTeamLeadId")
                         .HasColumnType("uuid");
@@ -426,6 +484,12 @@ namespace Backend.Migrations
                     b.Property<Guid?>("StreamId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("TeamsThreadId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TeamsThreadUrl")
+                        .HasColumnType("text");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -466,6 +530,9 @@ namespace Backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("FromTeams")
+                        .HasColumnType("boolean");
+
                     b.PrimitiveCollection<string>("Mentions")
                         .IsRequired()
                         .HasColumnType("jsonb");
@@ -475,6 +542,9 @@ namespace Backend.Migrations
 
                     b.Property<Guid>("TaskId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("TeamsMessageId")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -685,6 +755,17 @@ namespace Backend.Migrations
                     b.Navigation("Stream");
                 });
 
+            modelBuilder.Entity("Backend.Modules.Projects.Models.StepConfigFile", b =>
+                {
+                    b.HasOne("Backend.Modules.Projects.Models.ProjectStep", "Step")
+                        .WithMany("ConfigFiles")
+                        .HasForeignKey("StepId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Step");
+                });
+
             modelBuilder.Entity("Backend.Modules.Projects.Models.Stream", b =>
                 {
                     b.HasOne("Backend.Modules.Auth.Models.User", "BusinessTeamLead")
@@ -744,7 +825,7 @@ namespace Backend.Migrations
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Backend.Modules.Tasks.Models.AcpTask", "Task")
-                        .WithMany()
+                        .WithMany("Comments")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -802,9 +883,19 @@ namespace Backend.Migrations
                     b.Navigation("Streams");
                 });
 
+            modelBuilder.Entity("Backend.Modules.Projects.Models.ProjectStep", b =>
+                {
+                    b.Navigation("ConfigFiles");
+                });
+
             modelBuilder.Entity("Backend.Modules.Projects.Models.Stream", b =>
                 {
                     b.Navigation("Members");
+                });
+
+            modelBuilder.Entity("Backend.Modules.Tasks.Models.AcpTask", b =>
+                {
+                    b.Navigation("Comments");
                 });
 
             modelBuilder.Entity("Backend.Modules.Tasks.Models.TaskComment", b =>

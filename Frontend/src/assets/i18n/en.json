@@ -11,11 +11,12 @@
     "ADD": "Add",
     "ACTIONS": "Actions",
     "STATUS": "Status",
-    "DATE": "Date",
+    "DATE": "Creation Date",
     "NAME": "Name",
     "DESCRIPTION": "Description",
     "CLOSE": "Close",
-    "SELECTED": "selected" 
+    "SELECTED": "selected" ,
+    "DEADLINE":"Due Date"
   },
   "AUTH": {
     "LOGOUT": "Log out"
@@ -41,7 +42,9 @@
     "SEARCH": "Search tasks...",
     "WORKFLOW_TASKS": "Workflow Tasks",
     "ASSIGNED_TASKS": "Assigned Tasks",
-    "STREAM": "Stream"
+    "STREAM": "Stream",
+    "COMMENT":"Comment",
+    "CONFIG":"Config"
   },
   "PROJECTS": {
     "TITLE": "Projects",
@@ -246,7 +249,12 @@
   "NO_TECH_LEAD": "No Technical Team Lead available.",
   "BIZ_CONSULTANTS": "Business Team Consultants",
   "TECH_CONSULTANTS": "Technical Team Consultants",
-  "ACTIVE_STREAMS": "Active Streams"
+  "ACTIVE_STREAMS": "Active Streams",
+  "SELECT_BIZ_LEAD": "Select business lead...",
+"SELECT_TECH_LEAD": "Select technical lead...",
+"ADD_CONSULTANT": "Add consultant",
+"ASSIGNED": "Assigned",
+"NO_CONSULTANTS": "No consultants yet"
 },"SA": {
   "ROLES": "Roles",
   "MANAGE_USERS_DESC": "Add, edit or delete platform users and assign roles.",

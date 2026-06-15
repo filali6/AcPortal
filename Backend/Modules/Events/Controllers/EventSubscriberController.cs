@@ -25,10 +25,17 @@ public class EventsSubscriberController : ControllerBase
         _logger.LogInformation("Event reçu : {Payload}", payload.ToString());
 
         Guid? projectId = null;
-        if (payload.TryGetProperty("projectId", out var pid))
-            Guid.TryParse(pid.GetString(), out var parsedId);
+        Guid? streamId = null;
 
-        await _processor.ProcessAsync(payload.ToString(), projectId);
+        if (payload.TryGetProperty("projectId", out var pid) &&
+            Guid.TryParse(pid.GetString(), out var parsedProjectId))
+            projectId = parsedProjectId;
+
+        if (payload.TryGetProperty("streamId", out var sid) &&
+            Guid.TryParse(sid.GetString(), out var parsedStreamId))
+            streamId = parsedStreamId;
+
+        await _processor.ProcessAsync(payload.ToString(), projectId, streamId);
         return Ok();
     }
 }

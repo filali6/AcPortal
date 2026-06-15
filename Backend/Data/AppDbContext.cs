@@ -34,6 +34,7 @@ public class AppDbContext : DbContext
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<TaskComment> TaskComments { get; set; }
+    public DbSet<StepConfigFile> StepConfigFiles { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

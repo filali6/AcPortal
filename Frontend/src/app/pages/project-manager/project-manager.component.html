@@ -301,7 +301,7 @@
     </ng-container>
 
     <!-- CREATE STREAM TAB -->
-    <ng-container *ngFor="let tabId of getOpenTabIds()">
+    <!-- <ng-container *ngFor="let tabId of getOpenTabIds()">
         <ng-container *ngIf="activeTabId === tabId">
             <div class="card" *ngIf="getTabData(tabId) as tab">
                 <div class="card-header">
@@ -404,6 +404,202 @@
                 </div>
             </div>
         </ng-container>
-    </ng-container>
+    </ng-container> -->
+<ng-container *ngFor="let tabId of getOpenTabIds()">
+    <ng-container *ngIf="activeTabId === tabId">
+        <div class="card" *ngIf="getTabData(tabId) as tab">
 
+            <div class="card-header">
+                <h2>{{ 'PM.CREATE_STREAM' | translate }}</h2>
+            </div>
+
+            <div class="card-body">
+
+                <div class="project-info-block">
+                    <span class="label">{{ 'PROJECTS.TITLE' | translate }}</span>
+                    <span class="project-name">{{ getProjectName(tab.task?.projectId ?? '') }}</span>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ 'PM.STREAM_NAME' | translate }} *</label>
+                    <input type="text" [(ngModel)]="tab.streamName" placeholder="e.g. Functional Stream 1"
+                        class="form-input">
+                </div>
+
+                <!-- TWO-COLUMN DIAGRAM -->
+                <div class="stream-diagram">
+
+                    <!-- ── BUSINESS LEAD ── -->
+                    <div class="diagram-col">
+                        <div class="diagram-card">
+
+                            <div class="diagram-col-header">
+                                <span class="team-label business">{{ 'PM.BIZ_LEAD' | translate }}</span>
+                            </div>
+
+                            <!-- lead selector -->
+                            <div class="form-group">
+                                <select class="form-input" [(ngModel)]="tab.selectedBizLeadId">
+                                    <option value="">{{ 'PM.SELECT_BIZ_LEAD' | translate }}</option>
+                                    <option *ngFor="let u of bizLeads" [value]="u.id">
+                                        {{ u.fullName }} ({{ u.streamCount ?? 0 }} {{ 'PM.STREAMS_COUNT' | translate }})
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- selected lead card -->
+                            <ng-container *ngIf="getLeadById(tab.selectedBizLeadId, 'biz') as lead">
+                                <div class="selected-lead-display">
+                                    <div class="lead-avatar av-biz">{{ getInitials(lead.fullName) }}</div>
+                                    <div class="lead-info">
+                                        <span class="lead-name">{{ lead.fullName }}</span>
+                                        <span class="lead-email">{{ lead.email }}</span>
+                                    </div>
+                                    <div class="stream-count-badge">
+                                        <i class="pi pi-briefcase"></i>
+                                        <span>{{ lead.streamCount ?? 0 }}</span>
+                                        <small>{{ 'PM.STREAMS_COUNT' | translate }}</small>
+                                    </div>
+                                </div>
+                            </ng-container>
+
+                            <!-- consultant section -->
+                            <div class="consultant-section">
+                                <span class="consultant-section-label">{{ 'PM.BIZ_CONSULTANTS' | translate }}</span>
+
+                                <div class="consultant-nodes">
+                                    <div class="empty-consultants"
+                                        *ngIf="getConsultantsForTab(tabId, 'business').length === 0">
+                                        {{ 'PM.NO_CONSULTANTS' | translate }}
+                                    </div>
+                                    <div class="consultant-node" *ngFor="let c of getConsultantsForTab(tabId, 'business')">
+                                        <div class="lead-avatar av-cons">{{ getInitials(c.fullName) }}</div>
+                                        <span class="c-node-name">{{ c.fullName }}</span>
+                                        <button class="c-remove-btn" (click)="toggleConsultant(tabId, c.id, 'business')"
+                                            [attr.aria-label]="'Remove ' + c.fullName">
+                                            <i class="pi pi-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- add consultant dropdown -->
+                                <div class="add-consultant-wrap" clickOutside (clickOutside)="closeDrop('biz-'+tabId)">
+                                    <button class="add-consultant-btn" (click)="toggleDrop('biz-'+tabId)">
+                                        <i class="pi pi-plus"></i>
+                                        {{ 'PM.ADD_CONSULTANT' | translate }}
+                                    </button>
+                                    <div class="consultant-dropdown" *ngIf="openDrop === 'biz-'+tabId">
+                                        <div class="consultant-dropdown-item" *ngFor="let c of consultants"
+                                            [class.used]="isConsultantSelected(tabId, c.id, 'business') || isConsultantSelected(tabId, c.id, 'technical')"
+                                            (click)="addConsultantFromDrop(tabId, c, 'business')">
+                                            <div class="lead-avatar av-cons"
+                                                style="width:24px;height:24px;font-size:9px">
+                                                {{ getInitials(c.fullName) }}
+                                            </div>
+                                            {{ c.fullName }}
+                                            <span class="used-badge"
+                                                *ngIf="isConsultantSelected(tabId, c.id, 'business') || isConsultantSelected(tabId, c.id, 'technical')">
+                                                {{ 'PM.ASSIGNED' | translate }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- ── TECHNICAL LEAD ── -->
+                    <div class="diagram-col">
+                        <div class="diagram-card">
+
+                            <div class="diagram-col-header">
+                                <span class="team-label technical">{{ 'PM.TECH_LEAD' | translate }}</span>
+                            </div>
+
+                            <div class="form-group">
+                                <select class="form-input" [(ngModel)]="tab.selectedTechLeadId">
+                                    <option value="">{{ 'PM.SELECT_TECH_LEAD' | translate }}</option>
+                                    <option *ngFor="let u of techLeads" [value]="u.id">
+                                        {{ u.fullName }} ({{ u.streamCount ?? 0 }} {{ 'PM.STREAMS_COUNT' | translate }})
+                                    </option>
+                                </select>
+                                <div class="empty" *ngIf="techLeads.length === 0">
+                                    {{ 'PM.NO_TECH_LEAD' | translate }}
+                                </div>
+                            </div>
+
+                            <ng-container *ngIf="getLeadById(tab.selectedTechLeadId, 'tech') as lead">
+                                <div class="selected-lead-display">
+                                    <div class="lead-avatar av-tech">{{ getInitials(lead.fullName) }}</div>
+                                    <div class="lead-info">
+                                        <span class="lead-name">{{ lead.fullName }}</span>
+                                        <span class="lead-email">{{ lead.email }}</span>
+                                    </div>
+                                    <div class="stream-count-badge">
+                                        <i class="pi pi-briefcase"></i>
+                                        <span>{{ lead.streamCount ?? 0 }}</span>
+                                        <small>{{ 'PM.STREAMS_COUNT' | translate }}</small>
+                                    </div>
+                                </div>
+                            </ng-container>
+
+                            <div class="consultant-section">
+                                <span class="consultant-section-label">{{ 'PM.TECH_CONSULTANTS' | translate }}</span>
+
+                                <div class="consultant-nodes">
+                                    <div class="empty-consultants"
+                                        *ngIf="getConsultantsForTab(tabId, 'technical').length === 0">
+                                        {{ 'PM.NO_CONSULTANTS' | translate }}
+                                    </div>
+                                    <div class="consultant-node" *ngFor="let c of getConsultantsForTab(tabId, 'technical')">
+                                        <div class="lead-avatar av-cons">{{ getInitials(c.fullName) }}</div>
+                                        <span class="c-node-name">{{ c.fullName }}</span>
+                                        <button class="c-remove-btn"
+                                            (click)="toggleConsultant(tabId, c.id, 'technical')"
+                                            [attr.aria-label]="'Remove ' + c.fullName">
+                                            <i class="pi pi-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="add-consultant-wrap" clickOutside (clickOutside)="closeDrop('tech-'+tabId)">
+                                    <button class="add-consultant-btn" (click)="toggleDrop('tech-'+tabId)">
+                                        <i class="pi pi-plus"></i>
+                                        {{ 'PM.ADD_CONSULTANT' | translate }}
+                                    </button>
+                                    <div class="consultant-dropdown" *ngIf="openDrop === 'tech-'+tabId">
+                                        <div class="consultant-dropdown-item" *ngFor="let c of consultants"
+                                            [class.used]="isConsultantSelected(tabId, c.id, 'business') || isConsultantSelected(tabId, c.id, 'technical')"
+                                            (click)="addConsultantFromDrop(tabId, c, 'technical')">
+                                            <div class="lead-avatar av-cons"
+                                                style="width:24px;height:24px;font-size:9px">
+                                                {{ getInitials(c.fullName) }}
+                                            </div>
+                                            {{ c.fullName }}
+                                            <span class="used-badge"
+                                                *ngIf="isConsultantSelected(tabId, c.id, 'business') || isConsultantSelected(tabId, c.id, 'technical')">
+                                                {{ 'PM.ASSIGNED' | translate }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+                <!-- end stream-diagram -->
+
+                <div class="bottom-actions">
+                    <button class="btn-primary" (click)="createStream(tabId)" [disabled]="!tab.streamName || loading">
+                        {{ loading ? ('COMMON.LOADING' | translate) : ('PM.CREATE_STREAM' | translate) }}
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </ng-container>
+</ng-container>
 </div>

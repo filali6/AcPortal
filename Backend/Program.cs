@@ -17,6 +17,8 @@ using Backend.Modules.Notifications.Services;
 using Backend.Modules.Chat.Services;
 using Backend.Modules.AI.Configurators;
 using Backend.Modules.Dashboard.Services;
+using Backend.Modules.Git.Services;
+using Backend.Modules.Teams.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -62,6 +64,15 @@ builder.Services.AddScoped<BriefingService>();
 builder.Services.AddScoped<TaskCommentsService>();
 builder.Services.AddHttpClient<TeamsNotificationService>();
 builder.Services.AddScoped<TeamsNotificationService>();
+
+builder.Services.AddScoped<IGitProvider, GitHubProvider>();
+builder.Services.AddScoped<GitService>();
+
+builder.Services.AddScoped<GraphService>();
+builder.Services.AddScoped<IActionHandler, CreateTeamsTeamHandler>();
+builder.Services.AddScoped<IActionHandler, CreateTeamsChannelHandler>();
+builder.Services.AddScoped<TeamsCommentSyncService>();
+builder.Services.AddScoped<EmailService>();
 
 builder.Services.AddMemoryCache();
 

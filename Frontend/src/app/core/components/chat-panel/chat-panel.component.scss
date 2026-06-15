@@ -391,3 +391,20 @@
     border-radius: 3px;
 }
 }
+.comment-meta {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.teams-badge {
+    font-size: 10px;
+    font-weight: 600;
+    color: #5b5fc7;
+    background: #ebebf5;
+    padding: 2px 8px;
+    border-radius: 99px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}

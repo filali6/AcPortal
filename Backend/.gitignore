@@ -50,3 +50,4 @@ secrets.json
 
 .dapr/
 .uploads/
+appsettings.Development.json

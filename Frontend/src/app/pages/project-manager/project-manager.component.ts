@@ -47,6 +47,8 @@ export class ProjectManagerComponent implements OnInit, OnDestroy {
     technicalTeamConsultants: string[]
   }} = {};
 
+  openDrop: string | null = null;
+
   loading = false;
   currentUserId = '';
   selectedProjectDetail: any = null;
@@ -396,6 +398,43 @@ getAvailableConsultants(streamId: string): any[] {
   if (!stream) return this.consultants;
   const assignedIds = stream.members?.map((m: any) => m.consultantId) || [];
   return this.consultants.filter(c => !assignedIds.includes(c.id));
+}
+
+getInitials(fullName: string): string {
+  if (!fullName) return '?';
+  return fullName.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+getLeadById(id: string, type: 'biz' | 'tech') {
+  if (!id) return null;
+  const pool = type === 'biz' ? this.bizLeads : this.techLeads;
+  return pool.find((u: any) => u.id === id) ?? null;
+}
+
+getConsultantsForTab(tabId: string, side: 'business' | 'technical') {
+  const tab = this.openTabs[tabId];
+  if (!tab) return [];
+  const ids = side === 'business'
+    ? tab.businessTeamConsultants
+    : tab.technicalTeamConsultants;
+  return this.consultants.filter((c: any) => ids.includes(c.id));
+}
+
+toggleDrop(key: string) {
+  this.openDrop = this.openDrop === key ? null : key;
+}
+
+closeDrop(key: string) {
+  if (this.openDrop === key) this.openDrop = null;
+}
+
+addConsultantFromDrop(tabId: string, c: any, side: 'business' | 'technical') {
+  const alreadyUsed =
+    this.isConsultantSelected(tabId, c.id, 'business') ||
+    this.isConsultantSelected(tabId, c.id, 'technical');
+  if (alreadyUsed) return;
+  this.toggleConsultant(tabId, c.id, side);
+  this.openDrop = null;
 }
 
 }

@@ -24,6 +24,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { DrawerService } from '../../core/services/drawer.service';
 import { BriefingCardComponent } from '../../core/components/briefing-card/briefing-card.component';
+import { GitService } from '../../core/services/git.service';
 
 @Component({
   selector: 'app-team-lead',
@@ -70,6 +71,10 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
   chatTaskId: string | null = null;
   chatTitle = '';
 
+  streamConfigs: { [streamId: string]: any } = {};
+  loadingConfigs = false;
+  validatingStream = false;
+
   readonly ChevronRight = ChevronRight;
   readonly Layers = Layers;
   readonly MessageSquare = MessageSquare;
@@ -89,7 +94,8 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
     private chatService: ChatService,
     private keycloak: KeycloakService,
     private translate: TranslateService,
-    private drawerService:DrawerService
+    private drawerService:DrawerService,
+    private gitService: GitService
   ) {}
 
   ngOnInit(): void {
@@ -336,8 +342,13 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
 
   selectStream(stream: any): void {
     this.selectedStream = stream;
-    this.tabsService.openTab({ id: `stream-detail-${stream.id}`, title: stream.name, type: 'create-project' });
-  }
+    this.tabsService.openTab({
+        id: `stream-detail-${stream.id}`,
+        title: stream.name,
+        type: 'create-project'
+    });
+    this.loadStreamConfigs(stream.id);
+}
 
   openStreamChat(stream: any): void {
     this.chatStreamId = stream.id;
@@ -361,4 +372,28 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
     this.chatOpen = false;
     this.drawerService.close();
   }
+   loadStreamConfigs(streamId: string): void {
+    this.loadingConfigs = true;
+    this.gitService.getStreamConfigs(streamId).subscribe({
+        next: (configs) => {
+            this.streamConfigs[streamId] = configs;
+            this.loadingConfigs = false;
+        },
+        error: () => this.loadingConfigs = false
+    });
+}
+
+validateStream(streamId: string): void {
+    this.validatingStream = true;
+    this.gitService.validateStream(streamId).subscribe({
+        next: (result) => {
+            this.toastService.show(`✅ ${result.message}`, 'success');
+            this.validatingStream = false;
+        },
+        error: () => {
+            this.toastService.show('❌ Failed to validate stream', 'error');
+            this.validatingStream = false;
+        }
+    });
+}
 }

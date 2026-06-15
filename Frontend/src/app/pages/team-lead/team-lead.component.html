@@ -278,6 +278,55 @@
                     </div>
                 </div>
             </div>
+            <!-- Git Configs Card -->
+            <div class="detail-col" style="grid-column: 1 / -1;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2> Stream Configurations</h2>
+                        <a *ngIf="streamConfigs[selectedStream.id]?.repoUrl" [href]="streamConfigs[selectedStream.id]?.repoUrl"
+                            target="_blank" class="btn-github">
+                            🔗 View on GitHub
+                        </a>
+                        <button class="btn-primary" *ngIf="streamConfigs[selectedStream.id]?.repoUrl"
+                            (click)="validateStream(selectedStream.id)" [disabled]="validatingStream">
+                            {{ validatingStream ? 'Validating...' : ' Validate Stream (v1.0)' }}
+                        </button>
+                    </div>
+                    <div class="card-body">
+            
+                        <!-- Loading -->
+                        <div class="empty" *ngIf="loadingConfigs">Loading configs...</div>
+            
+                        <!-- No configs yet -->
+                        <div class="empty" *ngIf="!loadingConfigs && !streamConfigs[selectedStream.id]?.dbFiles?.length">
+                            No configurations uploaded yet.
+                        </div>
+            
+                        <!-- Configs list -->
+                        <div class="config-list" *ngIf="!loadingConfigs && streamConfigs[selectedStream.id]?.dbFiles?.length">
+                            <div class="config-item" *ngFor="let file of streamConfigs[selectedStream.id]?.dbFiles">
+                                <div class="config-step">
+                                    <span class="step-badge">{{ file.stepName }}</span>
+                                    <span class="tool-badge">{{ file.toolName }}</span>
+                                </div>
+                                <div class="config-file-info">
+                                    <span class="config-filename">📄 {{ file.fileName }}</span>
+                                    <span class="config-meta">
+                                        v{{ file.version }} —
+                                        commit: {{ file.commitHash | slice:0:7 }} —
+                                        {{ file.uploadedAt | date:'dd/MM/yyyy HH:mm' }} —
+                                        by {{ file.uploadedBy }}
+                                    </span>
+                                </div>
+                                <a [href]="streamConfigs[selectedStream.id]?.repoUrl" target="_blank" class="config-link">
+                                    🔗
+                                </a>
+                            </div>
+                        </div>
+            
+                    </div>
+                </div>
+            </div>
         </div>
 
     </ng-container>
@@ -318,6 +367,7 @@
                     </div>
                 </div>
             </div>
+           
         </ng-container>
     </ng-container>
 

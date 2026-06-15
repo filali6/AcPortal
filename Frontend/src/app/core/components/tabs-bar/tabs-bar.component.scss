@@ -40,7 +40,7 @@
     }
 
         &.active {
-            background: #f1f5f9;
+            background: #0080ff1f;
             color: #0080FF;
             font-weight: 600;
         }
@@ -56,7 +56,7 @@
         border: none;
         cursor: pointer;
         font-size: 11px;
-        color: #94a3b8;
+        color: #9b0101a6;
         padding: 0 2px;
         border-radius: 3px;
         line-height: 1;
@@ -68,10 +68,11 @@
     }
 
                 &.active .tab-close {
-                    color: white;
+                    color: #9ca3af;
         
                     &:hover {
-                        background: rgba(255, 255, 255, 0.2);
+                        background: #9b0101a6;
+                        opacity: 20%;
                     }
                 }
 }

@@ -8,6 +8,7 @@ using Backend.Modules.Events.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using Backend.Modules.Tasks.Models;
+using Backend.Modules.Git.Services;
 
 namespace Backend.Modules.Projects.Controllers;
 
@@ -17,11 +18,13 @@ public class StreamController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly EventPublisher _eventPublisher;
+    private readonly GitService _gitService;
 
-    public StreamController(AppDbContext db,EventPublisher eventPublisher)
+    public StreamController(AppDbContext db,EventPublisher eventPublisher,GitService gitService)
     {
         _db = db;
         _eventPublisher=eventPublisher;
+        _gitService=gitService;
     }
 
      
@@ -63,6 +66,7 @@ public class StreamController : ControllerBase
         }
 
         await _db.SaveChangesAsync();
+        await _gitService.InitStreamRepoAsync(stream.Id, dto.ProjectId);
         var project = await _db.Projects.FindAsync(dto.ProjectId);
 
         await _eventPublisher.PublishAsync(new

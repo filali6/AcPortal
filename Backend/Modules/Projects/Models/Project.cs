@@ -14,4 +14,8 @@ public class Project
     public Guid? ProjectManagerId { get; set; }
     public User? ProjectManager { get; set; }
     public ICollection<Stream> Streams { get; set; } = new List<Stream>();
+
+    public string? TeamsTeamId { get; set; }     
+    public string? TeamsTeamUrl { get; set; }    
+    public bool TeamsSetupFailed { get; set; }   
 }

@@ -40,7 +40,10 @@
                         <button class="delete-btn" *ngIf="comment.authorKeycloakId === currentUserId"
                             (click)="deleteComment(comment.id)">✕</button>
                     </div>
+                <div class="comment-meta">
                     <p class="comment-content" [innerHTML]="highlightMentions(comment.content)"></p>
+                    <span class="teams-badge" *ngIf="comment.fromTeams">via Teams</span>
+                </div>
 
                     <!-- Replies -->
                     <div class="reply-item" *ngFor="let reply of comment.replies">
@@ -52,7 +55,10 @@
                                 <button class="delete-btn" *ngIf="reply.authorKeycloakId === currentUserId"
                                     (click)="deleteComment(reply.id)">✕</button>
                             </div>
-                            <p class="comment-content" [innerHTML]="highlightMentions(reply.content)"></p>
+                            <div class="comment-meta">
+                                <p class="comment-content" [innerHTML]="highlightMentions(reply.content)"></p>
+                                <span class="teams-badge" *ngIf="reply.fromTeams">via Teams</span>
+                            </div>
                         </div>
                     </div>
 

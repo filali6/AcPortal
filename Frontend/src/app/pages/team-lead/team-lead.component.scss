@@ -438,7 +438,7 @@
 
 .btn-primary {
     padding: 8px 18px;
-    background: var(--accent);
+    background: #0080ff;
     color: white;
     border: none;
     border-radius: 6px;
@@ -676,4 +676,76 @@
     &:hover {
         background: #f0f4ff;
     }
+}
+.btn-github {
+    padding: 6px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 12px;
+    text-decoration: none;
+    color: var(--text-primary);
+    background: white;
+
+    &:hover {
+        background: #f0f5ff;
+    }
+}
+
+.config-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.config-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.config-step {
+    display: flex;
+    gap: 6px;
+    min-width: 200px;
+}
+
+.config-file-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.config-filename {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.config-meta {
+    font-size: 11px;
+    color: #64748b;
+}
+
+.config-link {
+    font-size: 16px;
+    text-decoration: none;
+    opacity: 0.6;
+
+    &:hover {
+        opacity: 1;
+    }
+}
+
+.step-badge {
+    padding: 2px 8px;
+    background: #e8f0fe;
+    color: #0080FF;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
 }

@@ -1,6 +1,7 @@
 using Backend.Data;
 using Backend.Modules.Tasks.Models;
 using Backend.Modules.Notifications.Services;
+using Backend.Modules.Teams.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Modules.Tasks.Services;
@@ -11,11 +12,18 @@ public class TaskCommentsService
     private readonly NotificationService _notificationService;
     private readonly TeamsNotificationService _teamsService;
 
-    public TaskCommentsService(AppDbContext db, NotificationService notificationService,TeamsNotificationService teamsService)
+    private readonly TeamsCommentSyncService _teamsCommentSync;
+    private readonly EmailService _emailService;
+
+    public TaskCommentsService(
+    AppDbContext db,
+    NotificationService notificationService,TeamsNotificationService teamsService,TeamsCommentSyncService teamsCommentSync,EmailService emailService)
     {
         _db = db;
         _notificationService = notificationService;
-        _teamsService=teamsService;
+        _teamsService = teamsService;
+        _teamsCommentSync = teamsCommentSync;
+        _emailService = emailService;
     }
 
     public async Task<List<object>> GetCommentsAsync(Guid taskId)
@@ -67,6 +75,8 @@ public class TaskCommentsService
 
         _db.TaskComments.Add(comment);
         await _db.SaveChangesAsync();
+
+        await _teamsCommentSync.SyncCommentToTeamsAsync(taskId, authorName, content);
 
         // Notifier les membres du stream
         await NotifyStreamMembersAsync(taskId, authorKeycloakId, authorName, content, mentions);
@@ -149,6 +159,26 @@ public class TaskCommentsService
             $"{authorName} : \"{teamsPreview}\"",
             "http://localhost:4200"
     );
+        // Send email to mentioned users
+        if (mentions != null && mentions.Any())
+        {
+            foreach (var mentionedKeycloakId in mentions)
+            {
+                var mentionedUser = await _db.Users
+                    .FirstOrDefaultAsync(u => u.KeycloakId == mentionedKeycloakId);
+
+                if (mentionedUser?.Email != null)
+                {
+                    await _emailService.SendMentionEmailAsync(
+                        mentionedUser.Email,
+                        mentionedUser.FullName,
+                        authorName,
+                        task.Title,
+                        content
+                    );
+                }
+            }
+        }
     }
 
     public async Task<bool> DeleteCommentAsync(Guid commentId, Guid taskId, string keycloakId)
