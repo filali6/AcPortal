@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
@@ -9,6 +9,7 @@ import { NotificationService } from './core/services/notification.service';
 import { TabsBarComponent } from './core/components/tabs-bar/tabs-bar.component';
 import { ToastComponent } from './core/components/toast/toast.component';
 import { NotificationsDropdownComponent } from './core/components/notifications-dropdown/notifications-dropdown.component';
+import { BriefingCardComponent } from './core/components/briefing-card/briefing-card.component';
 import { LucideAngularModule, LayoutDashboard, FolderOpen, FileText, Wrench, Bell, MessageSquare, LogOut, User, ChevronRight, Briefcase,Users,GitBranch,Settings } from 'lucide-angular';
 import { ChatService } from './core/services/chat.service';
 import { KeycloakService } from 'keycloak-angular';
@@ -18,14 +19,16 @@ import { LanguageService } from './core/services/language.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { DrawerService } from './core/services/drawer.service';
 import { TabsService } from './core/services/tabs.service';
+import { TooltipService } from './core/services/tooltip.service';
+
 @Component({
   selector: 'app-root',
   standalone: true,
-imports: [CommonModule, RouterOutlet, TabsBarComponent, ToastComponent, NotificationsDropdownComponent, LucideAngularModule,DiscussionsPanelComponent, ChatPanelComponent,TranslateModule],
+imports: [CommonModule, RouterOutlet, TabsBarComponent, ToastComponent, NotificationsDropdownComponent, BriefingCardComponent, LucideAngularModule,DiscussionsPanelComponent, ChatPanelComponent,TranslateModule],
 templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
 
   showLayout = false;
   currentRoute = '';
@@ -76,13 +79,14 @@ readonly Settings=Settings;
     private chatService:ChatService,
     public languageService:LanguageService,
     private drawerService: DrawerService,
-    public tabsService:TabsService
+    public tabsService:TabsService,
+    private tooltipService: TooltipService
     
     
   ) {}
 
   ngOnInit(): void {
-   
+    this.tooltipService.init();
   this.languageService.init();
   if (this.keycloak.isLoggedIn()) {
     this.userInfo = this.authService.getUserInfo();
@@ -151,6 +155,11 @@ readonly Settings=Settings;
     && !currentUrl.includes('plugins/axe-gui');
     this.currentRoute = currentUrl;
   }
+
+  ngOnDestroy(): void {
+    this.tooltipService.destroy();
+  }
+
 onSwitchLang(lang: string): void {
   this.languageService.switchLanguage(lang);
   window.location.reload();

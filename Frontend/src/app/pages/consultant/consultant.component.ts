@@ -77,6 +77,7 @@ chatToolName: string | null = null;
     activeStreams: 0,
     toolsUsed: 0
   };
+  chatMessagingChannelUrl: string | null = null;
 
   readonly ChevronRight = ChevronRight;
   readonly Layers = Layers;
@@ -314,7 +315,11 @@ chatToolName: string | null = null;
     this.chatTitle = task.title;
     this.chatTaskStatus = task.status;
     this.chatToolName = task.toolName || null;
-    this.chatStreamId = task.streamId || null; // ← ADD
+    this.chatStreamId = task.streamId || null;
+
+    const stream = this.myStreams.find(s => s.id === task.streamId);
+    this.chatMessagingChannelUrl = stream?.messagingChannelUrl || null;
+
     this.chatOpen = true;
     this.drawerService.open();
     this.chatService.markTaskAsRead(task.id);

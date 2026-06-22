@@ -1,7 +1,8 @@
 using Backend.Data;
 using Backend.Modules.Tasks.Models;
 using Backend.Modules.Notifications.Services;
-using Backend.Modules.Teams.Services;
+using Backend.Modules.Messaging.Services;
+using Backend.Modules.Events.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Modules.Tasks.Services;
@@ -12,18 +13,20 @@ public class TaskCommentsService
     private readonly NotificationService _notificationService;
     private readonly TeamsNotificationService _teamsService;
 
-    private readonly TeamsCommentSyncService _teamsCommentSync;
+    private readonly MessagingCommentSyncService _messagingCommentSync; 
     private readonly EmailService _emailService;
+    private readonly EventPublisher _eventPublisher;
 
     public TaskCommentsService(
     AppDbContext db,
-    NotificationService notificationService,TeamsNotificationService teamsService,TeamsCommentSyncService teamsCommentSync,EmailService emailService)
+    NotificationService notificationService,TeamsNotificationService teamsService,MessagingCommentSyncService messagingCommentSync,EmailService emailService,EventPublisher eventPublisher)
     {
         _db = db;
         _notificationService = notificationService;
         _teamsService = teamsService;
-        _teamsCommentSync = teamsCommentSync;
+        _messagingCommentSync=messagingCommentSync;
         _emailService = emailService;
+        _eventPublisher=eventPublisher;
     }
 
     public async Task<List<object>> GetCommentsAsync(Guid taskId)
@@ -75,11 +78,14 @@ public class TaskCommentsService
 
         _db.TaskComments.Add(comment);
         await _db.SaveChangesAsync();
+       
+         
 
-        await _teamsCommentSync.SyncCommentToTeamsAsync(taskId, authorName, content);
+        await _messagingCommentSync.SyncCommentToMessagingAsync(taskId, authorName, content);
 
         // Notifier les membres du stream
         await NotifyStreamMembersAsync(taskId, authorKeycloakId, authorName, content, mentions);
+        await PublishCommentEventAsync(taskId, authorKeycloakId, authorName, content);
 
         return comment;
     }
@@ -179,6 +185,25 @@ public class TaskCommentsService
                 }
             }
         }
+    }
+    private async Task PublishCommentEventAsync(
+    Guid taskId, string authorKeycloakId, string authorName, string content)
+    {
+        var task = await _db.AcpTasks.FindAsync(taskId);
+        if (task == null) return;
+
+        var project = await _db.Projects.FindAsync(task.ProjectId);
+
+        await _eventPublisher.PublishAsync(new
+        {
+            eventType = "CommentaireAjouté",
+            taskId = taskId,
+            streamId = task.StreamId,
+            authorKeycloakId = authorKeycloakId,
+            authorName = authorName,
+            content = content,
+            taskTitle = task.Title
+        }, task.ProjectId, project?.Name);
     }
 
     public async Task<bool> DeleteCommentAsync(Guid commentId, Guid taskId, string keycloakId)

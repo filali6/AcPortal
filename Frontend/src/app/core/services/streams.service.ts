@@ -10,6 +10,8 @@ export interface Stream {
   businessTeamLeadId: string;
   technicalTeamLeadId: string;
   createdAt: string;
+  messagingChannelId?: string;
+  messagingChannelUrl?: string;
 }
 
 @Injectable({

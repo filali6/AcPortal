@@ -100,6 +100,8 @@ public class StreamController : ControllerBase
                 s.Id,
                 s.Name,
                 s.ProjectId,
+                s.MessagingChannelId,
+                s.MessagingChannelUrl,
                 businessTeamLead = s.BusinessTeamLead == null ? null : new
                 {
                     s.BusinessTeamLead.Id,
@@ -123,7 +125,7 @@ public class StreamController : ControllerBase
         return Ok(streams);
     }
 
-    // AJOUTER un consultant à un stream
+ 
     [HttpPost("{streamId}/members")]
     [Authorize(Roles = "ProjectManager")]
     public async Task<IActionResult> AddMember(
@@ -140,7 +142,7 @@ public class StreamController : ControllerBase
         await _db.SaveChangesAsync();
         return Ok(member);
     }
-    // retourne les streams où le user connecté est lead
+   
     [HttpGet("my")]
     [Authorize]
      
@@ -197,7 +199,10 @@ public class StreamController : ControllerBase
             s.Id,
             s.Name,
             s.ProjectId,
+            
             projectName = projects.FirstOrDefault(p => p.Id == s.ProjectId)?.Name ?? "—",
+            s.MessagingChannelId,
+            s.MessagingChannelUrl,
             businessTeamLead = s.BusinessTeamLead == null ? null : new
             {
                 s.BusinessTeamLead.Id,

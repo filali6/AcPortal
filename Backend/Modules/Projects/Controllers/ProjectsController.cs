@@ -250,6 +250,8 @@ public class ProjectsController : ControllerBase
                 s.Id,
                 s.Name,
                 s.CreatedAt,
+                s.MessagingChannelId,
+                s.MessagingChannelUrl,
                 businessTeamLead = s.BusinessTeamLead == null ? null : new
                 {
                     s.BusinessTeamLead.Id,

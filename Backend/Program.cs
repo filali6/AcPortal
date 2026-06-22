@@ -18,7 +18,8 @@ using Backend.Modules.Chat.Services;
 using Backend.Modules.AI.Configurators;
 using Backend.Modules.Dashboard.Services;
 using Backend.Modules.Git.Services;
-using Backend.Modules.Teams.Services;
+
+using Backend.Modules.Messaging.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -68,12 +69,13 @@ builder.Services.AddScoped<TeamsNotificationService>();
 builder.Services.AddScoped<IGitProvider, GitHubProvider>();
 builder.Services.AddScoped<GitService>();
 
-builder.Services.AddScoped<GraphService>();
-builder.Services.AddScoped<IActionHandler, CreateTeamsTeamHandler>();
-builder.Services.AddScoped<IActionHandler, CreateTeamsChannelHandler>();
-builder.Services.AddScoped<TeamsCommentSyncService>();
+//builder.Services.AddScoped<GraphService>();
+builder.Services.AddScoped<IMessagingProvider, SlackMessagingProvider>();
+builder.Services.AddScoped<IActionHandler, CreateMessagingChannelHandler>();
+builder.Services.AddScoped<MessagingCommentSyncService>();
 builder.Services.AddScoped<EmailService>();
-
+builder.Services.AddScoped<IMessagingProvider, SlackMessagingProvider>();
+builder.Services.AddScoped<IActionHandler, SendCommentEmailHandler>();
 builder.Services.AddMemoryCache();
 
 var kernelBuilder = builder.Services.AddKernel();
@@ -89,7 +91,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddControllers().AddDapr().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles; // ✅
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles; 
 });
 
 var keycloakUrl = builder.Configuration["Keycloak:BaseUrl"];

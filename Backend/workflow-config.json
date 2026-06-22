@@ -67,9 +67,10 @@
       ],
       "Config": null
     },
+     
     {
-      "EventCode": "ProjetCr\u00E9\u00E9",
-      "ActionType": "CREATE_TEAMS_TEAM",
+      "EventCode": "StreamCr\u00E9\u00E9",
+      "ActionType": "CREATE_MESSAGING_CHANNEL",
       "TaskTitle": "",
       "TaskDescription": "",
       "TargetType": "",
@@ -77,13 +78,13 @@
       "Config": null
     },
     {
-      "EventCode": "StreamCr\u00E9\u00E9",
-      "ActionType": "CREATE_TEAMS_CHANNEL",
-      "TaskTitle": "",
-      "TaskDescription": "",
-      "TargetType": "",
-      "TargetValues": [],
-      "Config": null
-    }
+  "EventCode": "CommentaireAjouté",
+  "ActionType": "SEND_COMMENT_EMAIL",
+  "TaskTitle": "",
+  "TaskDescription": "",
+  "TargetType": "",
+  "TargetValues": [],
+  "Config": null
+}
   ]
 }
