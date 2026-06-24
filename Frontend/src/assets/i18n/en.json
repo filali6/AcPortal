@@ -209,7 +209,8 @@
 "AI": {
   "SUMMARY": "AI Summary",
   "SUMMARY_PENDING": "AI Summary is being generated...",
-  "SUMMARY_FAILED": "Summary generation failed."
+  "SUMMARY_FAILED": "Summary generation failed.",
+  "RETRY_SUMMARY": "Regenerate Summary "
 },
 "CONSULTANT": {
   "STREAMS_ASSIGNED": "streams assigned",

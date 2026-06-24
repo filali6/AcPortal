@@ -205,7 +205,8 @@
 "AI": {
   "SUMMARY": "Résumé IA",
   "SUMMARY_PENDING": "Résumé IA en cours de génération...",
-  "SUMMARY_FAILED": "Échec de la génération du résumé."
+  "SUMMARY_FAILED": "Échec de la génération du résumé.",
+  "RETRY_SUMMARY": "Relancer le résumé"
 },
 "CONSULTANT": {
   "STREAMS_ASSIGNED": "streams assignés",

@@ -129,7 +129,7 @@ public class ContractsService
             }
         }
 
-        // Forcer EF Core à détecter le changement sur la liste
+        
         var updatedPaths = contract.FilesPaths.ToList();
         contract.FilesPaths = updatedPaths;
         _db.Entry(contract).State = EntityState.Modified;

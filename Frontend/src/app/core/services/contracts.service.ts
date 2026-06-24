@@ -50,4 +50,7 @@ deleteFile(contractId: string, fileName: string): Observable<any> {
 getAll(): Observable<any[]> {
   return this.http.get<any[]>(`${this.api}/contracts/all`);
 }
+retrySummary(contractId: string): Observable<any> {
+  return this.http.post(`${this.api}/contracts/${contractId}/summarize`, {});
+}
 }

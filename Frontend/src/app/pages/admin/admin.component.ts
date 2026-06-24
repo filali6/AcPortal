@@ -401,4 +401,17 @@ export class AdminComponent implements OnInit {
    
     return filePath.split('/').pop() || filePath;
 }
+retrySummary(contractId: string): void {
+  this.loading = true;
+  this.contractsService.retrySummary(contractId).subscribe({
+    next: () => {
+      this.toastService.show('Résumé en cours de génération...', 'success');
+      this.loading = false;
+    },
+    error: () => {
+      this.toastService.show('Erreur lors de la relance', 'error');
+      this.loading = false;
+    }
+  });
+}
 }

@@ -1,6 +1,6 @@
 
 <div class="admin-page">
-    <app-briefing-card />
+   
 
     <!-- TASK LIST -->
     <ng-container *ngIf="activeTabId === 'tasks'">
@@ -170,6 +170,9 @@
                             </div>
                             <div class="summary-failed" *ngIf="tab.contractInfo?.summaryStatus === 3">
                                 <span>{{ 'AI.SUMMARY_FAILED' | translate }}</span>
+                                <button class="btn-secondary" (click)="retrySummary(tab.contractInfo.id)" [disabled]="loading">
+                                    {{ 'AI.RETRY_SUMMARY' | translate }}
+                                </button>
                             </div>
                         </div>
                     </div>

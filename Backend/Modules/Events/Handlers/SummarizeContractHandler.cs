@@ -3,6 +3,7 @@ using Backend.Modules.Contracts.Models;
 using Backend.Modules.Contracts.Services;
 using Backend.Modules.Events.Models;
 using Backend.Modules.Notifications.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace Backend.Modules.Events.Handlers;
 
@@ -16,6 +17,7 @@ public class SummarizeContractHandler : IActionHandler
     private readonly NotificationService _notificationService;
     private readonly ILogger<SummarizeContractHandler> _logger;
     private readonly IWebHostEnvironment _env;
+    private readonly IConfiguration _configuration;
 
     public SummarizeContractHandler(
         AppDbContext db,
@@ -23,7 +25,7 @@ public class SummarizeContractHandler : IActionHandler
         IContractSummaryService summaryService,
         NotificationService notificationService,
         ILogger<SummarizeContractHandler> logger,
-        IWebHostEnvironment env)
+        IWebHostEnvironment env, IConfiguration configuration)
     {
         _db = db;
         _extractor = extractor;
@@ -31,6 +33,7 @@ public class SummarizeContractHandler : IActionHandler
         _notificationService = notificationService;
         _logger = logger;
         _env = env;
+        _configuration = configuration;
     }
 
     public async Task HandleAsync(
@@ -75,7 +78,26 @@ public class SummarizeContractHandler : IActionHandler
             var extractedText = _extractor.Extract(fullPath);
 
             // 3. Summarize
-            var summary = await _summaryService.SummarizeAsync(extractedText, prompt);
+            string summary = string.Empty;
+            var maxRetries = _configuration.GetValue<int>("SummarizeContract:MaxRetries", 3);
+            var delayMs = _configuration.GetValue<int>("SummarizeContract:RetryDelayMs", 2000);
+
+            for (int i = 0; i < maxRetries; i++)
+            {
+                try
+                {
+                    summary = await _summaryService.SummarizeAsync(extractedText, prompt);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("Essai {Essai} échoué pour Gemini : {Message}", i + 1, ex.Message);
+                    if (i < maxRetries - 1)
+                        await Task.Delay(delayMs * (int)Math.Pow(2, i));
+                    else
+                        throw;
+                }
+            }
 
             // 4. Save
             contract.Summary = summary;
