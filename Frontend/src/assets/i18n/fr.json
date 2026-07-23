@@ -15,7 +15,8 @@
     "NAME": "Nom",
     "DESCRIPTION": "Description",
     "CLOSE": "Fermer",
-    "SELECT": "séléctionné(s)" 
+    "SELECT": "séléctionné(s)" ,
+    "FUNCTIONALDOMAIN":"Domaine Fonctionnel"
   },
   "AUTH": {
     "LOGOUT": "Se déconnecter"
@@ -230,23 +231,49 @@
   "ASSIGN": "Assigner",
   "ACTIVE_PROJECTS": "Projets actifs"
 },"PM": {
-  "MY_PROJECTS": "Mes projets",
+  "MY_PROJECTS": "Mes Projets",
   "PROJECTS_MANAGED": "projets gérés",
   "NO_PROJECTS": "Aucun projet assigné.",
-  "EDIT_LEADS": "Modifier les leads",
+  "EDIT_LEADS": "Modifier les Leads",
   "LEAD": "Lead",
   "NO_CONSULTANTS": "Aucun consultant",
   "ADD_TO": "Ajouter à",
   "BIZ_LEAD": "Business Team Lead",
   "TECH_LEAD": "Technical Team Lead",
-  "CREATE_STREAM": "Créer un stream",
-  "STREAM_NAME": "Nom du stream",
+  "CREATE_STREAM": "Créer un Stream",
+  "STREAM_NAME": "Nom du Stream",
   "STREAMS_COUNT": "stream(s)",
   "NO_BIZ_LEAD": "Aucun Business Team Lead disponible.",
   "NO_TECH_LEAD": "Aucun Technical Team Lead disponible.",
   "BIZ_CONSULTANTS": "Consultants Business",
   "TECH_CONSULTANTS": "Consultants Techniques",
-  "ACTIVE_STREAMS": "Streams actifs"
+  "ACTIVE_STREAMS": "Streams Actifs",
+  "SELECT_BIZ_LEAD": "Sélectionner un lead business...",
+  "SELECT_TECH_LEAD": "Sélectionner un lead technique...",
+  "ADD_CONSULTANT": "Ajouter un consultant",
+  "ASSIGNED": "Assigné",
+  "PROJECT_TO_PLAN": "Projet à Planifier",
+  "CHOOSE_PLANNING_METHOD": "Comment souhaitez-vous planifier ce projet ?",
+  "PLAN_MANUALLY": "Planifier Manuellement",
+  "PLAN_MANUALLY_DESC": "Créez les streams et assignez les équipes vous-même, étape par étape.",
+  "USE_AI_AGENT": "Utiliser l'Agent IA",
+  "USE_AI_AGENT_DESC": "Uploadez votre FSD et laissez l'IA proposer un plan complet.",
+  "AI_PLANNING_TITLE": "Planification IA",
+  "GUIDELINES": "Directives",
+  "GUIDELINES_PLACEHOLDER": "ex: Maximum 4 streams, séparer les équipes Business et Technique...",
+  "UPLOAD_FSD": "Uploader le FSD",
+  "CLICK_TO_UPLOAD": "Cliquez pour uploader votre FSD",
+  "GENERATE_PLAN": "Générer le Plan",
+  "GENERATING_PLAN": "Génération en cours...",
+  "AI_ANALYZING": "L'IA analyse votre FSD et prépare le plan...",
+  "PROPOSED_PLAN": "Plan Proposé",
+  "REFINE_PLACEHOLDER": "Demandez à l'IA d'ajuster le plan...",
+  "SEND": "Envoyer",
+  "APPROVE_PLAN": "Approuver le Plan",
+  "APPROVING": "Approbation en cours...",
+  "PLAN_APPROVED": "Plan Approuvé !",
+  "STREAMS_BEING_CREATED": "Les streams sont en cours de création et votre équipe est notifiée."
+
 },"SA": {
   "ROLES": "Rôles",
   "MANAGE_USERS_DESC": "Ajouter, modifier ou supprimer des utilisateurs et assigner des rôles.",
@@ -264,13 +291,24 @@
 },
 "TOOLS_PAGE": {
   "MY_TOOLS": "Mes outils",
-  "NO_TOOLS": "Aucun outil ajouté pour l'instant.",
+  "SUBTITLE": "Gérez les outils connectés à votre espace de travail",
+  "NO_TOOLS": "Aucun outil ajouté pour le moment.",
+  "NO_TOOLS_DESC": "Parcourez le marketplace pour ajouter votre premier outil.",
+  "NO_MATCH": "Aucun outil ne correspond à votre recherche ou filtre.",
   "OPEN": "Ouvrir",
   "REMOVE": "Retirer",
   "CATALOGUE": "Catalogue",
   "ADDED": "Ajouté",
-  "MARKETPLACE":"MARKETPLACE",
-  "AVAILABLE":"DISPONIBLE"
+  "MARKETPLACE": "MARKETPLACE",
+  "AVAILABLE": "DISPONIBLES",
+  "ALL": "Tous",
+  "ACTIVE": "Actif",
+  "INACTIVE": "Inactif",
+  "SUSPENDED": "Suspendu",
+  "SUSPENDED_NOTE": "Cet outil a été désactivé par votre administrateur",
+  "TOOLS_COUNT": "outils ajoutés",
+  "SEARCH_PLACEHOLDER": "Rechercher un outil…",
+  "ALL_CATEGORIES": "Toutes les catégories"
 },
 "ADMIN": {
   "ACTIVE_PROJECTS": "Projets actifs"
@@ -295,5 +333,10 @@
   "TOOLTIP": "Voir le briefing du jour",
   "ERROR": "Impossible de charger le briefing",
   "EMPTY": "Aucun briefing disponible"
+},
+"TL": {
+  "VERIFY_AI_STEPS": "Vérifier les steps générés par l'IA",
+  "AI_STEPS_CONTEXT": "Ces steps ont été générés par l'agent IA. Vérifiez, modifiez si nécessaire, puis approuvez.",
+  "APPROVE_AI_STEPS": "Approuver les steps"
 }
 }

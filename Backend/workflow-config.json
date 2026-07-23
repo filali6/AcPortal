@@ -85,6 +85,33 @@
   "TargetType": "",
   "TargetValues": [],
   "Config": null
-}
+},
+{
+  "EventCode": "StreamCrééParIA",
+  "ActionType": "CREATE_TASK",
+  "TaskTitle": "VVérifier les steps Business — {streamName}",
+  "TaskDescription": "L'agent IA a proposé des steps Business — vérifiez et approuvez",
+  "TargetType": "CONTEXT_USER",
+  "TargetValues": ["BusinessTeamLeadId"],
+  "Config": null
+},
+{
+  "EventCode": "StreamCrééParIA",
+  "ActionType": "CREATE_TASK",
+  "TaskTitle": "Vérifier les steps Techniques — {streamName}",
+  "TaskDescription": "L'agent IA a proposé des steps Technical — vérifiez et approuvez",
+  "TargetType": "CONTEXT_USER",
+  "TargetValues": ["TechnicalTeamLeadId"],
+  "Config": null
+},
+    {
+      "EventCode": "StreamCrééParIA",
+      "ActionType": "CREATE_MESSAGING_CHANNEL",
+      "TaskTitle": "",
+      "TaskDescription": "",
+      "TargetType": "",
+      "TargetValues": [],
+      "Config": null
+    }
   ]
 }

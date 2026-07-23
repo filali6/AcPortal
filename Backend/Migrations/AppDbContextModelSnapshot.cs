@@ -28,6 +28,9 @@ namespace Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int?>("ConsultantType")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -228,6 +231,44 @@ namespace Backend.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("Backend.Modules.Planning.Models.PlanningProposal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConversationJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FsdFileName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Guidelines")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProposalJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PlanningProposals");
+                });
+
             modelBuilder.Entity("Backend.Modules.Projects.Models.Portfolio", b =>
                 {
                     b.Property<Guid>("Id")
@@ -323,6 +364,9 @@ namespace Backend.Migrations
 
                     b.Property<Guid?>("StreamId")
                         .HasColumnType("uuid");
+
+                    b.Property<int?>("TeamType")
+                        .HasColumnType("integer");
 
                     b.Property<string>("ToolName")
                         .IsRequired()
@@ -617,6 +661,9 @@ namespace Backend.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FunctionalDomain")
                         .HasColumnType("text");
 
                     b.Property<string>("Icon")

@@ -3,9 +3,9 @@ using Dapr.Client;
 namespace Backend.Modules.Events.Services;
 
 using System.Text.Json;
-// using System.Text;
+using System.Text;
  
-// using System.Net.Http;
+using System.Net.Http;
 
 public class EventPublisher
 {
@@ -51,14 +51,23 @@ public class EventPublisher
         {
             try
             {
-                await _dapr.PublishEventAsync("pubsub", topic, payload);
+                var json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                using var httpClient = new HttpClient();
+                var response = await httpClient.PostAsync(
+                    $"http://localhost:3500/v1.0/publish/pubsub/{topic}",
+                    content);
+                response.EnsureSuccessStatusCode();
                 _logger.LogInformation("Event publié → topic : {Topic}", topic);
                 return;
             }
             catch (Exception ex)
             {
-                _logger.LogWarning("Essai {Essai} échoué sur {Topic}, on réessaie...", i + 1, topic);
+                //_logger.LogWarning("Essai {Essai} échoué sur {Topic}, on réessaie...", i + 1, topic);
+                //_logger.LogWarning("Essai {Essai} échoué sur {Topic} : {Erreur}", i + 1, topic, ex.Message);
                 await Task.Delay(delai);
+                _logger.LogWarning("Essai {Essai} échoué sur {Topic} : {Erreur} | Inner: {Inner}",
+    i + 1, topic, ex.Message, ex.InnerException?.Message ?? "aucune");
             }
         }
 

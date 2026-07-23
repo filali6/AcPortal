@@ -14,4 +14,5 @@ public class PluginDefinition
     public bool IsActive { get; set; } = true;
     public string AllowedRoles { get; set; } = "[]";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string? FunctionalDomain { get; set; }
 }

@@ -402,9 +402,9 @@
     text-decoration: line-through;
     color: var(--text-secondary);
 }
- tr.task-done td:not(:first-child) {
-     opacity: 0.45;
- }
+//  tr.task-done td:not(:first-child) {
+//      opacity: 0.45;
+//  }
 
 tr.selected td {
     background: #eff6ff;
@@ -501,7 +501,7 @@ tr.selected td {
      
     bottom: 0;
     background: var(--bg-main);
-    padding: 10px 0;
+    
     z-index: 10;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -566,17 +566,15 @@ tr.selected td {
     color: #9ca3af;
 }
 
-// Responsive page
+ 
 .admin-page {
     width: 100%;
-    max-width: 100%;
-    padding: 0 ;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-height: 100%;
-    //height: calc(100vh - 48px);
+        max-width: 100%;
+        padding: 8;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
 }
 
 // Btn small

@@ -34,11 +34,8 @@
                 <button class="action-btn success" (click)="markDone()">✓ {{ 'TASKS.MARK_DONE' | translate }}</button>
             </div>
 
-            <div class="task-section-label" *ngIf="workflowTasks.length > 0">
-                {{ 'TASKS.WORKFLOW_TASKS' | translate }}
-            </div>
             <div class="table-wrapper">
-                <table class="tasks-table" *ngIf="workflowTasks.length > 0">
+                <table class="tasks-table" *ngIf="filteredTasks.length > 0">
                     <thead>
                         <tr>
                             <th style="width:40px"></th>
@@ -49,7 +46,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let task of workflowTasks" [class.task-done]="task.status === 2"
+                        <tr *ngFor="let task of filteredTasks" [class.task-done]="task.status === 2"
                             [class.selected]="isSelected(task.id)" (click)="onTaskClick(task)">
                             <td (click)="toggleSelect(task.id); $event.stopPropagation()">
                                 <div class="checkbox" [class.checked]="isSelected(task.id)">
@@ -59,47 +56,7 @@
                             <td class="task-title">{{ task.title }}</td>
                             <td class="text-secondary">{{ getStreamName(task.streamId ?? '') }}</td>
                             <td>
-                                <span class="status-badge"
-                                    [style.background]="utils.getTaskStatusColor(task.status) + '20'"
-                                    [style.color]="utils.getTaskStatusColor(task.status)">
-                                    {{ utils.getTaskStatusLabel(task.status) }}
-                                </span>
-                            </td>
-                            <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="task-section-label" *ngIf="stepTasks.length > 0">
-                {{ 'TASKS.ASSIGNED_TASKS' | translate }}
-            </div>
-            <div class="table-wrapper">
-                <table class="tasks-table" *ngIf="stepTasks.length > 0">
-                    <thead>
-                        <tr>
-                            <th style="width:40px"></th>
-                            <th>{{ 'COMMON.NAME' | translate }}</th>
-                            <th>{{ 'TASKS.TOOL' | translate }}</th>
-                            <th>{{ 'TASKS.STREAM' | translate }}</th>
-                            <th>{{ 'COMMON.STATUS' | translate }}</th>
-                            <th>{{ 'COMMON.DATE' | translate }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let task of stepTasks" [class.task-done]="task.status === 2"
-                            [class.selected]="isSelected(task.id)" (click)="onTaskClick(task)">
-                            <td (click)="toggleSelect(task.id); $event.stopPropagation()">
-                                <div class="checkbox" [class.checked]="isSelected(task.id)">
-                                    <span *ngIf="isSelected(task.id)">✓</span>
-                                </div>
-                            </td>
-                            <td class="task-title">{{ task.title }}</td>
-                            <td><span class="tool-badge">{{ task.toolName }}</span></td>
-                            <td class="text-secondary">{{ getStreamName(task.streamId ?? '') }}</td>
-                            <td>
-                                <span class="status-badge"
-                                    [style.background]="utils.getTaskStatusColor(task.status) + '20'"
+                                <span class="status-badge" [style.background]="utils.getTaskStatusColor(task.status) + '20'"
                                     [style.color]="utils.getTaskStatusColor(task.status)">
                                     {{ utils.getTaskStatusLabel(task.status) }}
                                 </span>
@@ -356,7 +313,7 @@
     </ng-container>
 
     <!-- DEFINE STEPS TAB -->
-    <ng-container *ngFor="let tabId of getOpenTabIds()">
+    <!-- <ng-container *ngFor="let tabId of getOpenTabIds()">
         <ng-container *ngIf="activeTabId === tabId">
             <div class="card" *ngIf="getTabData(tabId) as tab">
                 <div class="card-header">
@@ -393,8 +350,78 @@
             </div>
            
         </ng-container>
+    </ng-container> -->
+    <!-- DEFINE STEPS TAB -->
+    <ng-container *ngFor="let tabId of getOpenTabIds()">
+        <ng-container *ngIf="activeTabId === tabId">
+            <div class="card" *ngIf="getTabData(tabId) as tab">
+    
+                <div class="card-header">
+                    <h2>
+                        <!-- Badge IA si c'est une tâche de vérification -->
+                        <span class="ai-review-badge" *ngIf="tab.isAiReview">
+                            <lucide-icon [img]="Sparkles" size="13"></lucide-icon>
+                            AI
+                        </span>
+                        {{ tab.isAiReview ? ('TL.VERIFY_AI_STEPS' | translate) : ('STREAMS.DEFINE_STEPS' | translate) }}
+                    </h2>
+                </div>
+    
+                <div class="card-body">
+                    <div class="project-info-block">
+                        <span class="label">Stream</span>
+                        <span class="project-name">{{ getStreamName(tab.task?.streamId ?? '') }}</span>
+                    </div>
+    
+                    <!-- Message contextuel pour la tâche IA -->
+                    <div class="ai-context-banner" *ngIf="tab.isAiReview">
+                        <lucide-icon [img]="Sparkles" size="14"></lucide-icon>
+                        <span>{{ 'TL.AI_STEPS_CONTEXT' | translate }}</span>
+                    </div>
+    
+                    <!-- Loading spinner -->
+                    <div class="empty" *ngIf="tab.loadingAiSteps">
+                        <div class="ai-spinner" style="margin: 0 auto;"></div>
+                    </div>
+    
+                    <!-- Steps list (même composant pour manuel et IA) -->
+                    <div class="steps-container" *ngIf="!tab.loadingAiSteps">
+                        <div class="step-row" *ngFor="let step of tab.steps; let i = index">
+                            <span class="step-number">{{ i + 1 }}</span>
+                            <input type="text" [(ngModel)]="step.stepName" [placeholder]="'STREAMS.STEP_NAME' | translate"
+                                class="form-input">
+                            <select [(ngModel)]="step.toolName" class="form-input tool-select">
+                                <option value="">{{ 'STREAMS.SELECT_TOOL' | translate }}</option>
+                                <option *ngFor="let plugin of availablePlugins" [value]="plugin.id">
+                                    {{ plugin.name }}
+                                </option>
+                            </select>
+                            <button class="btn-remove" (click)="removeStep(tabId, i)"
+                                *ngIf="tab.steps.length > 1">✕</button>
+                        </div>
+                    </div>
+    
+                    <button class="btn-add" (click)="addStep(tabId)" *ngIf="!tab.loadingAiSteps">
+                        {{ 'STREAMS.ADD_STEP' | translate }}
+                    </button>
+    
+                    <div class="bottom-actions" *ngIf="!tab.loadingAiSteps">
+                        <!-- Bouton IA : Approuver les steps -->
+                        <button class="btn-primary" *ngIf="tab.isAiReview" (click)="approveAiSteps(tabId)"
+                            [disabled]="loading || !tab.steps.length">
+                            {{ loading ? ('COMMON.LOADING' | translate) : ('TL.APPROVE_AI_STEPS' | translate) }}
+                        </button>
+    
+                        <!-- Bouton Manuel : Sauvegarder les steps -->
+                        <button class="btn-primary" *ngIf="!tab.isAiReview" (click)="saveSteps(tabId)"
+                            [disabled]="loading || !tab.steps.length">
+                            {{ loading ? ('STREAMS.SAVING' | translate) : ('STREAMS.SAVE_STEPS' | translate) }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
     </ng-container>
-
 <app-chat-panel [isOpen]="chatOpen" [streamId]="chatStreamId" [taskId]="chatTaskId" [title]="chatTitle"
     (closed)="closeChat()">
 </app-chat-panel>

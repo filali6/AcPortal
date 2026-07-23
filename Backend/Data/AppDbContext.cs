@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Modules.Contracts.Models;
 using Backend.Modules.Notifications.Models;
 using Backend.Modules.Chat.Models;
+using Backend.Modules.Planning.Models;
 namespace Backend.Data;
 
 public class AppDbContext : DbContext
@@ -35,6 +36,7 @@ public class AppDbContext : DbContext
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<TaskComment> TaskComments { get; set; }
     public DbSet<StepConfigFile> StepConfigFiles { get; set; }
+    public DbSet<PlanningProposal> PlanningProposals { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
