@@ -1,11 +1,11 @@
 .tab-content {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
 }
 
 .card {
-    background: white;
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 8px;
     overflow: hidden;
@@ -51,12 +51,12 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
         border-bottom: 1px solid var(--border);
-        background: #fafafa;
+        background: var(--bg-subtle);
     }
 
     td {
         padding: 10px 16px;
-        border-bottom: 1px solid #f3f4f6;
+        border-bottom: 1px solid var(--neutral-bg);
         font-size: 13px;
     }
 
@@ -68,7 +68,7 @@
         cursor: pointer;
 
         &:hover td {
-            background: #fafafa;
+            background: var(--bg-subtle);
         }
     }
 }
@@ -86,16 +86,16 @@
 
 .project-badge {
     font-size: 12px;
-    background: #d1fae5;
-    color: #065f46;
+    background: var(--success-bg);
+    color: var(--success-text);
     padding: 2px 8px;
     border-radius: 4px;
 }
 
 .project-pending {
     font-size: 12px;
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--warning-bg);
+    color: var(--warning-text);
     padding: 2px 8px;
     border-radius: 4px;
 }
@@ -157,7 +157,7 @@
     color: var(--text-secondary);
 
     &:hover {
-        background: #f3f4f6;
+        background: var(--neutral-bg);
     }
 }
 
@@ -165,12 +165,12 @@
     padding: 4px 10px;
     border: 1px solid var(--border);
     border-radius: 4px;
-    background: white;
+    background: var(--bg-card);
     font-size: 12px;
     cursor: pointer;
 
     &:hover {
-        background: #f3f4f6;
+        background: var(--neutral-bg);
     }
 }
 
@@ -185,9 +185,10 @@
     color: var(--text-secondary);
     font-size: 13px;
 }
+
 .inline-panel {
-    background: white;
-    border: 1px solid #e5e7eb;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px;
     margin-bottom: 16px;
@@ -202,7 +203,7 @@
     h2 {
         font-size: 16px;
         font-weight: 600;
-        color: #1e293b;
+        color: var(--text-primary);
         margin: 0;
     }
 }
@@ -211,14 +212,14 @@
     background: none;
     border: none;
     font-size: 16px;
-    color: #9ca3af;
+    color: var(--text-secondary);
     cursor: pointer;
     padding: 4px 8px;
     border-radius: 4px;
 
     &:hover {
-        background: #f5f5f5;
-        color: #333;
+        background: var(--bg-subtle);
+        color: var(--text-primary);
     }
 }
 
@@ -238,14 +239,14 @@
 .info-label {
     font-size: 11px;
     font-weight: 600;
-    color: #9ca3af;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .info-value {
     font-size: 13px;
-    color: #1e293b;
+    color: var(--text-primary);
 }
 
 .files-section {
@@ -260,7 +261,7 @@
 }
 
 .file-link {
-    color: #0080FF;
+    color: var(--accent);
     font-size: 12px;
     text-decoration: none;
 
@@ -270,8 +271,8 @@
 }
 
 .summary-section {
-    background: #f8fafc;
-    border-left: 3px solid #0080FF;
+    background: var(--header-bg);
+    border-left: 3px solid var(--accent);
     border-radius: 0 8px 8px 0;
     padding: 12px 16px;
     margin-top: 8px;
@@ -280,7 +281,7 @@
 .summary-label {
     font-size: 11px;
     font-weight: 700;
-    color: #0080FF;
+    color: var(--accent);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     display: block;
@@ -289,14 +290,14 @@
 
 .summary-text {
     font-size: 13px;
-    color: #1e293b;
+    color: var(--text-primary);
     line-height: 1.6;
     margin: 0;
 }
 
 .summary-badge-sm {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
+    background: var(--status-done-tint);
+    color: var(--status-done);
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 11px;
@@ -304,5 +305,5 @@
 }
 
 .row-selected {
-    background: #eff6ff;
+    background: var(--selected-bg);
 }

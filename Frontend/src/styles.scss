@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
+    color-scheme: light;
+
     --sidebar-bg: #1a1f2e;
     --sidebar-hover: rgba(255, 255, 255, 0.08);
     --sidebar-text: rgba(255, 255, 255, 0.7);
@@ -15,7 +17,9 @@
     --text-primary: #0f1117;
     --text-secondary: #6b7280;
 
-    --accent: #3b6fd4;
+    /* Couleur de marque réellement utilisée dans les composants (#0080FF) */
+    --accent: #0080FF;
+    --accent-hover: #0066cc;
     --accent-light: #eef2ff;
 
     --border: #e5e7eb;
@@ -27,6 +31,162 @@
 
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
     --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.04);
+
+    /* Nouvelles variables trouvées dans app.scss */
+    --header-bg: #f8fafc;
+    --header-border: #e2e8f0;
+    --header-btn-bg: rgba(0, 0, 0, 0.04);
+    --icon-color: #64748b;
+
+    --toast-bg: #1e293b;
+    --toast-text: #f1f5f9;
+    --toast-accent: #a5b4fc;
+    --toast-close: #94a3b8;
+
+    /* Nouvelles variables trouvées dans tools-page.scss */
+    --bg-subtle: #fafafa;
+
+    --success-bg: #d1fae5;
+    --success-bg-subtle: #f0fdf4;
+    --success-border: #a7f3d0;
+    --success-text: #065f46;
+    --success-dot: #22c55e;
+
+    --neutral-bg: #f3f4f6;
+    --neutral-text: #4b5563;
+
+    --danger-bg: #fee2e2;
+    --danger-border: #fecaca;
+    --danger-text: #ef4444;
+
+    --warning-text: #b45309;
+
+    --overlay-bg: rgba(0, 0, 0, 0.18);
+
+    /* Nouvelles variables trouvées dans tl-page.scss */
+    --border-subtle: #f1f5f9;
+    --selected-bg: #eff6ff;
+
+    /* Nouvelle variable trouvée dans daf-page.scss */
+    --warning-bg: #fef3c7;
+
+    /* Nouvelles variables trouvées dans consultant-page.scss (boutons d'action indigo) */
+    --info-bg: #f0f4ff;
+    --info-border: #c7d7fc;
+    --info-text: #3b5bdb;
+    --info-bg-hover: #e0e9ff;
+    --info-border-hover: #a5b8fa;
+    --info-text-hover: #2f4ac4;
+
+    /* Nouvelles variables trouvées dans admin-page.scss */
+    --banner-info-bg: #f0f9ff;
+    --banner-info-border: #bae6fd;
+    --banner-info-text: #0369a1;
+    --text-body: #374151;
+    --accent-tint: rgba(0, 128, 255, 0.08);
+
+    /* Nouvelles variables trouvées dans toast.scss (fonds solides, identiques clair/sombre) */
+    --toast-success-bg: #065f46;
+    --toast-error-bg: #991b1b;
+    --toast-info-bg: #1e40af;
+
+    /* Nouvelles variables trouvées dans chat-drawer.scss (badge Teams) */
+    --teams-badge-bg: #ebebf5;
+    --teams-badge-text: #5b5fc7;
+
+    /* Nouvelles variables trouvées dans briefing-pill.scss (dégradé indigo IA) */
+    --shimmer-1: #e0e7ff;
+    --shimmer-2: #c7d2fe;
+
+    /* Nouvelle variable trouvée dans utils.service.ts (statut contrat "In Progress") */
+    --status-contract-progress: #6366f1;
+    --status-contract-progress-tint: rgba(99, 102, 241, 0.1);
+
+    --badge-blue-bg: #dbeafe;
+    --badge-blue-text: #1d4ed8;
+    --badge-purple-bg: #ede9fe;
+    --badge-purple-text: #7c3aed;
+
+    /* teintes transparentes : marchent pareil sur fond clair ou sombre */
+    --status-done-tint: rgba(16, 185, 129, 0.1);
+    --status-pending-tint: rgba(245, 158, 11, 0.1);
+    --status-blocked-tint: rgba(239, 68, 68, 0.1);
+}
+
+/* 👇 MODE SOMBRE */
+[data-theme="dark"] {
+    color-scheme: dark;
+
+    --bg-main: #121417;
+    --bg-card: #1c1f26;
+
+    --text-primary: #f1f1f1;
+    --text-secondary: #9ca3af;
+
+    --accent: #5b8def;
+    --accent-hover: #4a7bd8;
+    --accent-light: #1e2740;
+
+    --border: #2a2e37;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+
+    --header-bg: #1c1f26;
+    --header-border: #2a2e37;
+    --header-btn-bg: rgba(255, 255, 255, 0.06);
+    --icon-color: #cbd5e1;
+
+    --toast-bg: #0d1017;
+    /* --toast-text, --toast-accent, --toast-close : identiques au mode clair, pas besoin de les répéter */
+
+    --bg-subtle: #22262e;
+
+    --success-bg: rgba(34, 197, 94, 0.15);
+    --success-bg-subtle: rgba(34, 197, 94, 0.08);
+    --success-border: rgba(34, 197, 94, 0.3);
+    --success-text: #4ade80;
+    /* --success-dot : identique au mode clair (#22c55e), pas besoin de le répéter */
+
+    --neutral-bg: #2a2e37;
+    --neutral-text: #9ca3af;
+
+    --danger-bg: rgba(239, 68, 68, 0.15);
+    --danger-border: rgba(239, 68, 68, 0.3);
+    --danger-text: #f87171;
+
+    --warning-text: #f59e0b;
+
+    --overlay-bg: rgba(0, 0, 0, 0.5);
+
+    --border-subtle: #242830;
+    --selected-bg: rgba(59, 130, 246, 0.15);
+
+    --warning-bg: rgba(245, 158, 11, 0.15);
+
+    --info-bg: rgba(59, 91, 219, 0.15);
+    --info-border: rgba(59, 91, 219, 0.35);
+    --info-text: #8fa8f7;
+    --info-bg-hover: rgba(59, 91, 219, 0.22);
+    --info-border-hover: rgba(59, 91, 219, 0.5);
+    --info-text-hover: #adc0fa;
+
+    --banner-info-bg: rgba(56, 189, 248, 0.12);
+    --banner-info-border: rgba(56, 189, 248, 0.35);
+    --banner-info-text: #7dd3fc;
+    --text-body: #cbd5e1;
+    --accent-tint: rgba(91, 141, 239, 0.12);
+
+    --badge-blue-bg: rgba(59, 130, 246, 0.18);
+    --badge-blue-text: #60a5fa;
+
+    --teams-badge-bg: rgba(91, 95, 199, 0.2);
+    --teams-badge-text: #9b9ff0;
+    --badge-purple-bg: rgba(124, 58, 237, 0.18);
+    --badge-purple-text: #a78bfa;
+
+    --shimmer-1: #312e81;
+    --shimmer-2: #4338ca;
 }
 
 * {
@@ -55,10 +215,11 @@ body {
     background: #d1d5db;
     border-radius: 3px;
 }
+
 .app-tooltip {
     position: fixed;
-    background: #1e293b;
-    color: #f1f5f9;
+    background: var(--toast-bg);
+    color: var(--toast-text);
     padding: 5px 10px;
     border-radius: 6px;
     font-size: 12px;
@@ -67,4 +228,26 @@ body {
     pointer-events: none;
     white-space: nowrap;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Classes globales de statut (task + contract) — utilisées via [ngClass] à la place
+   des couleurs injectées en style inline, pour que les badges suivent le dark mode */
+.status-pending {
+    background: var(--status-pending-tint);
+    color: var(--status-pending);
+}
+
+.status-blocked {
+    background: var(--status-blocked-tint);
+    color: var(--status-blocked);
+}
+
+.status-done {
+    background: var(--status-done-tint);
+    color: var(--status-done);
+}
+
+.status-contract-progress {
+    background: var(--status-contract-progress-tint);
+    color: var(--status-contract-progress);
 }

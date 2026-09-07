@@ -1,3 +1,5 @@
+using Backend.Modules.Sla.Models;
+
 namespace Backend.Modules.Tasks.Models;
 
 public enum AcpTaskStatus
@@ -36,6 +38,10 @@ public class AcpTask
 
     public string? MessagingThreadId { get; set; }
     public string? MessagingThreadUrl { get; set; }
+    // Ajouter dans AcpTask.cs
+    public DateTime? DueDate { get; set; }
+    public Guid? SlaRuleId { get; set; }
+    public SlaStatus SlaStatus { get; set; } = SlaStatus.OnTrack;
 
 
 }

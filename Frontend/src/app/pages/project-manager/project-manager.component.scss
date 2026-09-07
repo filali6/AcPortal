@@ -1,11 +1,11 @@
 .pm-page {
-    width: 100%;
+width: 100%;
     max-width: 100%;
-    padding: 0;
+    padding: 8;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
 }
 
 .card {
@@ -41,7 +41,7 @@
     gap: 10px;
     padding: 12px 20px;
     border-bottom: 1px solid var(--border);
-    background: #fafafa;
+    background: var(--bg-subtle);
 
     .search-input {
         flex: 1;
@@ -70,12 +70,12 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
         border-bottom: 1px solid var(--border);
-        background: #fafafa;
+        background: var(--bg-subtle);
     }
 
     td {
         padding: 12px 20px;
-        border-bottom: 1px solid #f3f4f6;
+        border-bottom: 1px solid var(--neutral-bg);
         font-size: 13px;
     }
 
@@ -87,7 +87,7 @@
         cursor: pointer;
 
         &:hover td {
-            background: #fafafa;
+            background: var(--bg-subtle);
         }
     }
 
@@ -96,7 +96,7 @@
     }
 
     tr.selected td {
-        background: #eff6ff;
+        background: var(--selected-bg);
     }
 }
 
@@ -138,7 +138,7 @@
     align-items: center;
     gap: 12px;
     padding: 10px 20px;
-    background: #f9fafb;
+    background: var(--header-bg);
     border-bottom: 1px solid var(--border);
 }
 
@@ -155,13 +155,13 @@
     cursor: pointer;
 
     &.success {
-        background: #d1fae5;
-        color: #065f46;
+        background: var(--success-bg);
+        color: var(--success-text);
     }
 }
 
 .access-card {
-    background: white;
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 14px 20px;
@@ -235,21 +235,21 @@
     flex-direction: column;
     gap: 2px;
     padding-bottom: 8px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border-subtle);
 
     &:last-child {
         border-bottom: none;
     }
 
     &.qs-alert .qs-value {
-        color: #ef4444;
+        color: var(--danger-text);
     }
 }
 
 .qs-label {
     font-size: 11px;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.4px;
 }
@@ -257,7 +257,7 @@
 .qs-value {
     font-size: 20px;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--text-primary);
 }
 
 .qs-name {
@@ -266,7 +266,7 @@
 
 .qs-sub {
     font-size: 11px;
-    color: #9ca3af;
+    color: var(--text-secondary);
 }
 
 .project-info-block {
@@ -313,12 +313,13 @@
         border-color: var(--accent);
     }
 }
+
 select.form-input {
     appearance: none;
     -webkit-appearance: none;
     padding-right: 32px;
     cursor: pointer;
-    background-color: #fff;
+    background-color: var(--bg-card);
     background-image: none;
 
     &:focus {
@@ -326,7 +327,7 @@ select.form-input {
         border-color: var(--accent);
     }
 }
- 
+
 .team-label {
     font-size: 12px;
     font-weight: 700;
@@ -335,13 +336,13 @@ select.form-input {
     display: inline-block;
 
     &.business {
-        background: #dbeafe;
-        color: #1d4ed8;
+        background: var(--badge-blue-bg);
+        color: var(--badge-blue-text);
     }
 
     &.technical {
-        background: #ede9fe;
-        color: #7c3aed;
+        background: var(--badge-purple-bg);
+        color: var(--badge-purple-text);
     }
 }
 
@@ -427,7 +428,7 @@ select.form-input {
 
 .btn-primary {
     padding: 8px 18px;
-    background: #0080ff;
+    background: var(--accent);
     color: #ffffff;
     border: none;
     border-radius: 6px;
@@ -451,6 +452,7 @@ select.form-input {
     color: var(--text-secondary);
     font-size: 13px;
 }
+
 .stream-actions {
     display: flex;
     align-items: center;
@@ -494,7 +496,7 @@ select.form-input {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: #f3f4f6;
+    background: var(--neutral-bg);
     padding: 4px 10px;
     border-radius: 20px;
     font-size: 12px;
@@ -503,13 +505,13 @@ select.form-input {
 .remove-btn {
     background: none;
     border: none;
-    color: #9ca3af;
+    color: var(--text-secondary);
     cursor: pointer;
     font-size: 11px;
     padding: 0;
 
     &:hover {
-        color: #dc2626;
+        color: var(--danger-text);
     }
 }
 
@@ -530,7 +532,7 @@ select.form-input {
     color: var(--text-secondary);
 
     &:hover {
-        background: #f3f4f6;
+        background: var(--neutral-bg);
     }
 }
 
@@ -545,8 +547,9 @@ select.form-input {
     font-weight: 700;
     color: var(--accent);
 }
+
 .project-detail-panel {
-    background: white;
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px;
@@ -569,7 +572,7 @@ select.form-input {
     h2 {
         font-size: 16px;
         font-weight: 700;
-        color: #1e293b;
+        color: var(--text-primary);
         margin: 0;
     }
 }
@@ -582,8 +585,8 @@ select.form-input {
 }
 
 .progress-pct-badge {
-    background: rgba(0, 128, 255, 0.1);
-    color: #0080FF;
+    background: var(--accent-light);
+    color: var(--accent);
     padding: 2px 10px;
     border-radius: 10px;
     font-size: 12px;
@@ -592,8 +595,8 @@ select.form-input {
 
 .streams-count-badge,
 .tasks-count-badge {
-    background: #f1f5f9;
-    color: #64748b;
+    background: var(--border-subtle);
+    color: var(--icon-color);
     padding: 2px 10px;
     border-radius: 10px;
     font-size: 12px;
@@ -609,7 +612,7 @@ select.form-input {
 .progress-track {
     width: 160px;
     height: 8px;
-    background: #f1f5f9;
+    background: var(--border-subtle);
     border-radius: 4px;
     overflow: hidden;
 }
@@ -624,14 +627,14 @@ select.form-input {
     background: none;
     border: none;
     font-size: 16px;
-    color: #9ca3af;
+    color: var(--text-secondary);
     cursor: pointer;
     padding: 4px 8px;
     border-radius: 4px;
 
     &:hover {
-        background: #f5f5f5;
-        color: #333;
+        background: var(--bg-subtle);
+        color: var(--text-primary);
     }
 }
 
@@ -642,10 +645,10 @@ select.form-input {
 }
 
 .stream-detail-card {
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: 16px;
-    background: white;
+    background: var(--bg-card);
     transition: box-shadow 0.15s;
 
     &:hover {
@@ -667,7 +670,7 @@ select.form-input {
 .stream-detail-name {
     font-size: 14px;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--text-primary);
 }
 
 .stream-progress-pill {
@@ -679,7 +682,7 @@ select.form-input {
 
 .stream-progress-bar {
     height: 6px;
-    background: #f1f5f9;
+    background: var(--border-subtle);
     border-radius: 3px;
     overflow: hidden;
 }
@@ -716,13 +719,13 @@ select.form-input {
     border-radius: 4px;
 
     &.business {
-        background: #dbeafe;
-        color: #1d4ed8;
+        background: var(--badge-blue-bg);
+        color: var(--badge-blue-text);
     }
 
     &.technical {
-        background: #ede9fe;
-        color: #7c3aed;
+        background: var(--badge-purple-bg);
+        color: var(--badge-purple-text);
     }
 }
 
@@ -731,7 +734,7 @@ select.form-input {
     align-items: center;
     gap: 8px;
     padding: 5px 8px;
-    background: #f8fafc;
+    background: var(--header-bg);
     border-radius: 6px;
     margin-bottom: 4px;
 }
@@ -745,7 +748,7 @@ select.form-input {
     transition: background 0.15s;
 
     &:hover {
-        background: #fef2f2;
+        background: var(--danger-bg);
 
         .remove-member-btn {
             opacity: 1;
@@ -762,24 +765,24 @@ select.form-input {
     flex-shrink: 0;
 
     &.btl {
-        background: #dbeafe;
-        color: #1d4ed8;
+        background: var(--badge-blue-bg);
+        color: var(--badge-blue-text);
     }
 
     &.ttl {
-        background: #ede9fe;
-        color: #7c3aed;
+        background: var(--badge-purple-bg);
+        color: var(--badge-purple-text);
     }
 
     &.dev {
-        background: #f0fdf4;
-        color: #16a34a;
+        background: var(--success-bg-subtle);
+        color: var(--success-text);
     }
 }
 
 .member-name-sm {
     font-size: 12px;
-    color: #1e293b;
+    color: var(--text-primary);
     flex: 1;
     white-space: nowrap;
     overflow: hidden;
@@ -789,7 +792,7 @@ select.form-input {
 .remove-member-btn {
     background: none;
     border: none;
-    color: #ef4444;
+    color: var(--danger-text);
     cursor: pointer;
     font-size: 10px;
     padding: 2px 5px;
@@ -799,13 +802,13 @@ select.form-input {
     flex-shrink: 0;
 
     &:hover {
-        background: #fee2e2;
+        background: var(--danger-bg);
     }
 }
 
 .no-members {
     font-size: 11px;
-    color: #9ca3af;
+    color: var(--text-secondary);
     font-style: italic;
     padding: 4px 8px;
 }
@@ -814,24 +817,24 @@ select.form-input {
     margin-top: 6px;
     width: 100%;
     padding: 5px;
-    border: 1px dashed #cbd5e1;
+    border: 1px dashed var(--border);
     border-radius: 6px;
     background: transparent;
-    color: #64748b;
+    color: var(--icon-color);
     font-size: 12px;
     cursor: pointer;
     font-family: 'DM Sans', sans-serif;
     transition: all 0.15s;
 
     &:hover {
-        border-color: #0080FF;
-        color: #0080FF;
-        background: rgba(0, 128, 255, 0.04);
+        border-color: var(--accent);
+        color: var(--accent);
+        background: var(--accent-light);
     }
 }
 
 .stream-footer {
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--border-subtle);
     padding-top: 12px;
     display: flex;
     justify-content: flex-end;
@@ -841,7 +844,7 @@ select.form-input {
     padding: 6px 14px;
     border: 1px solid var(--border);
     border-radius: 6px;
-    background: white;
+    background: var(--bg-card);
     color: var(--text-secondary);
     font-size: 12px;
     cursor: pointer;
@@ -849,21 +852,22 @@ select.form-input {
     transition: all 0.15s;
 
     &:hover {
-        border-color: #0080FF;
-        color: #0080FF;
+        border-color: var(--accent);
+        color: var(--accent);
     }
 }
 
 .row-selected td {
-    background: #eff6ff;
+    background: var(--selected-bg);
 }
+
 .stream-tasks-summary {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
     margin-bottom: 14px;
     padding: 8px 12px;
-    background: #f8fafc;
+    background: var(--header-bg);
     border-radius: 8px;
 }
 
@@ -874,26 +878,27 @@ select.form-input {
     border-radius: 6px;
 
     &.done {
-        background: rgba(16, 185, 129, 0.1);
-        color: #10b981;
+        background: var(--status-done-tint);
+        color: var(--status-done);
     }
 
     &.pending {
-        background: rgba(245, 158, 11, 0.1);
-        color: #f59e0b;
+        background: var(--status-pending-tint);
+        color: var(--status-pending);
     }
 
     &.blocked {
-        background: rgba(239, 68, 68, 0.1);
-        color: #ef4444;
+        background: var(--status-blocked-tint);
+        color: var(--danger-text);
     }
 }
 
 .task-sum-total {
     font-size: 12px;
-    color: #64748b;
+    color: var(--icon-color);
     margin-left: auto;
 }
+
 // ── Stream diagram layout ──────────────────────────────────────
 
 .stream-diagram {
@@ -916,7 +921,7 @@ select.form-input {
     flex-direction: column;
     gap: 12px;
     height: 100%;
-    overflow:visible;
+    overflow: visible;
 }
 
 .diagram-col-header {
@@ -948,18 +953,18 @@ select.form-input {
     flex-shrink: 0;
 
     &.av-biz {
-        background: #dbeafe;
-        color: #1d4ed8;
+        background: var(--badge-blue-bg);
+        color: var(--badge-blue-text);
     }
 
     &.av-tech {
-        background: #ede9fe;
-        color: #7c3aed;
+        background: var(--badge-purple-bg);
+        color: var(--badge-purple-text);
     }
 
     &.av-cons {
-        background: #f1f5f9;
-        color: #475569;
+        background: var(--border-subtle);
+        color: var(--icon-color);
     }
 }
 
@@ -1013,8 +1018,8 @@ select.form-input {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    max-height: 160px;  
-    overflow-y: auto; 
+    max-height: 160px;
+    overflow-y: auto;
 
     &::-webkit-scrollbar {
         width: 3px;
@@ -1049,7 +1054,7 @@ select.form-input {
     padding: 7px 10px;
     border: 1px solid var(--border);
     border-radius: 8px;
-    background: #fafafa;
+    background: var(--bg-subtle);
     transition: border-color 0.15s;
 
     &:hover {
@@ -1077,7 +1082,7 @@ select.form-input {
 
     &:hover {
         opacity: 1;
-        color: #dc2626;
+        color: var(--danger-text);
     }
 }
 
@@ -1114,13 +1119,13 @@ select.form-input {
     top: calc(100% + 4px);
     left: 0;
     right: 0;
-    background: white;
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 8px;
     z-index: 200;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    overflow-y: auto;  
-    max-height: 200px;  
+    overflow-y: auto;
+    max-height: 200px;
 }
 
 .consultant-dropdown-item {
@@ -1147,28 +1152,10 @@ select.form-input {
 .used-badge {
     margin-left: auto;
     font-size: 10px;
-    background: #f1f5f9;
+    background: var(--border-subtle);
     color: var(--text-secondary);
     padding: 1px 6px;
     border-radius: 4px;
-}
-.btn-slack-link {
-    background: #4A154B;
-    color: white;
-    border: none;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    cursor: pointer;
-
-    &:hover {
-        opacity: 0.85;
-    }
-}
-
-.messaging-status {
-    font-size: 12px;
-    color: #94a3b8;
 }
 
 .stream-title-row {
@@ -1182,9 +1169,9 @@ select.form-input {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    color: #1a1a1a;
+    background: var(--bg-card);
+    border: 1px solid var(--header-border);
+    color: var(--text-primary);
     padding: 6px 12px;
     border-radius: 8px;
     font-size: 13px;
@@ -1193,8 +1180,8 @@ select.form-input {
     transition: all 0.15s ease;
 
     &:hover {
-        background: #f8fafc;
-        border-color: #cbd5e1;
+        background: var(--header-bg);
+        border-color: var(--border);
     }
 
     svg {
@@ -1204,308 +1191,10 @@ select.form-input {
 
 .messaging-status {
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--toast-close);
     font-style: italic;
 }
-// ── AI Planning — choix manuel vs agent ────────────────────────
 
-.planning-choice-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-}
-
-.planning-choice-card {
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 24px 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.18s ease;
-    background: var(--bg-card);
-
-    &:hover {
-        border-color: var(--accent);
-        background: var(--accent-light);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    }
-
-    .choice-icon {
-        font-size: 28px;
-        margin-bottom: 10px;
-    }
-
-    h3 {
-        font-size: 14px;
-        font-weight: 600;
-        margin: 0 0 6px;
-        color: var(--text-primary);
-    }
-
-    p {
-        font-size: 12px;
-        margin: 0;
-        line-height: 1.4;
-    }
-
-    &.ai-card {
-        border-color: #e9d5ff;
-        background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
-
-        &:hover {
-            border-color: #a855f7;
-            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
-        }
-    }
-}
-
-// ── FSD upload zone ─────────────────────────────────────────────
-
-.fsd-upload-zone {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 28px 16px;
-    border: 1.5px dashed var(--border);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    text-align: center;
-
-    &:hover {
-        border-color: var(--accent);
-        background: var(--accent-light);
-    }
-
-    &.has-file {
-        border-color: #10b981;
-        border-style: solid;
-        background: rgba(16, 185, 129, 0.04);
-    }
-
-    .upload-icon {
-        font-size: 24px;
-    }
-
-    .upload-text {
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--text-primary);
-    }
-
-    .upload-hint {
-        font-size: 11px;
-        color: var(--text-secondary);
-    }
-}
-
-// ── AI loading state ────────────────────────────────────────────
-
-.ai-loading-banner {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
-    border: 1px solid #e9d5ff;
-    border-radius: 8px;
-    color: #7c3aed;
-    font-size: 13px;
-    font-weight: 500;
-}
-
-.ai-spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid #e9d5ff;
-    border-top-color: #7c3aed;
-    border-radius: 50%;
-    animation: ai-spin 0.8s linear infinite;
-    flex-shrink: 0;
-}
-
-@keyframes ai-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-// ── Proposed plan cards ──────────────────────────────────────────
-
-.proposed-stream-card {
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    background: #fafafa;
-    transition: box-shadow 0.15s;
-
-    &:hover {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    }
-}
-
-.proposed-stream-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-
-    h3 {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-}
-
-.stream-meta-badge {
-    font-size: 11px;
-    color: var(--text-secondary);
-    background: white;
-    border: 1px solid var(--border);
-    padding: 3px 9px;
-    border-radius: 99px;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.proposed-rationale {
-    font-size: 12px;
-    color: #7c3aed;
-    background: #faf5ff;
-    border: 1px solid #f3e8ff;
-    padding: 8px 12px;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    line-height: 1.4;
-}
-
-.proposed-steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.proposed-step-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    padding: 7px 10px;
-    font-size: 12.5px;
-}
-
-.step-order-badge {
-    background: var(--accent);
-    color: white;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-
-.step-name {
-    flex: 1;
-    color: var(--text-primary);
-}
-
-.tool-badge {
-    font-size: 10px;
-    font-weight: 600;
-    background: rgba(0, 128, 255, 0.1);
-    color: var(--accent);
-    padding: 2px 8px;
-    border-radius: 4px;
-}
-
-// ── AI refine chat ───────────────────────────────────────────────
-
-.ai-refine-chat {
-    border-top: 1px solid var(--border);
-    padding-top: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.chat-history {
-    max-height: 140px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-
-    &::-webkit-scrollbar {
-        width: 3px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background: #d1d5db;
-        border-radius: 4px;
-    }
-}
-
-.chat-msg {
-    font-size: 12.5px;
-    padding: 7px 12px;
-    background: #f1f5f9;
-    border-radius: 8px;
-    max-width: 85%;
-    line-height: 1.4;
-    color: var(--text-primary);
-
-    &.user-msg {
-        background: var(--accent-light);
-        color: var(--accent);
-        margin-left: auto;
-    }
-}
-
-.chat-input-row {
-    display: flex;
-    gap: 8px;
-
-    .form-input {
-        flex: 1;
-    }
-}
-
-// ── AI done state ────────────────────────────────────────────────
-
-.ai-done-state {
-    text-align: center;
-    padding: 48px 24px !important;
-    align-items: center;
-
-    h2 {
-        font-size: 16px;
-        margin: 0 0 6px;
-    }
-}
-
-.ai-done-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 26px;
-    font-weight: 700;
-    margin: 0 auto 16px;
-}
 .choice-section-label {
     font-size: 11px;
     color: var(--text-secondary);
@@ -1559,7 +1248,7 @@ select.form-input {
     width: 21px;
     height: 21px;
     border-radius: 50%;
-    background: white;
+    background: var(--bg-card);
     border: 1px solid var(--accent);
     color: var(--accent);
     display: flex;
@@ -1571,7 +1260,7 @@ select.form-input {
     width: 44px;
     height: 44px;
     border-radius: 10px;
-    background: #f1f5f9;
+    background: var(--border-subtle);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1663,10 +1352,10 @@ select.form-input {
     }
 
     &.has-file {
-        border-color: #10b981;
+        border-color: var(--status-done);
         border-style: solid;
-        background: rgba(16, 185, 129, 0.04);
-        color: #10b981;
+        background: var(--status-done-tint);
+        color: var(--status-done);
     }
 
     .upload-text {
@@ -1725,7 +1414,7 @@ select.form-input {
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 16px;
-    background: #fafafa;
+    background: var(--bg-subtle);
     transition: box-shadow 0.15s;
 
     &:hover {
@@ -1750,7 +1439,7 @@ select.form-input {
 .stream-meta-badge {
     font-size: 11px;
     color: var(--text-secondary);
-    background: white;
+    background: var(--bg-card);
     border: 1px solid var(--border);
     padding: 3px 9px;
     border-radius: 99px;
@@ -1779,7 +1468,7 @@ select.form-input {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: white;
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 7px;
     padding: 7px 10px;
@@ -1842,7 +1531,7 @@ select.form-input {
 .chat-msg {
     font-size: 12.5px;
     padding: 7px 12px;
-    background: #f1f5f9;
+    background: var(--border-subtle);
     border-radius: 8px;
     max-width: 85%;
     line-height: 1.4;
@@ -1902,13 +1591,14 @@ select.form-input {
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
+    background: var(--status-done-tint);
+    color: var(--status-done);
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 14px;
 }
+
 .proposed-stream-card.editing {
     border-color: var(--accent);
     background: var(--accent-light);
@@ -1922,7 +1612,7 @@ select.form-input {
     height: 26px;
     border: 1px solid var(--border);
     border-radius: 6px;
-    background: white;
+    background: var(--bg-card);
     color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.15s;
@@ -1939,14 +1629,14 @@ select.form-input {
     gap: 5px;
     background: none;
     border: none;
-    color: #ef4444;
+    color: var(--danger-text);
     font-size: 12px;
     cursor: pointer;
     padding: 4px 8px;
     border-radius: 6px;
 
     &:hover {
-        background: #fee2e2;
+        background: var(--danger-bg);
     }
 }
 
@@ -1997,6 +1687,7 @@ select.form-input {
     border-color: var(--accent);
     background: var(--accent-light);
 }
+
 .btn-back-history {
     display: inline-flex;
     align-items: center;
@@ -2006,15 +1697,15 @@ select.form-input {
     font-weight: 500;
     color: var(--text-secondary);
     background: transparent;
-    border: 1px solid var(--border-color, #e2e8f0);
+    border: 1px solid var(--header-border);
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.15s ease;
 
     &:hover {
-        background: var(--bg-hover, #f1f5f9);
+        background: var(--border-subtle);
         color: var(--text-primary);
-        border-color: var(--accent, #3b82f6);
+        border-color: var(--accent);
     }
 
     &:active {

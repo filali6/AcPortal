@@ -10,7 +10,7 @@ import { TabsBarComponent } from './core/components/tabs-bar/tabs-bar.component'
 import { ToastComponent } from './core/components/toast/toast.component';
 import { NotificationsDropdownComponent } from './core/components/notifications-dropdown/notifications-dropdown.component';
 import { BriefingCardComponent } from './core/components/briefing-card/briefing-card.component';
-import { LucideAngularModule, LayoutDashboard, FolderOpen, FileText, Wrench, Bell, MessageSquare, LogOut, User, ChevronRight, Briefcase,Users,GitBranch,Settings } from 'lucide-angular';
+import { LucideAngularModule, LayoutDashboard, FolderOpen, FileText, Wrench, Bell, MessageSquare, LogOut, User, ChevronRight, Briefcase,Users,GitBranch,Settings , Sun , Moon } from 'lucide-angular';
 import { ChatService } from './core/services/chat.service';
 import { KeycloakService } from 'keycloak-angular';
 import { DiscussionsPanelComponent } from './core/components/discussions-panel/discussions-panel.component';
@@ -20,6 +20,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DrawerService } from './core/services/drawer.service';
 import { TabsService } from './core/services/tabs.service';
 import { TooltipService } from './core/services/tooltip.service';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -69,6 +70,8 @@ readonly Briefcase = Briefcase;
 readonly Users=Users;
 readonly GitBranch=GitBranch;
 readonly Settings=Settings;
+readonly Sun=Sun;
+readonly Moon=Moon;
 
   constructor(
     private router: Router,
@@ -80,7 +83,8 @@ readonly Settings=Settings;
     public languageService:LanguageService,
     private drawerService: DrawerService,
     public tabsService:TabsService,
-    private tooltipService: TooltipService
+    private tooltipService: TooltipService,
+    public themeService: ThemeService
     
     
   ) {}

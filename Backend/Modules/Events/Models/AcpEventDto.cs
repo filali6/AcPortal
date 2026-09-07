@@ -28,5 +28,10 @@ public class AcpEventDto
     public string? Content { get; set; }
     public string? TaskTitle { get; set; }
 
-     
+ 
+   
+    public string? AssignedTo { get; set; }
+    
+
+
 }

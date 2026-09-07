@@ -44,9 +44,7 @@
                             <td class="task-title">{{ task.title }}</td>
                             <td class="text-secondary">{{ getProjectName(task.projectId ?? '') }}</td>
                             <td>
-                                <span class="status-badge"
-                                    [style.background]="utils.getTaskStatusColor(task.status) + '20'"
-                                    [style.color]="utils.getTaskStatusColor(task.status)">
+                                <span class="status-badge" [ngClass]="utils.getTaskStatusClass(task.status)">
                                     {{ utils.getTaskStatusLabel(task.status) }}
                                 </span>
                             </td>

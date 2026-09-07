@@ -144,11 +144,7 @@
                     </a>
                 </ng-container>
 
-                <a *ngIf="isConsultant() || isTeamLead()" class="nav-item" [class.active]="isActive('discussions')"
-                    (click)="openDiscussions()" data-tooltip="TOOLTIP.DISCUSSIONS">
-                    <lucide-icon [img]="MessageSquare" size="16" class="nav-icon"></lucide-icon>
-                    <span>{{ 'SIDEBAR.DISCUSSIONS' | translate }}</span>
-                </a>
+                 
 
             </nav>
 
@@ -162,9 +158,17 @@
                     </button>
                 </div>
                 <div class="footer-separator"></div>
+                <button class="theme-toggle-btn" (click)="themeService.toggleTheme()"
+                    [attr.aria-label]="themeService.theme() === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'">
+                    @if (themeService.theme() === 'dark') {
+                    <lucide-icon [img]="Sun" [size]="14"></lucide-icon>
+                    } @else {
+                    <lucide-icon [img]="Moon" [size]="14"></lucide-icon>
+                    }
+                </button>
                 <a class="nav-item logout-item" (click)="logout()" data-tooltip="TOOLTIP.LOGOUT">
                     <lucide-icon [img]="LogOut" size="16" class="nav-icon"></lucide-icon>
-                    <span>{{ 'AUTH.LOGOUT' | translate }}</span>
+                    <!-- <span>{{ 'AUTH.LOGOUT' | translate }}</span> -->
                 </a>
             </div>
 

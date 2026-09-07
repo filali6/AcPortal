@@ -291,7 +291,9 @@
   "EDIT_RULE": "Edit Workflow Rule",
   "CATEGORY": "Category",
   "TASK_DESCRIPTION": "Task Description",
-  "ADD_VALUE": "Add value..."
+  "ADD_VALUE": "Add value...",
+  "ICON_PREVIEW":"Preview",
+  "ICON":"Icon"
 },"TOOLS_PAGE": {
   "MY_TOOLS": "My Tools",
   "SUBTITLE": "Manage the tools connected to your workspace",

@@ -99,6 +99,7 @@ public class PluginBridgeController : ControllerBase
                 plugin.Category,
                 plugin.Icon,
                 plugin.SsoEnabled,
+                plugin.IsActive,
                 accessUrl = adapter?.GetAccessUrl(),
                 addedAt = up.AddedAt
             };

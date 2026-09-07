@@ -48,9 +48,7 @@
                             <td><span class="task-title">{{ task.title }}</span></td>
                             <td><span class="tool-badge">{{ task.toolName }}</span></td>
                             <td>
-                                <span class="status-badge"
-                                    [style.background]="utils.getTaskStatusColor(task.status) + '20'"
-                                    [style.color]="utils.getTaskStatusColor(task.status)">
+                                <span class="status-badge" [ngClass]="utils.getTaskStatusClass(task.status)">
                                     {{ utils.getTaskStatusLabel(task.status) }}
                                 </span>
                             </td>

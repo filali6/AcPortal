@@ -287,7 +287,9 @@
   "EDIT_RULE": "Modifier la règle workflow",
   "CATEGORY": "Catégorie",
   "TASK_DESCRIPTION": "Description de la tâche",
-  "ADD_VALUE": "Ajouter une valeur..."
+  "ADD_VALUE": "Ajouter une valeur...",
+  "ICON_PREVIEW":"Aperçu",
+  "ICON":"Icône"
 },
 "TOOLS_PAGE": {
   "MY_TOOLS": "Mes outils",
