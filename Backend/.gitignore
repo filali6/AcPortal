@@ -49,3 +49,6 @@ secrets.json
 *.sqlite
 
 .dapr/
+# Secrets ASP.NET
+appsettings.Development.json
+**/appsettings.Development.json
