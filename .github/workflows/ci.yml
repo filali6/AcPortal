@@ -1,28 +1,29 @@
-name: CI Pipeline — ACPortal
+name: CI - Backend Tests
 
 on:
-  pull_request:
-    branches: [dev, main]
   push:
-    branches: [dev, main]
+    branches: [dev]
+  pull_request:
+    branches: [dev]
 
 jobs:
-  backend:
-    name: Backend Build & Tests
+  test:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
 
-      - name: Setup .NET 10
-        uses: actions/setup-dotnet@v3
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installer .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
 
-      - name: Restore
-        run: dotnet restore
+      - name: Restaurer les dépendances
+        run: dotnet restore Backend.Tests/Backend.Tests.csproj
 
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build Backend.Tests/Backend.Tests.csproj --no-restore --configuration Release
 
-      - name: Test
-        run: dotnet test --no-build --verbosity normal
+      - name: Lancer les tests
+        run: dotnet test Backend.Tests/Backend.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage"
