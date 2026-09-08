@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TabsService, Tab } from '../../services/tabs.service';
-
+import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-tabs-bar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,TranslateModule],
   templateUrl: './tabs-bar.component.html',
   styleUrl: './tabs-bar.component.scss'
 })

@@ -44,7 +44,9 @@ export class AuthService {
 
     const payload = token.split('.')[1];
     const decoded = JSON.parse(atob(payload));
+    
     console.log('Token décodé :', decoded);
+    console.log('TOKEN:', this.keycloak.getKeycloakInstance().token);
 
     return {
       id: decoded.sub,                          // l'ID Keycloak
@@ -52,7 +54,7 @@ export class AuthService {
       email: decoded.email,
       role: decoded.realm_access?.roles?.find((r: string) =>
         ['HeadOfCDS', 'PortfolioDirector', 'ProjectManager',
-         'BusinessTeamLead', 'TechnicalTeamLead', 'Consultant', 'DAF']
+         'BusinessTeamLead', 'TechnicalTeamLead', 'Consultant', 'DAF','SuperAdmin']
         .includes(r)
       )
     };

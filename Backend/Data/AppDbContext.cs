@@ -6,6 +6,8 @@ using Backend.Modules.Tools.Models;
 using Backend.Modules.Projects.Models;
 using Microsoft.EntityFrameworkCore;
 using Backend.Modules.Contracts.Models;
+using Backend.Modules.Notifications.Models;
+using Backend.Modules.Chat.Models;
 namespace Backend.Data;
 
 public class AppDbContext : DbContext
@@ -27,7 +29,12 @@ public class AppDbContext : DbContext
     public DbSet<ToolRole> ToolRoles => Set<ToolRole>();
     public DbSet<ConsultantToolRole> ConsultantToolRoles => Set<ConsultantToolRole>();
     public DbSet<UserPlugin> UserPlugins => Set<UserPlugin>();
+    public DbSet<PluginDefinition> PluginDefinitions => Set<PluginDefinition>();
     public DbSet<Contract> Contracts => Set<Contract>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<TaskComment> TaskComments { get; set; }
+    public DbSet<StepConfigFile> StepConfigFiles { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -152,6 +159,37 @@ public class AppDbContext : DbContext
                 v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
                 v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>()
             );
+        modelBuilder.Entity<Notification>()
+    .HasIndex(n => n.RecipientKeycloakId);
+
+        modelBuilder.Entity<ChatMessage>()
+            .HasIndex(m => m.StreamId);
+
+        modelBuilder.Entity<ChatMessage>()
+            .HasIndex(m => m.TaskId);
+        modelBuilder.Entity<PluginDefinition>()
+    .HasKey(p => p.DbId);
+
+        modelBuilder.Entity<PluginDefinition>()
+            .HasIndex(p => p.Id)
+            .IsUnique();
+
+        modelBuilder.Entity<TaskComment>(entity =>
+            {
+                entity.HasOne(c => c.Task)
+                    .WithMany(t=>t.Comments)
+                    .HasForeignKey(c => c.TaskId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(c => c.ParentComment)
+                    .WithMany(c => c.Replies)
+                    .HasForeignKey(c => c.ParentCommentId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(c => c.Mentions)
+                    .HasColumnType("jsonb");
+            });
 
     }
+    
 }

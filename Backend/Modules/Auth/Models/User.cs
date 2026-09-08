@@ -8,7 +8,8 @@ public enum GlobalRole
     BusinessTeamLead = 3,    
     TechnicalTeamLead = 4,   
     Consultant = 5   ,
-    DAF =6
+    DAF =6,
+    SuperAdmin = 7
 
 }
 
