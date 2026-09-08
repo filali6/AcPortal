@@ -1,0 +1,200 @@
+// Overlay
+.discussions-overlay {
+    position: fixed;
+    inset: 0;
+    background: transparent;
+    z-index: 299;
+}
+
+// Panel — same positioning as notif-dropdown
+.discussions-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 320px;
+    max-height: 480px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(-8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+
+    &.open {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: all;
+    }
+}
+
+// Header — same as notif-header
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 12px;
+    color: var(--accent);
+    cursor: pointer;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+// Body — same as notif-body
+.panel-body {
+    max-height: 400px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+// Section labels — same as notif-date-label
+.section-label {
+    padding: 8px 16px 4px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+// Items — same as notif-item
+.discussion-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+
+    &:hover {
+        background: #f8fafc;
+    }
+}
+
+// Avatars — same as notif-avatar
+.disc-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+}
+
+.stream-avatar {
+    background: var(--accent);
+}
+
+.task-avatar {
+    background: #1a1f2e;
+}
+
+.disc-info {
+    flex: 1;
+    overflow: hidden;
+}
+
+.disc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.disc-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.disc-time {
+    font-size: 11px;
+    color: #9ca3af;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.disc-project {
+    font-size: 11px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.disc-last {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.empty-section {
+    padding: 24px;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 13px;
+}
+.discussion-item {
+    &.unread {
+        background: #eff6ff;
+
+        .disc-name {
+            color: #0080FF;
+            font-weight: 700;
+        }
+
+        .disc-last {
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        &:hover {
+            background: #dbeafe;
+        }
+    }
+}
+
+.unread-dot {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #0080FF;
+    flex-shrink: 0;
+}

@@ -32,6 +32,7 @@ public class TasksService
                 t.AssignedTo,
                 t.CreatedAt,
                 t.ProjectId,
+                t.ContractId,
                 t.StepId,
                 StreamId = t.StreamId ?? _db.ProjectSteps
                     .Where(s => s.Id == t.StepId)
@@ -87,6 +88,30 @@ public class TasksService
                 t.Title,
                 t.Description,
                 t.ToolName,
+                t.Status,
+                t.AssignedTo,
+                t.CreatedAt,
+                t.ProjectId,
+                t.StepId,
+                t.ContractId,
+                StreamId = t.StreamId ?? _db.ProjectSteps
+                    .Where(s => s.Id == t.StepId)
+                    .Select(s => s.StreamId)
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
+    }
+    public async Task<List<object>> GetByStreamAsync(Guid streamId)
+    {
+        return await _db.AcpTasks
+            .Where(t => t.StreamId == streamId ||
+                _db.ProjectSteps.Any(s => s.Id == t.StepId && s.StreamId == streamId))
+            .OrderByDescending(t => t.CreatedAt)
+            .Select(t => (object)new
+            {
+                t.Id,
+                t.Title,
+                t.Description,
                 t.Status,
                 t.AssignedTo,
                 t.CreatedAt,

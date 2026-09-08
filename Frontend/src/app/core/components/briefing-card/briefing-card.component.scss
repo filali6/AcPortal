@@ -1,0 +1,54 @@
+.briefing-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #f0f4ff;
+    border: 1px solid #d0dbff;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+}
+
+.briefing-icon {
+    color: #3b5bdb;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.briefing-text {
+    margin: 0;
+    font-size: 14px;
+    color: #1e2a5e;
+    line-height: 1.6;
+}
+
+// Loading shimmer
+.briefing-loading {
+    .shimmer-icon {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #e0e7ff 25%, #c7d2fe 50%, #e0e7ff 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.4s infinite;
+    }
+
+    .shimmer-text {
+        flex: 1;
+        height: 16px;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #e0e7ff 25%, #c7d2fe 50%, #e0e7ff 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.4s infinite;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}

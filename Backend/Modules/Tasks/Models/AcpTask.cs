@@ -30,7 +30,12 @@ public class AcpTask
     public Guid? ProjectId { get; set; }
     public Guid? StepId { get; set; }
     public Guid? StreamId { get; set; }
-     
+
+    public Guid? ContractId { get; set; }
+    public ICollection<TaskComment> Comments { get; set; } = new List<TaskComment>();
+
+    public string? TeamsThreadId { get; set; }    
+    public string? TeamsThreadUrl { get; set; }  
 
 
 }

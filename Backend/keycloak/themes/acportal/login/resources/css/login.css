@@ -1,0 +1,169 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #c8e1f0 0%, #f5e6d8 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.login-card {
+    background: white;
+    border-radius: 24px;
+    padding: 58px 52px;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 4px 40px rgba(0, 0, 0, 0.06);
+}
+
+.acp-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 40px;
+}
+
+.logo-icon {
+    width: 48px;
+    height: 48px;
+    background: #1a1aff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-icon svg {
+    display: block;
+}
+
+.logo-text {
+    font-size: 30px;
+    font-weight: 700;
+    color: #0080FF;
+    line-height: 1;
+}
+
+.acp-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0d0d6b;
+    margin-bottom: 8px;
+}
+
+.acp-subtitle {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 32px;
+}
+
+.acp-field {
+    margin-bottom: 25px;
+}
+
+.acp-field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0d0d6b;
+    margin-bottom: 8px;
+}
+
+.acp-input-wrap {
+    position: relative;
+}
+
+.acp-input {
+    width: 100%;
+    border: 1.5px solid #e8e8e8;
+    border-radius: 30px;
+    padding: 10px 17px;
+    font-size: 13px;
+    color: #333;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+    background: white;
+    transition: border-color 0.2s;
+}
+
+.acp-input:focus {
+    border-color: #1a1aff;
+}
+
+.acp-input::placeholder {
+    color: #bbb;
+}
+
+.toggle-pw {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    display: flex;
+    align-items: center;
+    padding: 0;
+}
+
+.acp-alert {
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
+
+.acp-alert-error {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #dc2626;
+}
+
+.acp-alert-warning {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: #d97706;
+}
+
+.acp-btn {
+    width: 100%;
+    background: #0080FF;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    margin-top: 12px;
+    transition: background 0.2s;
+}
+
+.acp-btn:hover {
+    background: #0000cc;
+}
+
+.acp-btn:active {
+    transform: scale(0.98);
+}
+
+.acp-footer {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 11px;
+    color: #aaa;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}

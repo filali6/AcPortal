@@ -1,0 +1,99 @@
+<div class="chat-drawer" [class.open]="isOpen">
+
+    <!-- Header -->
+    <div class="drawer-head">
+        <button class="drawer-close" (click)="close()">✕</button>
+        <div class="drawer-task-name">{{ title }}</div>
+        <div class="drawer-badges" *ngIf="taskStatus !== null">
+            <span class="status-badge" [style.background]="getStatusColor(taskStatus!) + '20'"
+                [style.color]="getStatusColor(taskStatus!)">
+                {{ getStatusLabel(taskStatus!) }}
+            </span>
+            <span class="tool-badge" *ngIf="toolName">{{ toolName }}</span>
+        </div>
+    </div>
+
+    <!-- Stream Members -->
+    <div class="members-bar" *ngIf="streamMembers.length > 0">
+        <span class="members-label">Team</span>
+        <div class="members-avatars">
+            <div class="member-avatar" *ngFor="let m of streamMembers" [title]="m.fullName + ' — ' + m.role">
+                {{ getInitialsFrom(m.fullName) }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Comments List -->
+    <div class="comments-area">
+        <div class="empty-comments" *ngIf="comments.length === 0">
+            No comments yet. Be the first to comment.
+        </div>
+
+        <ng-container *ngFor="let comment of comments">
+            <div class="comment-item">
+                <div class="comment-avatar">{{ getInitialsFrom(comment.authorName) }}</div>
+                <div class="comment-body">
+                    <div class="comment-header">
+                        <span class="comment-author">{{ comment.authorName }}</span>
+                        <span class="comment-time">{{ getTime(comment.createdAt) }}</span>
+                        <button class="reply-btn" (click)="setReply(comment)">Reply</button>
+                        <button class="delete-btn" *ngIf="comment.authorKeycloakId === currentUserId"
+                            (click)="deleteComment(comment.id)">✕</button>
+                    </div>
+                <div class="comment-meta">
+                    <p class="comment-content" [innerHTML]="highlightMentions(comment.content)"></p>
+                    <span class="teams-badge" *ngIf="comment.fromTeams">via Teams</span>
+                </div>
+
+                    <!-- Replies -->
+                    <div class="reply-item" *ngFor="let reply of comment.replies">
+                        <div class="comment-avatar small">{{ getInitialsFrom(reply.authorName) }}</div>
+                        <div class="comment-body">
+                            <div class="comment-header">
+                                <span class="comment-author">{{ reply.authorName }}</span>
+                                <span class="comment-time">{{ getTime(reply.createdAt) }}</span>
+                                <button class="delete-btn" *ngIf="reply.authorKeycloakId === currentUserId"
+                                    (click)="deleteComment(reply.id)">✕</button>
+                            </div>
+                            <div class="comment-meta">
+                                <p class="comment-content" [innerHTML]="highlightMentions(reply.content)"></p>
+                                <span class="teams-badge" *ngIf="reply.fromTeams">via Teams</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </ng-container>
+    </div>
+
+    <!-- Reply indicator -->
+    <div class="reply-indicator" *ngIf="replyingTo">
+        <span>Replying to <strong>{{ replyingTo.authorName }}</strong></span>
+        <button (click)="cancelReply()">✕</button>
+    </div>
+
+    <!-- Compose -->
+    <div class="drawer-compose">
+
+        <!-- Mention dropdown — inside compose for correct positioning -->
+        <div class="mention-dropdown" *ngIf="showMentions">
+            <div class="mention-item" *ngFor="let m of filteredMembers" (mousedown)="selectMention(m)">
+                <div class="mention-avatar">{{ getInitialsFrom(m.fullName) }}</div>
+                <div class="mention-info">
+                    <span class="mention-name">{{ m.fullName }}</span>
+                    <span class="mention-role">{{ m.role }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="compose-row">
+            <input type="text" [(ngModel)]="newComment" (input)="onCommentInput($event)" (keyup.enter)="postComment()"
+                placeholder="Write a comment... use @ to mention" class="compose-input">
+            <button class="compose-send" (click)="postComment()" [disabled]="!newComment.trim()">
+                →
+            </button>
+        </div>
+    </div>
+
+</div>

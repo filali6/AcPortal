@@ -52,6 +52,21 @@ export const routes: Routes = [
       import('./pages/consultant/consultant.component')
         .then(m => m.ConsultantComponent)
   },
+  {
+    path: 'consultant',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/consultant/consultant.component')
+        .then(m => m.ConsultantComponent)
+  },
+  {
+  path: 'super-admin',
+  canActivate: [authGuard],
+  loadComponent: () =>
+    import('./pages/super-admin/super-admin.component')
+      .then(m => m.SuperAdminComponent)
+},
+
 
   // Plugins → sans sidebar
   {
@@ -104,6 +119,13 @@ export const routes: Routes = [
     loadComponent: () =>
         import('./pages/team-lead/team-lead.component')
             .then(m => m.TeamLeadComponent)
+},
+{
+    path: 'discussions',
+    canActivate: [authGuard],
+    loadComponent: () =>
+        import('./pages/discussions/discussions.component')
+            .then(m => m.DiscussionsComponent)
 },
 
   // Route inconnue

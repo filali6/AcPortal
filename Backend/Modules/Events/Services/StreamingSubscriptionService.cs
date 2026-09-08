@@ -111,7 +111,8 @@ public class StreamingSubscriptionService : IHostedService
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Erreur sur {Topic}", topic);
+                    _logger.LogError(ex, "Erreur complète sur {Topic}: {Message} \n {StackTrace}",
+      topic, ex.Message, ex.StackTrace);
                     return TopicResponseAction.Retry;
                 }
             },

@@ -1,0 +1,25 @@
+{
+  "realm": "acp-portal",
+  "enabled": true,
+  "registrationAllowed": false,
+  "clients": [
+    {
+      "clientId": "acp-frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "redirectUris": ["http://localhost:4200/*"],
+      "webOrigins": ["http://localhost:4200"]
+    }
+  ],
+  "roles": {
+    "realm": [
+      { "name": "HeadOfCDS" },
+      { "name": "PortfolioDirector" },
+      { "name": "ProjectManager" },
+      { "name": "BusinessTeamLead" },
+      { "name": "TechnicalTeamLead" },
+      { "name": "Consultant" },
+      { "name": "DAF" }
+    ]
+  } }

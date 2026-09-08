@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { KeycloakService } from 'keycloak-angular';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [],
+  imports: [TranslateModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
@@ -46,7 +47,8 @@ export class LoginComponent implements OnInit {
     } else if (role === 'Consultant') {
       this.router.navigate(['/consultant']);
     } else if (role === 'DAF') {
-      this.router.navigate(['/daf']);
+      this.router.navigate(['/daf']);} else if (role === 'SuperAdmin') {
+    this.router.navigate(['/super-admin']);
     } else {
       this.keycloak.login();
     }
