@@ -43,10 +43,13 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_CACHE_THEME: false      
+      KC_CACHE_TEMPLATES: false     
     command: start-dev --import-realm
     volumes:
       - keycloak-data:/opt/keycloak/data
       - ./acp-realm.json:/opt/keycloak/data/import/acp-realm.json
+      - ./keycloak/themes:/opt/keycloak/themes
 
    
 

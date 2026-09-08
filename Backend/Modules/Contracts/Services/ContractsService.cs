@@ -102,4 +102,59 @@ public class ContractsService
             contracts.Count(c => !c.ProjectId.HasValue)
         );
     }
+    public async Task<Contract?> UpdateAsync(Guid contractId, string clientName, string description, int status, List<IFormFile>? newFiles)
+    {
+        var contract = await _db.Contracts.FindAsync(contractId);
+        if (contract == null) return null;
+
+        contract.ClientName = clientName;
+        contract.Description = description;
+        contract.Status = (ContractStatus)status;
+
+        if (newFiles != null && newFiles.Count > 0)
+        {
+            var uploadsPath = Path.Combine(_env.ContentRootPath, "uploads");
+            Directory.CreateDirectory(uploadsPath);
+
+            foreach (var file in newFiles)
+            {
+                if (file.Length > 0)
+                {
+                    var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+                    var filePath = Path.Combine(uploadsPath, fileName);
+                    using var stream = new FileStream(filePath, FileMode.Create);
+                    await file.CopyToAsync(stream);
+                    contract.FilesPaths.Add(fileName);
+                }
+            }
+        }
+
+        // Forcer EF Core à détecter le changement sur la liste
+        var updatedPaths = contract.FilesPaths.ToList();
+        contract.FilesPaths = updatedPaths;
+        _db.Entry(contract).State = EntityState.Modified;
+
+        await _db.SaveChangesAsync();
+        return contract;
+    }
+
+    public async Task<Contract?> DeleteFileAsync(Guid contractId, string fileName)
+    {
+        var contract = await _db.Contracts.FindAsync(contractId);
+        if (contract == null) return null;
+
+        var filePath = Path.Combine(_env.ContentRootPath, "uploads", fileName);
+        if (System.IO.File.Exists(filePath))
+            System.IO.File.Delete(filePath);
+
+        contract.FilesPaths.Remove(fileName);
+
+        // Forcer EF Core à détecter le changement sur la liste
+        var updatedPaths = contract.FilesPaths.ToList();
+        contract.FilesPaths = updatedPaths;
+        _db.Entry(contract).State = EntityState.Modified;
+
+        await _db.SaveChangesAsync();
+        return contract;
+    }
 }

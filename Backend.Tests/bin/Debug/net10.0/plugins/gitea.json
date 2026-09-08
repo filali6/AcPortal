@@ -1,0 +1,10 @@
+{
+  "id": "gitea",
+  "name": "Gitea",
+  "description": "Gestion de code source et versioning",
+  "category": "git",
+  "icon": "💻",
+  "baseUrlEnvKey": "PLUGIN_GITEA_URL",
+  "adapterType": "gitea",
+  "ssoEnabled": true
+}

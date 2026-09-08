@@ -1,80 +1,172 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { AuthService } from '../../core/services/auth.service';
 import { ContractsService } from '../../core/services/contracts.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { TabsService } from '../../core/services/tabs.service';
+import { ToastService } from '../../core/services/toast.service';
+import { Subscription } from 'rxjs';
+import { Chart, registerables } from 'chart.js';
+import { UtilsService } from '../../core/services/utils.service';
+import { ModalComponent } from '../../core/components/modal/modal.component';
+Chart.register(...registerables);
+import { ChartService } from '../../core/services/chart.service';
+import { TranslateModule,TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-daf',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,ModalComponent,TranslateModule],
   templateUrl: './daf.component.html',
   styleUrl: './daf.component.scss'
 })
-export class DafComponent implements OnInit {
+export class DafComponent implements OnInit, OnDestroy {
 
-  activeTabId = 'tasks';
-  stats = { total: 0, projectCreated: 0, pending: 0 };
+  activeTabId: string = 'tasks';
+  tabs: { id: string; title: string }[] = [];
   contracts: any[] = [];
   loading = false;
-  showNewContractForm = false;
-contractCreated = false;
 
+  // Modal nouveau contrat
+  showNewContractModal = false;
+  newContract = { clientName: '', description: '', files: [] as File[] };
+  newContractLoading = false;
+
+  // Données par onglet
   openTabs: { [tabId: string]: any } = {};
 
-  // Formulaire nouveau contrat
-  newContract = {
-    clientName: '',
-    description: '',
-    files: [] as File[]
-  };
+ statsBottom = {
+  total: 0,
+  converted: 0,
+  conversionRate: 0,
+  avgDays: 0,
+  waitingOver7Days: 0
+};
+  
 
-  // Formulaire ajout fichiers
-  addFilesData: { [contractId: string]: File[] } = {};
-
-  successMessage = '';
-  errorMessage = '';
+  private donutChart: Chart | null = null;
+  private barChart: Chart | null = null;
+  private subs: Subscription[] = [];
 
   constructor(
     private contractsService: ContractsService,
-    private authService: AuthService,
-    private tabsService: TabsService
+    private notificationService: NotificationService,
+    private tabsService: TabsService,
+    private toastService: ToastService,
+    public utils : UtilsService,
+    private chartService:ChartService,
+    private translate:TranslateService
   ) {}
 
   ngOnInit(): void {
     this.loadData();
-    this.tabsService.activeTabId.subscribe(id => this.activeTabId = id);
+    this.subs.push(
+      this.tabsService.activeTabId.subscribe(id => this.activeTabId = id),
+      this.tabsService.tabs.subscribe(tabs => this.tabs = tabs),
+      this.notificationService.notifications$.subscribe(() => this.loadData())
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subs.forEach(s => s.unsubscribe());
   }
 
   loadData(): void {
     this.loading = true;
     this.contractsService.getMyContracts().subscribe({
       next: (data) => {
-        this.stats = data.stats;
         this.contracts = data.contracts;
+        this.computeBottomStats();
+
+        Object.keys(this.openTabs).forEach(tabId => {
+          const contractId = this.openTabs[tabId]?.contract?.id;
+          if (contractId) {
+            const updated = this.contracts.find(c => c.id === contractId);
+            if (updated) this.openTabs[tabId].contract = { ...updated };
+          }
+        });
+
         this.loading = false;
       },
       error: () => this.loading = false
     });
   }
 
-  openNewContractTab(): void {
-  this.tabsService.setActiveTab('tasks');
-  this.showNewContractForm = true;
-}
+  
+
+   
+
+  closeNewContractModal(): void {
+    this.showNewContractModal = false;
+    this.newContract = { clientName: '', description: '', files: [] };
+  }
+
+  onNewFilesSelected(event: any): void {
+    const newFiles = Array.from(event.target.files) as File[];
+    this.newContract.files = [...this.newContract.files, ...newFiles];
+  }
+
+  createContract(): void {
+    if (!this.newContract.clientName.trim()) {
+      this.toastService.show('Client name is required', 'error');
+      return;
+    }
+    if (!this.newContract.description.trim()) {
+      this.toastService.show('Description is required', 'error');
+      return;
+    }
+    if (this.newContract.files.length === 0) {
+      this.toastService.show('At least one file is required', 'error');
+      return;
+    }
+
+    this.newContractLoading = true;
+    const formData = new FormData();
+    formData.append('clientName', this.newContract.clientName);
+    formData.append('description', this.newContract.description);
+    this.newContract.files.forEach(f => formData.append('files', f));
+
+    this.contractsService.create(formData).subscribe({
+      next: () => {
+        this.toastService.show('Contract signed — HeadOfCDS notified!', 'success');
+        this.newContractLoading = false;
+        this.closeNewContractModal();
+        this.loadData();
+      },
+      error: () => {
+        this.toastService.show('Error signing contract', 'error');
+        this.newContractLoading = false;
+      }
+    });
+  }
+
+   
+
+  setActiveTab(tabId: string): void {
+    this.tabsService.setActiveTab(tabId);
+  }
 
   openContractTab(contract: any): void {
     const tabId = `contract-${contract.id}`;
     if (!this.openTabs[tabId]) {
-      this.openTabs[tabId] = { contract, addFiles: [] };
+      this.openTabs[tabId] = {
+        contract: { ...contract },
+        editMode: true, // ouvert directement en mode édition
+        editData: {
+          clientName: contract.clientName,
+          description: contract.description,
+          status: contract.status,
+          newFiles: [] as File[]
+        }
+      };
     }
-    this.tabsService.openTab({
-      id: tabId,
-      title: contract.clientName,
-      type: 'create-project'
-    });
+    this.tabsService.openTab({ id: tabId, title: contract.clientName, type: 'create-project' });
+  }
+
+  closeTab(tabId: string, event: MouseEvent): void {
+    event.stopPropagation();
+    delete this.openTabs[tabId];
+    this.tabsService.closeTab(tabId);
   }
 
   getOpenTabIds(): string[] {
@@ -85,53 +177,66 @@ contractCreated = false;
     return this.openTabs[tabId] || null;
   }
 
-  onFilesSelected(event: any): void {
-    this.newContract.files = Array.from(event.target.files);
+  cancelEdit(tabId: string): void {
+    const tab = this.openTabs[tabId];
+    if (!tab) return;
+    tab.editMode = false;
+    tab.editData = {
+      clientName: tab.contract.clientName,
+      description: tab.contract.description,
+      status: tab.contract.status,
+      newFiles: []
+    };
   }
 
-  onAddFilesSelected(event: any, contractId: string): void {
-    this.addFilesData[contractId] = Array.from(event.target.files);
+  onEditFilesSelected(event: any, tabId: string): void {
+    const newFiles = Array.from(event.target.files) as File[];
+    this.openTabs[tabId].editData.newFiles = [
+      ...this.openTabs[tabId].editData.newFiles,
+      ...newFiles
+    ];
   }
 
-  createContract(): void {
-  if (!this.newContract.clientName) {
-    this.errorMessage = 'Nom du client obligatoire';
-    return;
-  }
-  this.loading = true;
-  this.errorMessage = '';
+  saveContract(tabId: string): void {
+    const tab = this.openTabs[tabId];
+    if (!tab) return;
 
-  const formData = new FormData();
-  formData.append('clientName', this.newContract.clientName);
-  formData.append('description', this.newContract.description);
-  this.newContract.files.forEach(f => formData.append('files', f));
-
-  this.contractsService.create(formData).subscribe({
-    next: () => {
-      this.successMessage = 'Contrat signé — HeadOfCDS notifié !';
-      this.loading = false;
-      this.contractCreated = true;
-      this.loadData();
-    },
-    error: () => {
-      this.errorMessage = 'Erreur lors de la signature';
-      this.loading = false;
+    if (!tab.editData.description.trim()) {
+      this.toastService.show('Description is required', 'error');
+      return;
     }
-  });
-}
-
-  addFiles(contractId: string): void {
-    const files = this.addFilesData[contractId];
-    if (!files?.length) return;
 
     const formData = new FormData();
-    files.forEach(f => formData.append('files', f));
+    formData.append('clientName', tab.contract.clientName);
+    formData.append('description', tab.editData.description);
+    formData.append('status', tab.contract.status.toString());
+    tab.editData.newFiles?.forEach((f: File) => formData.append('newFiles', f));
 
-    this.contractsService.addFiles(contractId, formData).subscribe({
-      next: () => {
-        this.successMessage = 'Fichiers ajoutés !';
+    this.contractsService.update(tab.contract.id, formData).subscribe({
+      next: (updated) => {
+        this.openTabs[tabId].contract = { ...updated };
+        this.openTabs[tabId].editMode = false;
+        this.toastService.show('Contract updated!', 'success');
         this.loadData();
-        delete this.addFilesData[contractId];
+      },
+      error: () => {
+        this.toastService.show('Error updating contract', 'error');
+      }
+    });
+  }
+
+  deleteFile(tabId: string, fileName: string): void {
+    const tab = this.openTabs[tabId];
+    if (!tab) return;
+
+    this.contractsService.deleteFile(tab.contract.id, encodeURIComponent(fileName)).subscribe({
+      next: (updated) => {
+        this.openTabs[tabId].contract = { ...updated };
+        this.toastService.show('File deleted!', 'success');
+        this.loadData();
+      },
+      error: () => {
+        this.toastService.show('Error deleting file', 'error');
       }
     });
   }
@@ -140,27 +245,77 @@ contractCreated = false;
     return this.contractsService.getFileUrl(fileName);
   }
 
-  getStatusLabel(status: number): string {
-    switch (status) {
-      case 0: return 'Signé';
-      case 1: return 'Projet créé';
-      case 2: return 'En cours';
-      default: return '—';
-    }
+  getFileName(fullPath: string): string {
+    return fullPath.split('_').slice(1).join('_') || fullPath;
   }
 
-  getStatusColor(status: number): string {
-    switch (status) {
-      case 0: return '#f59e0b';
-      case 1: return '#10b981';
-      case 2: return '#6366f1';
-      default: return '#888';
-    }
-  }
-  endNewContract(): void {
-  this.showNewContractForm = false;
-  this.contractCreated = false;
-  this.newContract = { clientName: '', description: '', files: [] };
-  this.successMessage = '';
+   
+
+  computeBottomStats(): void {
+  const converted = this.contracts.filter(c => c.projectId);
+
+  this.statsBottom.total = this.contracts.length;
+  this.statsBottom.converted = converted.length;
+  this.statsBottom.conversionRate = this.contracts.length
+    ? Math.round((converted.length / this.contracts.length) * 100)
+    : 0;
+
+  this.statsBottom.avgDays = converted.length
+    ? Math.round(
+        converted.reduce((sum, c) => sum + this.getDays(c.createdAt), 0) / converted.length
+      )
+    : 0;
+
+  this.statsBottom.waitingOver7Days = this.contracts.filter(c => this.isDelayed(c)).length;
+
+  setTimeout(() => this.renderCharts(), 100);
 }
+
+  renderCharts(): void {
+  this.donutChart = this.chartService.createDoughnut(
+    'donutChart',
+    [
+      this.translate.instant('CONTRACTS.CONVERTED'),
+      this.translate.instant('CONTRACTS.WAITING'),
+      this.translate.instant('CONTRACTS.DELAYED')
+    ],
+    [
+      this.contracts.filter(c => c.projectId).length,
+      this.contracts.filter(c => !c.projectId && !this.isDelayed(c)).length,
+      this.contracts.filter(c => this.isDelayed(c)).length
+    ],
+    ['#10b981', '#f59e0b', '#ef4444'],
+    this.donutChart
+  );
+
+  this.barChart = this.chartService.createBar(
+    'barChart',
+    this.chartService.getLast6MonthsLabels(),
+    this.chartService.getLast6MonthsData(this.contracts, 'createdAt'),
+    '#3b82f6',
+    this.barChart
+  );
+}
+   
+  openNewContractModal(): void {
+  this.newContract = { clientName: '', description: '', files: [] };
+  this.showNewContractModal = true;
+}
+getDays(createdAt: string): number {
+  const diff = new Date().getTime() - new Date(createdAt).getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+isDelayed(contract: any): boolean {
+  return !contract.projectId && this.getDays(contract.createdAt) > 7;
+}
+closeContractTab(tabId: string): void {
+  delete this.openTabs[tabId];
+  this.tabsService.closeTab(tabId);
+}
+  
+
+ 
+  
+ 
 }

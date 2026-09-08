@@ -1,0 +1,97 @@
+<div class="tab-content">
+
+    <!-- Panel detail — au dessus -->
+    <div class="inline-panel" *ngIf="selectedProject">
+        <div class="inline-panel-header">
+            <h2>{{ selectedProject.name }}</h2>
+            <button class="panel-close" (click)="selectedProject = null">✕</button>
+        </div>
+
+        <div class="panel-meta">
+            <span class="pm-badge" *ngIf="selectedProject.projectManager">
+                {{ 'PROJECTS.PM' | translate }}: {{ selectedProject.projectManager.fullName }}
+            </span>
+            <span class="text-secondary" *ngIf="selectedProject.targetDate">
+                {{ 'PROJECTS.TARGET_DATE' | translate }}: {{ selectedProject.targetDate | date:'dd/MM/yyyy' }}
+            </span>
+        </div>
+
+        <div class="progress-section">
+            <div class="progress-label-row">
+                <span>{{ 'PROJECTS.OVERALL_PROGRESS' | translate }}</span>
+                <span>{{ selectedProject.progress }}%</span>
+            </div>
+            <div class="progress-wrap">
+                <div class="progress-bar" [style.width.%]="selectedProject.progress"></div>
+            </div>
+            <span class="text-secondary">
+                {{ selectedProject.doneTasks }}/{{ selectedProject.totalTasks }} {{ 'PROJECTS.TASKS_DONE' | translate }}
+            </span>
+        </div>
+
+        <div class="streams-list">
+            <div class="stream-card" *ngFor="let stream of selectedProject.streams">
+                <div class="stream-card-header">
+                    <span class="stream-name">{{ stream.name }}</span>
+                    <span class="stream-progress">{{ stream.streamProgress }}%</span>
+                </div>
+                <div class="progress-wrap" style="margin-bottom: 8px">
+                    <div class="progress-bar" [style.width.%]="stream.streamProgress"></div>
+                </div>
+                <div class="stream-leads">
+                    <span class="lead-badge" *ngIf="stream.businessTeamLead">
+                        {{ 'PROJECTS.BTL' | translate }}: {{ stream.businessTeamLead.fullName }}
+                    </span>
+                    <span class="lead-badge" *ngIf="stream.technicalTeamLead">
+                        {{ 'PROJECTS.TTL' | translate }}: {{ stream.technicalTeamLead.fullName }}
+                    </span>
+                </div>
+                <div class="members-row" *ngIf="stream.members?.length > 0">
+                    <span class="member-chip" *ngFor="let m of stream.members">{{ m.fullName }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="card">
+        <div class="card-header">
+            <h2>{{ 'PROJECTS.TITLE' | translate }} ({{ filteredProjects.length }})</h2>
+            <div class="filter-badge" *ngIf="portfolioFilterName">
+                {{ 'PORTFOLIOS.TITLE' | translate }}: {{ portfolioFilterName }}
+                <button class="clear-filter" (click)="portfolioFilter = null; portfolioFilterName = null">✕</button>
+            </div>
+        </div>
+        <div *ngIf="loading" class="empty">{{ 'COMMON.LOADING' | translate }}</div>
+        <div class="table-wrapper" *ngIf="!loading">
+            <table class="projects-table">
+                <thead>
+                    <tr>
+                        <th>{{ 'COMMON.NAME' | translate }}</th>
+                        <th>{{ 'PROJECTS.PM' | translate }}</th>
+                        <th>{{ 'PROJECTS.TARGET_DATE' | translate }}</th>
+                        <th>{{ 'PROJECTS.OVERALL_PROGRESS' | translate }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let p of filteredProjects" class="clickable" [class.row-selected]="selectedProject?.id === p.id"
+                        (click)="selectProject(p)">
+                        <td class="item-name">{{ p.name }}</td>
+                        <td class="text-secondary">{{ p.projectManagerName || '—' }}</td>
+                        <td class="text-secondary">{{ p.targetDate ? (p.targetDate | date:'dd/MM/yyyy') : '—' }}</td>
+                        <td>
+                            <div class="progress-cell">
+                                <div class="progress-wrap-sm">
+                                    <div class="progress-bar-sm" [style.width.%]="p.progress || 0"></div>
+                                </div>
+                                <span class="progress-pct-sm">{{ p.progress || 0 }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty" *ngIf="!loading && filteredProjects.length === 0">{{ 'PROJECTS.EMPTY' | translate }}</div>
+    </div>
+
+</div>

@@ -17,10 +17,7 @@ public class WorkflowRulesService
     private List<WorkflowRule> LoadRules()
     {
         // cherche le fichier à la racine du build
-        var path = Path.Combine(
-            AppContext.BaseDirectory,
-            "workflow-config.json"
-        );
+        var path = Path.Combine(Directory.GetCurrentDirectory(), "workflow-config.json");
 
         if (!File.Exists(path))
         {
@@ -59,4 +56,9 @@ public class WorkflowRulesService
     }
 
     public List<WorkflowRule> GetAllRules() => _rules;
+    public void ReloadRules()
+    {
+        _rules.Clear();
+        _rules.AddRange(LoadRules());
+    }
 }
