@@ -1,0 +1,10 @@
+{
+  "id": "outline",
+  "name": "Outline",
+  "description": "Documentation et wiki collaboratif",
+  "category": "docs",
+  "icon": "📄",
+  "baseUrlEnvKey": "PLUGIN_OUTLINE_URL",
+  "adapterType": "outline",
+  "ssoEnabled": true
+}
