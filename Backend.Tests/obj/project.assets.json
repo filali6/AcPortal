@@ -487,13 +487,13 @@
           }
         }
       },
-      "Microsoft.EntityFrameworkCore.Relational/10.0.0": {
+      "Microsoft.EntityFrameworkCore.Relational/10.0.3": {
         "type": "package",
         "dependencies": {
-          "Microsoft.EntityFrameworkCore": "10.0.0",
-          "Microsoft.Extensions.Caching.Memory": "10.0.0",
-          "Microsoft.Extensions.Configuration.Abstractions": "10.0.0",
-          "Microsoft.Extensions.Logging": "10.0.0"
+          "Microsoft.EntityFrameworkCore": "10.0.3",
+          "Microsoft.Extensions.Caching.Memory": "10.0.3",
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.3",
+          "Microsoft.Extensions.Logging": "10.0.3"
         },
         "compile": {
           "lib/net10.0/Microsoft.EntityFrameworkCore.Relational.dll": {
@@ -2257,10 +2257,10 @@
         "microsoft.entityframeworkcore.inmemory.nuspec"
       ]
     },
-    "Microsoft.EntityFrameworkCore.Relational/10.0.0": {
-      "sha512": "A3MX1ee7RDxWCUdx/KqP+74fbksz0UIhkVZh56YHvbPkEKsffCXgHU3LGkRDwqR/MrBNWLCWC/IVX79tzM30ZA==",
+    "Microsoft.EntityFrameworkCore.Relational/10.0.3": {
+      "sha512": "Pmh60OK9neVr/M0FJwm9hlzm2bD4Kd65SID8E6SP5c90tExNgXwORrlEWl0oGU/ig9ifpNN4PSpIrnHNozlT5w==",
       "type": "package",
-      "path": "microsoft.entityframeworkcore.relational/10.0.0",
+      "path": "microsoft.entityframeworkcore.relational/10.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2268,7 +2268,7 @@
         "PACKAGE.md",
         "lib/net10.0/Microsoft.EntityFrameworkCore.Relational.dll",
         "lib/net10.0/Microsoft.EntityFrameworkCore.Relational.xml",
-        "microsoft.entityframeworkcore.relational.10.0.0.nupkg.sha512",
+        "microsoft.entityframeworkcore.relational.10.0.3.nupkg.sha512",
         "microsoft.entityframeworkcore.relational.nuspec"
       ]
     },
@@ -3839,6 +3839,7 @@
       "Backend >= 1.0.0",
       "FluentAssertions >= 6.12.1",
       "Microsoft.EntityFrameworkCore.InMemory >= 10.0.11",
+      "Microsoft.EntityFrameworkCore.Relational >= 10.0.3",
       "Microsoft.Extensions.Logging.Abstractions >= 10.0.11",
       "Microsoft.NET.Test.Sdk >= 17.14.1",
       "Moq >= 4.20.72",
@@ -3853,11 +3854,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\Backend.Tests.csproj",
+      "projectUniqueName": "c:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\Backend.Tests.csproj",
       "projectName": "Backend.Tests",
-      "projectPath": "C:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\Backend.Tests.csproj",
+      "projectPath": "c:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\Backend.Tests.csproj",
       "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\obj\\",
+      "outputPath": "c:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -3872,8 +3873,8 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "projectReferences": {
-            "C:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend\\Backend.csproj": {
-              "projectPath": "C:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend\\Backend.csproj"
+            "c:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend\\Backend.csproj": {
+              "projectPath": "c:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend\\Backend.csproj"
             }
           }
         }
@@ -3901,6 +3902,10 @@
           "Microsoft.EntityFrameworkCore.InMemory": {
             "target": "Package",
             "version": "[10.0.11, )"
+          },
+          "Microsoft.EntityFrameworkCore.Relational": {
+            "target": "Package",
+            "version": "[10.0.3, )"
           },
           "Microsoft.Extensions.Logging.Abstractions": {
             "target": "Package",

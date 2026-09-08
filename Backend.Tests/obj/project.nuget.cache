@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "4sgXwipNUwI=",
+  "dgSpecHash": "TqaEGn0ergQ=",
   "success": true,
-  "projectFilePath": "C:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\Backend.Tests.csproj",
+  "projectFilePath": "c:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\Backend.Tests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\HP\\.nuget\\packages\\bcrypt.net-next\\4.1.0\\bcrypt.net-next.4.1.0.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
@@ -27,7 +27,7 @@
     "C:\\Users\\HP\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\10.0.11\\microsoft.entityframeworkcore.abstractions.10.0.11.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\microsoft.entityframeworkcore.analyzers\\10.0.11\\microsoft.entityframeworkcore.analyzers.10.0.11.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\microsoft.entityframeworkcore.inmemory\\10.0.11\\microsoft.entityframeworkcore.inmemory.10.0.11.nupkg.sha512",
-    "C:\\Users\\HP\\.nuget\\packages\\microsoft.entityframeworkcore.relational\\10.0.0\\microsoft.entityframeworkcore.relational.10.0.0.nupkg.sha512",
+    "C:\\Users\\HP\\.nuget\\packages\\microsoft.entityframeworkcore.relational\\10.0.3\\microsoft.entityframeworkcore.relational.10.0.3.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\microsoft.extensions.apidescription.server\\10.0.0\\microsoft.extensions.apidescription.server.10.0.0.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\microsoft.extensions.caching.abstractions\\10.0.11\\microsoft.extensions.caching.abstractions.10.0.11.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\microsoft.extensions.caching.memory\\10.0.11\\microsoft.extensions.caching.memory.10.0.11.nupkg.sha512",
@@ -80,9 +80,9 @@
       "code": "NU1903",
       "level": "Warning",
       "message": "Le package 'Microsoft.OpenApi' 2.5.0 présente une vulnérabilité de gravité élevé(e) connue, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc.",
-      "projectPath": "C:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\Backend.Tests.csproj",
+      "projectPath": "c:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\Backend.Tests.csproj",
       "warningLevel": 1,
-      "filePath": "C:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\Backend.Tests.csproj",
+      "filePath": "c:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\Backend.Tests.csproj",
       "libraryId": "Microsoft.OpenApi",
       "targetGraphs": [
         "net10.0"
