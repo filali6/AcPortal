@@ -11,7 +11,7 @@ import { TabsService } from '../../core/services/tabs.service';
 import { ToastService } from '../../core/services/toast.service';
 import { UtilsService } from '../../core/services/utils.service';
 import { ChartService } from '../../core/services/chart.service';
-import { LucideAngularModule, ChevronRight, Layers, Edit, Sparkles, FileUp, Check, Send ,Trash2} from 'lucide-angular';
+import { LucideAngularModule, ChevronRight, Layers, Edit, Sparkles, FileUp, Check, Send ,Trash2, Plus,ChevronUp,ChevronDown,Edit2,X} from 'lucide-angular';
 import { Subscription } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
@@ -79,6 +79,7 @@ selectedHistoryPlan: any = null;
   generatingPlan = false;
   refiningPlan = false;
   approvingPlan = false;
+  openStreamTasks = new Set<string>();
 
   private donutChart: Chart | null = null;
   private barChart: Chart | null = null;
@@ -99,6 +100,11 @@ selectedHistoryPlan: any = null;
   readonly Check = Check;
   readonly Send = Send;
   readonly Trash2=Trash2;
+  readonly ChevronUp=ChevronUp;
+  readonly ChevronDown=ChevronDown;
+  readonly Edit2=Edit2;
+  readonly X=X;
+  readonly Plus=Plus;
 
   constructor(
     private authService: AuthService,
@@ -652,5 +658,24 @@ selectedHistoryPlan: any = null;
 
 viewHistoryPlan(proposal: any): void {
   this.selectedHistoryPlan = proposal;
+}
+isOverdue(date: string): boolean {
+  return new Date(date) < new Date();
+}
+
+isDueSoon(date: string): boolean {
+  const diff = new Date(date).getTime() - new Date().getTime();
+  return diff > 0 && diff < 7 * 24 * 60 * 60 * 1000; // 7 jours
+}
+toggleStreamTasks(streamId: string): void {
+  if (this.openStreamTasks.has(streamId)) {
+    this.openStreamTasks.delete(streamId);
+  } else {
+    this.openStreamTasks.add(streamId);
+  }
+}
+
+isStreamTasksOpen(streamId: string): boolean {
+  return this.openStreamTasks.has(streamId);
 }
 }

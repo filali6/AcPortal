@@ -1,5 +1,4 @@
 <div class="pm-page">
-    <!-- <app-briefing-card /> -->
 
     <!-- TASK INBOX -->
     <ng-container *ngIf="activeTabId === 'tasks'">
@@ -112,16 +111,27 @@
     <!-- MY PROJECTS TAB -->
     <ng-container *ngIf="activeTabId === 'my-projects'">
 
-        <!-- Panel detail -->
+        <!-- Panel detail projet -->
         <div class="project-detail-panel" *ngIf="selectedProjectDetail">
             <div class="panel-header">
                 <div class="panel-header-left">
                     <h2>{{ selectedProjectDetail.name }}</h2>
                     <div class="panel-meta">
-                        
+                        <!-- Barre progression globale projet -->
+                        <div class="progress-cell">
+                            <div class="progress-wrap-sm" style="width:120px">
+                                <div class="progress-bar-sm" [style.width.%]="selectedProjectDetail.progress ?? 0"
+                                    [style.background]="getProgressColor(selectedProjectDetail.progress ?? 0)">
+                                </div>
+                            </div>
+                            <span class="progress-pct-sm"
+                                [style.color]="getProgressColor(selectedProjectDetail.progress ?? 0)">
+                                {{ selectedProjectDetail.progress ?? 0 }}%
+                            </span>
+                        </div>
                         <span class="tasks-count-badge">
-                            {{ selectedProjectDetail.doneTasks }}/{{ selectedProjectDetail.totalTasks }} {{
-                            'PROJECTS.TASKS_DONE' | translate }}
+                            {{ selectedProjectDetail.doneTasks }}/{{ selectedProjectDetail.totalTasks }}
+                            {{ 'PROJECTS.TASKS_DONE' | translate }}
                         </span>
                     </div>
                 </div>
@@ -130,35 +140,37 @@
                     <button class="panel-close-btn" (click)="selectedProjectDetail = null">✕</button>
                 </div>
             </div>
-        
+
             <div class="streams-list-detail">
                 <div class="stream-detail-card" *ngFor="let stream of selectedProjectDetail.streams">
-        
-                    <!-- Stream header -->
+
                     <!-- Stream header -->
                     <div class="stream-detail-header">
                         <div class="stream-title-row">
                             <span class="stream-detail-name">{{ stream.name }}</span>
-                    
                             <button class="btn-slack-link" *ngIf="stream.messagingChannelUrl"
                                 (click)="openExternalLink(stream.messagingChannelUrl)">
                                 <svg width="14" height="14" viewBox="0 0 122.8 122.8" fill="none">
-                                    <path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9z"
+                                    <path
+                                        d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9z"
                                         fill="#E01E5A" />
                                     <path
                                         d="M32.3 77.6c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z"
                                         fill="#E01E5A" />
-                                    <path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2z"
+                                    <path
+                                        d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2z"
                                         fill="#36C5F0" />
                                     <path
                                         d="M45.2 32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z"
                                         fill="#36C5F0" />
-                                    <path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2z"
+                                    <path
+                                        d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2z"
                                         fill="#2EB67D" />
                                     <path
                                         d="M90.5 45.2c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z"
                                         fill="#2EB67D" />
-                                    <path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9z"
+                                    <path
+                                        d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9z"
                                         fill="#ECB22E" />
                                     <path
                                         d="M77.6 90.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z"
@@ -166,19 +178,34 @@
                                 </svg>
                                 Slack
                             </button>
-                            <span class="messaging-status" *ngIf="!stream.messagingChannelUrl">
-                                ⏳ Slack...
+                            <span class="messaging-status" *ngIf="!stream.messagingChannelUrl">⏳ Slack...</span>
+                        </div>
+
+                        <!-- Barre de progression du stream -->
+                        <div class="stream-progress-row">
+                            <div class="progress-wrap-sm" style="width:100px">
+                                <div class="progress-bar-sm" [style.width.%]="stream.streamProgress ?? 0"
+                                    [style.background]="getProgressColor(stream.streamProgress ?? 0)">
+                                </div>
+                            </div>
+                            <span class="progress-pct-sm" [style.color]="getProgressColor(stream.streamProgress ?? 0)">
+                                {{ stream.streamProgress ?? 0 }}%
                             </span>
                         </div>
+
+                        <!-- Résumé tâches -->
                         <div class="stream-tasks-summary">
-                            <span class="task-sum-item done">{{ getStreamDone(stream) }} {{ 'TASKS.DONE' | translate }}</span>
-                            <span class="task-sum-item pending"> {{ getStreamPending(stream) }} {{ 'TASKS.PENDING' | translate }}</span>
-                            <span class="task-sum-item blocked" *ngIf="getStreamBlocked(stream) > 0">✕ {{ getStreamBlocked(stream) }} {{
-                                'TASKS.BLOCKED' | translate }}</span>
+                            <span class="task-sum-item done">{{ getStreamDone(stream) }} {{ 'TASKS.DONE' | translate
+                                }}</span>
+                            <span class="task-sum-item pending">{{ getStreamPending(stream) }} {{ 'TASKS.PENDING' |
+                                translate }}</span>
+                            <span class="task-sum-item blocked" *ngIf="getStreamBlocked(stream) > 0">
+                                ✕ {{ getStreamBlocked(stream) }} {{ 'TASKS.BLOCKED' | translate }}
+                            </span>
                             <span class="task-sum-total">Total: {{ stream.streamTasks?.length || 0 }}</span>
                         </div>
                     </div>
-        
+
                     <!-- Teams -->
                     <div class="team-columns">
                         <!-- Business -->
@@ -204,7 +231,7 @@
                                 + {{ 'COMMON.ADD' | translate }}
                             </button>
                         </div>
-        
+
                         <!-- Technical -->
                         <div class="team-column">
                             <div class="team-column-header">
@@ -224,28 +251,57 @@
                                 *ngIf="!(stream.members | teamFilter:'Technical').length && !stream.technicalTeamLead">
                                 {{ 'PM.NO_CONSULTANTS' | translate }}
                             </span>
-                            <button class="btn-add-member-full" (click)="openAddConsultantModal(stream.id, 'technical')">
+                            <button class="btn-add-member-full"
+                                (click)="openAddConsultantModal(stream.id, 'technical')">
                                 + {{ 'COMMON.ADD' | translate }}
                             </button>
                         </div>
                     </div>
-        
+
+                    <!-- US24 : Liste des tâches du stream -->
+                    <div class="stream-tasks-section" *ngIf="stream.streamTasks?.length > 0">
+                        <div class="stream-tasks-header" (click)="toggleStreamTasks(stream.id)">
+                        <span class="stream-tasks-title">
+                            {{ 'STREAMS.STREAM_TASKS' | translate }} ({{ stream.streamTasks.length }})
+                        </span>
+                            <lucide-icon [img]="isStreamTasksOpen(stream.id) ? ChevronUp : ChevronDown" size="14">
+                            </lucide-icon>
+                        </div>
+                        <div class="stream-tasks-list" *ngIf="isStreamTasksOpen(stream.id)">
+                        <div class="stream-task-row" *ngFor="let task of stream.streamTasks">
+                            <span class="task-status-dot" [ngClass]="{
+                                    'dot-done':    task.status === 2,
+                                    'dot-pending': task.status === 0,
+                                    'dot-blocked': task.status === 1
+                                }">
+                            </span>
+                            <span class="stream-task-title">{{ task.title }}</span>
+                            <span class="status-badge" [ngClass]="utils.getTaskStatusClass(task.status)">
+                                {{ utils.getTaskStatusLabel(task.status) }}
+                            </span>
+                        </div>
+                        </div>
+                    </div>
+                    <div class="empty" *ngIf="!stream.streamTasks?.length" style="padding: 8px 16px; font-size:12px">
+                        {{ 'TASKS.NO_TASKS' | translate }}
+                    </div>
+
                     <!-- Edit leads -->
                     <div class="stream-footer">
                         <button class="btn-edit-leads-full" (click)="openEditLeadsModal(stream)">
                             ✎ {{ 'PM.EDIT_LEADS' | translate }}
                         </button>
                     </div>
-        
+
                 </div>
             </div>
-        
+
             <div class="empty" *ngIf="!selectedProjectDetail.streams?.length">
                 {{ 'DIRECTOR.NO_STREAMS' | translate }}
             </div>
         </div>
 
-        <!-- Tableau -->
+        
         <div class="card">
             <div class="card-header">
                 <h2>{{ 'PM.MY_PROJECTS' | translate }} ({{ projects.length }})</h2>
@@ -261,6 +317,9 @@
                                 {{ 'COMMON.DESCRIPTION' | translate }}
                             </th>
                             <th style="position: sticky; top: 0; z-index: 2; background: #fafafa">
+                                {{ 'PROJECTS.PROGRESS' | translate }}
+                            </th>
+                            <th style="position: sticky; top: 0; z-index: 2; background: #fafafa">
                                 {{ 'PROJECTS.TARGET_DATE' | translate }}
                             </th>
                         </tr>
@@ -268,10 +327,42 @@
                     <tbody>
                         <tr *ngFor="let p of projects" class="clickable-row"
                             [class.row-selected]="selectedProjectDetail?.id === p.id" (click)="selectProjectDetail(p)">
-                            <td class="task-title">{{ p.name }}</td>
+
+                            <!-- Nom + streams count -->
+                            <td>
+                                <div class="project-name-cell">
+                                    <span class="task-title">{{ p.name }}</span>
+                                    <span class="stream-count-chip" *ngIf="p.streamCount">
+                                        {{ p.streamCount }} {{ 'STREAMS.TITLE2' | translate | lowercase }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            <!-- Description -->
                             <td class="text-secondary">{{ p.description || '—' }}</td>
-                            <td class="text-secondary">
-                                {{ p.targetDate ? (p.targetDate | date:'dd/MM/yyyy') : '—' }}
+
+                            <!-- Avancement -->
+                            <td>
+                                <div class="progress-cell">
+                                    <div class="progress-wrap-sm">
+                                        <div class="progress-bar-sm" [style.width.%]="p.progress ?? 0"
+                                            [style.background]="getProgressColor(p.progress ?? 0)">
+                                        </div>
+                                    </div>
+                                    <span class="progress-pct-sm" [style.color]="getProgressColor(p.progress ?? 0)">
+                                        {{ p.progress ?? 0 }}%
+                                    </span>
+                                </div>
+                            </td>
+
+                            <!-- Target Date -->
+                            <td>
+                                <span class="text-secondary" *ngIf="!p.targetDate">—</span>
+                                <span *ngIf="p.targetDate" class="date-chip"
+                                    [class.date-overdue]="isOverdue(p.targetDate)"
+                                    [class.date-soon]="isDueSoon(p.targetDate) && !isOverdue(p.targetDate)">
+                                    {{ p.targetDate | date:'dd/MM/yyyy' }}
+                                </span>
                             </td>
                         </tr>
                     </tbody>
@@ -325,12 +416,13 @@
                 </button>
             </div>
         </app-modal>
-        <app-modal *ngIf="showPlanHistoryModal" title="AI Plan History" width="600px" (closed)="showPlanHistoryModal = false">
-        
+
+        <app-modal *ngIf="showPlanHistoryModal" title="AI Plan History" width="600px"
+            (closed)="showPlanHistoryModal = false">
             <div style="max-height: 70vh; overflow-y: auto; padding-right: 4px;">
-        
                 <div *ngIf="!selectedHistoryPlan">
-                    <div class="lead-card" *ngFor="let p of planHistory" (click)="viewHistoryPlan(p)" style="cursor:pointer">
+                    <div class="lead-card" *ngFor="let p of planHistory" (click)="viewHistoryPlan(p)"
+                        style="cursor:pointer">
                         <div class="lead-info">
                             <span class="lead-name">{{ p.status }} — {{ p.plan?.streams?.length || 0 }} streams</span>
                             <span class="lead-email">{{ p.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
@@ -338,15 +430,16 @@
                     </div>
                     <div class="empty" *ngIf="planHistory.length === 0">No plans generated yet</div>
                 </div>
-        
                 <div *ngIf="selectedHistoryPlan">
-                    <button class="btn-back-history" (click)="selectedHistoryPlan = null" style="margin-bottom:10px">←</button>
+                    <button class="btn-back-history" (click)="selectedHistoryPlan = null"
+                        style="margin-bottom:10px">←</button>
                     <div class="proposed-stream-card" *ngFor="let stream of selectedHistoryPlan.plan?.streams">
                         <div class="proposed-stream-header">
                             <h3>{{ stream.name }}</h3>
                             <span class="stream-meta-badge">{{ stream.steps?.length || 0 }} steps</span>
                         </div>
-                        <p class="text-secondary" style="font-size:13px; margin: 4px 0 10px">{{ stream.description }}</p>
+                        <p class="text-secondary" style="font-size:13px; margin: 4px 0 10px">{{ stream.description }}
+                        </p>
                         <div class="proposed-teams-row">
                             <div class="proposed-team-block">
                                 <span class="team-type-label business">Business</span>
@@ -377,608 +470,361 @@
                                 <span class="step-name">{{ step.stepName }}</span>
                                 <span class="team-type-label"
                                     [ngClass]="step.teamType === 'Technical' ? 'technical' : 'business'"
-                                    style="font-size:10px; padding:2px 8px">
-                                    {{ step.teamType }}
-                                </span>
+                                    style="font-size:10px; padding:2px 8px">{{ step.teamType }}</span>
                                 <span class="tool-badge">{{ step.pluginId }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
-        
             </div>
         </app-modal>
 
     </ng-container>
 
     <!-- CREATE STREAM TAB -->
-    <!-- <ng-container *ngFor="let tabId of getOpenTabIds()">
+    <ng-container *ngFor="let tabId of getOpenTabIds()">
         <ng-container *ngIf="activeTabId === tabId">
             <div class="card" *ngIf="getTabData(tabId) as tab">
                 <div class="card-header">
-                    <h2>{{ 'PM.CREATE_STREAM' | translate }}</h2>
+                    <h2>{{ 'PM.PROJECT_TO_PLAN' | translate }}</h2>
                 </div>
                 <div class="card-body">
                     <div class="project-info-block">
                         <span class="label">{{ 'PROJECTS.TITLE' | translate }}</span>
                         <span class="project-name">{{ getProjectName(tab.task?.projectId ?? '') }}</span>
                     </div>
-                    <div class="form-group">
-                        <label>{{ 'PM.STREAM_NAME' | translate }} *</label>
-                        <input type="text" [(ngModel)]="tab.streamName" placeholder="e.g. Functional Stream 1"
-                            class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label>{{ 'PM.BIZ_LEAD' | translate }}</label>
-                        <div class="leads-list">
-                            <div class="lead-card" *ngFor="let u of bizLeads"
-                                [class.selected-lead]="tab.selectedBizLeadId === u.id"
-                                (click)="tab.selectedBizLeadId = u.id">
-                                <div class="lead-info">
-                                    <span class="lead-name">{{ u.fullName }}</span>
-                                    <span class="lead-email">{{ u.email }}</span>
-                                </div>
-                                <div class="lead-charge">
-                                    <span class="charge-number">{{ u.streamCount ?? 0 }}</span>
-                                    <span class="charge-label">{{ 'PM.STREAMS_COUNT' | translate }}</span>
-                                </div>
-                                <div class="selected-check" *ngIf="tab.selectedBizLeadId === u.id">✓</div>
+                    <p class="choice-section-label">{{ 'PM.CHOOSE_PLANNING_METHOD' | translate }}</p>
+                    <div class="planning-choice-grid">
+                        <div class="planning-choice-card" [class.selected]="tab.selectedMode === 'manual'"
+                            (click)="selectPlanningMode(tabId, 'manual')">
+                            <div class="ai-check-badge" *ngIf="tab.selectedMode === 'manual'">
+                                <lucide-icon [img]="Check" size="13"></lucide-icon>
                             </div>
-                            <div class="empty" *ngIf="bizLeads.length === 0">{{ 'PM.NO_BIZ_LEAD' | translate }}</div>
-                        </div>
-                    </div>
-                    <div class="form-group" *ngIf="tab.selectedBizLeadId">
-                        <label class="team-label business">{{ 'PM.BIZ_CONSULTANTS' | translate }}</label>
-                        <div class="leads-list">
-                            <div class="lead-card" *ngFor="let c of consultants"
-                                [class.selected-lead]="isConsultantSelected(tabId, c.id, 'business')"
-                                (click)="toggleConsultant(tabId, c.id, 'business')">
-                                <div class="lead-info">
-                                    <span class="lead-name">{{ c.fullName }}</span>
-                                    <span class="lead-email">{{ c.email }}</span>
-                                </div>
-                                <div class="lead-charge">
-                                    <span class="charge-number">{{ c.streamCount ?? 0 }}</span>
-                                    <span class="charge-label">{{ 'PM.STREAMS_COUNT' | translate }}</span>
-                                </div>
-                                <div class="selected-check" *ngIf="isConsultantSelected(tabId, c.id, 'business')">✓
-                                </div>
+                            <div class="choice-icon-box">
+                                <lucide-icon [img]="Edit" size="22"></lucide-icon>
                             </div>
+                            <h3>{{ 'PM.PLAN_MANUALLY' | translate }}</h3>
+                            <p class="text-secondary">{{ 'PM.PLAN_MANUALLY_DESC' | translate }}</p>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label>{{ 'PM.TECH_LEAD' | translate }}</label>
-                        <div class="leads-list">
-                            <div class="lead-card" *ngFor="let u of techLeads"
-                                [class.selected-lead]="tab.selectedTechLeadId === u.id"
-                                (click)="tab.selectedTechLeadId = u.id">
-                                <div class="lead-info">
-                                    <span class="lead-name">{{ u.fullName }}</span>
-                                    <span class="lead-email">{{ u.email }}</span>
-                                </div>
-                                <div class="lead-charge">
-                                    <span class="charge-number">{{ u.streamCount ?? 0 }}</span>
-                                    <span class="charge-label">{{ 'PM.STREAMS_COUNT' | translate }}</span>
-                                </div>
-                                <div class="selected-check" *ngIf="tab.selectedTechLeadId === u.id">✓</div>
+                        <div class="planning-choice-card" [class.selected]="tab.selectedMode === 'ai'"
+                            (click)="selectPlanningMode(tabId, 'ai')">
+                            <div class="ai-check-badge" *ngIf="tab.selectedMode === 'ai'">
+                                <lucide-icon [img]="Check" size="13"></lucide-icon>
                             </div>
-                            <div class="empty" *ngIf="techLeads.length === 0">
-                                {{ 'PM.NO_TECH_LEAD' | translate }}
+                            <div class="choice-icon-box ai">
+                                <lucide-icon [img]="Sparkles" size="22"></lucide-icon>
                             </div>
-                        </div>
-                    </div>
-                    <div class="form-group" *ngIf="tab.selectedTechLeadId">
-                        <label class="team-label technical">{{ 'PM.TECH_CONSULTANTS' | translate }}</label>
-                        <div class="leads-list">
-                            <div class="lead-card" *ngFor="let c of consultants"
-                                [class.selected-lead]="isConsultantSelected(tabId, c.id, 'technical')"
-                                (click)="toggleConsultant(tabId, c.id, 'technical')">
-                                <div class="lead-info">
-                                    <span class="lead-name">{{ c.fullName }}</span>
-                                    <span class="lead-email">{{ c.email }}</span>
-                                </div>
-                                <div class="lead-charge">
-                                    <span class="charge-number">{{ c.streamCount ?? 0 }}</span>
-                                    <span class="charge-label">{{ 'PM.STREAMS_COUNT' | translate }}</span>
-                                </div>
-                                <div class="selected-check" *ngIf="isConsultantSelected(tabId, c.id, 'technical')">✓
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bottom-actions">
-                        <button class="btn-primary" (click)="createStream(tabId)"
-                            [disabled]="!tab.streamName || loading">
-                            {{ loading ? ('COMMON.LOADING' | translate) : ('PM.CREATE_STREAM' | translate) }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </ng-container>
-    </ng-container> -->
-<!-- CREATE STREAM TAB -->
-<!-- CREATE STREAM TAB -->
-<ng-container *ngFor="let tabId of getOpenTabIds()">
-    <ng-container *ngIf="activeTabId === tabId">
-        <div class="card" *ngIf="getTabData(tabId) as tab">
-
-            <div class="card-header">
-                <h2>{{ 'PM.PROJECT_TO_PLAN' | translate }}</h2>
-            </div>
-
-            <div class="card-body">
-
-                <div class="project-info-block">
-                    <span class="label">{{ 'PROJECTS.TITLE' | translate }}</span>
-                    <span class="project-name">{{ getProjectName(tab.task?.projectId ?? '') }}</span>
-                </div>
-
-                <p class="choice-section-label">{{ 'PM.CHOOSE_PLANNING_METHOD' | translate }}</p>
-
-                <div class="planning-choice-grid">
-                    <div class="planning-choice-card" [class.selected]="tab.selectedMode === 'manual'"
-                        (click)="selectPlanningMode(tabId, 'manual')">
-                        <div class="ai-check-badge" *ngIf="tab.selectedMode === 'manual'">
-                            <lucide-icon [img]="Check" size="13"></lucide-icon>
-                        </div>
-                        <div class="choice-icon-box">
-                            <lucide-icon [img]="Edit" size="22"></lucide-icon>
-                        </div>
-                        <h3>{{ 'PM.PLAN_MANUALLY' | translate }}</h3>
-                        <p class="text-secondary">{{ 'PM.PLAN_MANUALLY_DESC' | translate }}</p>
-                    </div>
-
-                    <div class="planning-choice-card" [class.selected]="tab.selectedMode === 'ai'"
-                        (click)="selectPlanningMode(tabId, 'ai')">
-                        <div class="ai-check-badge" *ngIf="tab.selectedMode === 'ai'">
-                            <lucide-icon [img]="Check" size="13"></lucide-icon>
-                        </div>
-                        <div class="choice-icon-box ai">
-                            <lucide-icon [img]="Sparkles" size="22"></lucide-icon>
-                        </div>
-                        <h3>{{ 'PM.USE_AI_AGENT' | translate }}</h3>
-                        <p class="text-secondary">{{ 'PM.USE_AI_AGENT_DESC' | translate }}</p>
-                    </div>
-                </div>
-
-                <!-- ===== FORMULAIRE MANUEL ===== -->
-                <div class="selected-form-panel" *ngIf="tab.selectedMode === 'manual'">
-
-                    <div class="form-group">
-                        <label>{{ 'PM.STREAM_NAME' | translate }} *</label>
-                        <input type="text" [(ngModel)]="tab.streamName" placeholder="e.g. Functional Stream 1"
-                            class="form-input">
-                    </div>
-
-                    <div class="stream-diagram">
-
-                        <div class="diagram-col">
-                            <div class="diagram-card">
-                                <div class="diagram-col-header">
-                                    <span class="team-label business">{{ 'PM.BIZ_LEAD' | translate }}</span>
-                                </div>
-
-                                <div class="form-group">
-                                    <select class="form-input" [(ngModel)]="tab.selectedBizLeadId">
-                                        <option value="">{{ 'PM.SELECT_BIZ_LEAD' | translate }}</option>
-                                        <option *ngFor="let u of bizLeads" [value]="u.id">
-                                            {{ u.fullName }} ({{ u.streamCount ?? 0 }} {{ 'PM.STREAMS_COUNT' | translate
-                                            }})
-                                        </option>
-                                    </select>
-                                </div>
-
-                                <ng-container *ngIf="getLeadById(tab.selectedBizLeadId, 'biz') as lead">
-                                    <div class="selected-lead-display">
-                                        <div class="lead-avatar av-biz">{{ getInitials(lead.fullName) }}</div>
-                                        <div class="lead-info">
-                                            <span class="lead-name">{{ lead.fullName }}</span>
-                                            <span class="lead-email">{{ lead.email }}</span>
-                                        </div>
-                                        <div class="stream-count-badge">
-                                            <i class="pi pi-briefcase"></i>
-                                            <span>{{ lead.streamCount ?? 0 }}</span>
-                                            <small>{{ 'PM.STREAMS_COUNT' | translate }}</small>
-                                        </div>
-                                    </div>
-                                </ng-container>
-
-                                <div class="consultant-section">
-                                    <span class="consultant-section-label">{{ 'PM.BIZ_CONSULTANTS' | translate }}</span>
-
-                                    <div class="consultant-nodes">
-                                        <div class="empty-consultants"
-                                            *ngIf="getConsultantsForTab(tabId, 'business').length === 0">
-                                            {{ 'PM.NO_CONSULTANTS' | translate }}
-                                        </div>
-                                        <div class="consultant-node"
-                                            *ngFor="let c of getConsultantsForTab(tabId, 'business')">
-                                            <div class="lead-avatar av-cons">{{ getInitials(c.fullName) }}</div>
-                                            <span class="c-node-name">{{ c.fullName }}</span>
-                                            <button class="c-remove-btn"
-                                                (click)="toggleConsultant(tabId, c.id, 'business')"
-                                                [attr.aria-label]="'Remove ' + c.fullName">
-                                                <i class="pi pi-times"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="add-consultant-wrap" clickOutside
-                                        (clickOutside)="closeDrop('biz-'+tabId)">
-                                        <button class="add-consultant-btn" (click)="toggleDrop('biz-'+tabId)">
-                                            <i class="pi pi-plus"></i>
-                                            {{ 'PM.ADD_CONSULTANT' | translate }}
-                                        </button>
-                                        <div class="consultant-dropdown" *ngIf="openDrop === 'biz-'+tabId">
-                                            <div class="consultant-dropdown-item" *ngFor="let c of consultants"
-                                                [class.used]="isConsultantSelected(tabId, c.id, 'business') || isConsultantSelected(tabId, c.id, 'technical')"
-                                                (click)="addConsultantFromDrop(tabId, c, 'business')">
-                                                <div class="lead-avatar av-cons"
-                                                    style="width:24px;height:24px;font-size:9px">
-                                                    {{ getInitials(c.fullName) }}
-                                                </div>
-                                                {{ c.fullName }}
-                                                <span class="used-badge"
-                                                    *ngIf="isConsultantSelected(tabId, c.id, 'business') || isConsultantSelected(tabId, c.id, 'technical')">
-                                                    {{ 'PM.ASSIGNED' | translate }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <div class="diagram-col">
-                            <div class="diagram-card">
-                                <div class="diagram-col-header">
-                                    <span class="team-label technical">{{ 'PM.TECH_LEAD' | translate }}</span>
-                                </div>
-
-                                <div class="form-group">
-                                    <select class="form-input" [(ngModel)]="tab.selectedTechLeadId">
-                                        <option value="">{{ 'PM.SELECT_TECH_LEAD' | translate }}</option>
-                                        <option *ngFor="let u of techLeads" [value]="u.id">
-                                            {{ u.fullName }} ({{ u.streamCount ?? 0 }} {{ 'PM.STREAMS_COUNT' | translate
-                                            }})
-                                        </option>
-                                    </select>
-                                    <div class="empty" *ngIf="techLeads.length === 0">
-                                        {{ 'PM.NO_TECH_LEAD' | translate }}
-                                    </div>
-                                </div>
-
-                                <ng-container *ngIf="getLeadById(tab.selectedTechLeadId, 'tech') as lead">
-                                    <div class="selected-lead-display">
-                                        <div class="lead-avatar av-tech">{{ getInitials(lead.fullName) }}</div>
-                                        <div class="lead-info">
-                                            <span class="lead-name">{{ lead.fullName }}</span>
-                                            <span class="lead-email">{{ lead.email }}</span>
-                                        </div>
-                                        <div class="stream-count-badge">
-                                            <i class="pi pi-briefcase"></i>
-                                            <span>{{ lead.streamCount ?? 0 }}</span>
-                                            <small>{{ 'PM.STREAMS_COUNT' | translate }}</small>
-                                        </div>
-                                    </div>
-                                </ng-container>
-
-                                <div class="consultant-section">
-                                    <span class="consultant-section-label">{{ 'PM.TECH_CONSULTANTS' | translate
-                                        }}</span>
-
-                                    <div class="consultant-nodes">
-                                        <div class="empty-consultants"
-                                            *ngIf="getConsultantsForTab(tabId, 'technical').length === 0">
-                                            {{ 'PM.NO_CONSULTANTS' | translate }}
-                                        </div>
-                                        <div class="consultant-node"
-                                            *ngFor="let c of getConsultantsForTab(tabId, 'technical')">
-                                            <div class="lead-avatar av-cons">{{ getInitials(c.fullName) }}</div>
-                                            <span class="c-node-name">{{ c.fullName }}</span>
-                                            <button class="c-remove-btn"
-                                                (click)="toggleConsultant(tabId, c.id, 'technical')"
-                                                [attr.aria-label]="'Remove ' + c.fullName">
-                                                <i class="pi pi-times"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="add-consultant-wrap" clickOutside
-                                        (clickOutside)="closeDrop('tech-'+tabId)">
-                                        <button class="add-consultant-btn" (click)="toggleDrop('tech-'+tabId)">
-                                            <i class="pi pi-plus"></i>
-                                            {{ 'PM.ADD_CONSULTANT' | translate }}
-                                        </button>
-                                        <div class="consultant-dropdown" *ngIf="openDrop === 'tech-'+tabId">
-                                            <div class="consultant-dropdown-item" *ngFor="let c of consultants"
-                                                [class.used]="isConsultantSelected(tabId, c.id, 'business') || isConsultantSelected(tabId, c.id, 'technical')"
-                                                (click)="addConsultantFromDrop(tabId, c, 'technical')">
-                                                <div class="lead-avatar av-cons"
-                                                    style="width:24px;height:24px;font-size:9px">
-                                                    {{ getInitials(c.fullName) }}
-                                                </div>
-                                                {{ c.fullName }}
-                                                <span class="used-badge"
-                                                    *ngIf="isConsultantSelected(tabId, c.id, 'business') || isConsultantSelected(tabId, c.id, 'technical')">
-                                                    {{ 'PM.ASSIGNED' | translate }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="bottom-actions">
-                        <button class="btn-primary" (click)="createStream(tabId)"
-                            [disabled]="!tab.streamName || loading">
-                            {{ loading ? ('COMMON.LOADING' | translate) : ('PM.CREATE_STREAM' | translate) }}
-                        </button>
-                    </div>
-                </div>
-
-                <!-- ===== FORMULAIRE IA - UPLOAD ===== -->
-                <div class="selected-form-panel" *ngIf="tab.selectedMode === 'ai' && tab.aiSubStep === 'upload'">
-
-                    <div class="numbered-steps-grid">
-                        <div class="numbered-step">
-                            <div class="step-num-row">
-                                <span class="step-num">1</span>
-                                <span class="step-title">{{ 'PM.GUIDELINES' | translate }}</span>
-                            </div>
-                            <div class="form-group">
-                                <textarea [(ngModel)]="tab.guidelines" class="form-input" rows="4"
-                                    [placeholder]="'PM.GUIDELINES_PLACEHOLDER' | translate"></textarea>
-                            </div>
-                        </div>
-
-                        <div class="numbered-step">
-                            <div class="step-num-row">
-                                <span class="step-num">2</span>
-                                <span class="step-title">{{ 'PM.UPLOAD_FSD' | translate }}</span>
-                            </div>
-                            <label class="fsd-upload-zone" [class.has-file]="tab.file">
-                                <input type="file" accept=".pdf,.docx" (change)="onFsdFileSelected($event, tabId)"
-                                    hidden>
-                                <ng-container *ngIf="!tab.file">
-                                    <lucide-icon [img]="FileUp" size="22"></lucide-icon>
-                                    <span class="upload-text">{{ 'PM.CLICK_TO_UPLOAD' | translate }}</span>
-                                    <span class="upload-hint">PDF, DOCX</span>
-                                </ng-container>
-                                <ng-container *ngIf="tab.file">
-                                    <lucide-icon [img]="Check" size="22"></lucide-icon>
-                                    <span class="upload-text">{{ tab.file.name }}</span>
-                                </ng-container>
-                            </label>
+                            <h3>{{ 'PM.USE_AI_AGENT' | translate }}</h3>
+                            <p class="text-secondary">{{ 'PM.USE_AI_AGENT_DESC' | translate }}</p>
                         </div>
                     </div>
 
-                    <div class="bottom-actions">
-                        <button class="btn-primary" (click)="generatePlan(tabId)"
-                            [disabled]="!tab.file || generatingPlan">
-                            {{ generatingPlan ? ('PM.GENERATING_PLAN' | translate) : ('PM.GENERATE_PLAN' | translate) }}
-                        </button>
-                    </div>
-
-                    <div class="ai-loading-banner" *ngIf="generatingPlan">
-                        <div class="ai-spinner"></div>
-                        <span>{{ 'PM.AI_ANALYZING' | translate }}</span>
-                    </div>
-                </div>
-
-                <!-- ===== FORMULAIRE IA - REVIEW ===== -->
-            <!-- ===== FORMULAIRE IA - REVIEW ===== -->
-            <div class="selected-form-panel" *ngIf="tab.selectedMode === 'ai' && tab.aiSubStep === 'review'">
-            
-                <div class="review-header-row">
-                    <span class="review-label">{{ 'PM.PROPOSED_PLAN' | translate }}</span>
-                    <span class="streams-count-badge">{{ tab.plan?.streams?.length || 0 }} streams</span>
-                </div>
-            
-                <div class="proposed-stream-card" *ngFor="let stream of tab.plan?.streams; let i = index"
-                    [class.editing]="tab.editingStreamIndex === i">
-            
-                    <!-- ===== MODE LECTURE ===== -->
-                    <ng-container *ngIf="tab.editingStreamIndex !== i">
-            
-                        <div class="proposed-stream-header">
-                            <h3>{{ stream.name }}</h3>
-                            <div style="display:flex; gap:8px; align-items:center">
-                                <span class="stream-meta-badge">{{ stream.steps?.length || 0 }} steps</span>
-                                <button class="btn-stream-edit" (click)="startEditStream(tabId, i)">
-                                    <lucide-icon [img]="Edit" size="13"></lucide-icon>
-                                </button>
-                            </div>
-                        </div>
-            
-                        <p class="text-secondary" style="font-size:13px; margin: 4px 0 10px">{{ stream.description }}</p>
-            
-                        <div class="proposed-rationale" *ngIf="stream.rationale">{{ stream.rationale }}</div>
-            
-                        <!-- Équipes -->
-                        <div class="proposed-teams-row">
-                            <div class="proposed-team-block">
-                                <span class="team-type-label business">Business</span>
-                                <div class="proposed-member-list">
-                                    <span class="proposed-member" *ngIf="stream.businessLeadId">
-                                        <span class="role-pill btl">BTL</span>
-                                        {{ getLeadName(stream.businessLeadId) }}
-                                    </span>
-                                    <span class="proposed-member" *ngFor="let cid of stream.businessConsultantIds">
-                                        <span class="role-pill dev">DEV</span>
-                                        {{ getConsultantName(cid) }}
-                                    </span>
-                                    <span class="text-secondary" style="font-size:11px"
-                                        *ngIf="!stream.businessLeadId && !stream.businessConsultantIds?.length">—</span>
-                                </div>
-                            </div>
-                            <div class="proposed-team-block">
-                                <span class="team-type-label technical">Technical</span>
-                                <div class="proposed-member-list">
-                                    <span class="proposed-member" *ngIf="stream.technicalLeadId">
-                                        <span class="role-pill ttl">TTL</span>
-                                        {{ getLeadName(stream.technicalLeadId) }}
-                                    </span>
-                                    <span class="proposed-member" *ngFor="let cid of stream.technicalConsultantIds">
-                                        <span class="role-pill dev">DEV</span>
-                                        {{ getConsultantName(cid) }}
-                                    </span>
-                                    <span class="text-secondary" style="font-size:11px"
-                                        *ngIf="!stream.technicalLeadId && !stream.technicalConsultantIds?.length">—</span>
-                                </div>
-                            </div>
-                        </div>
-            
-                        <!-- Steps -->
-                        <div class="proposed-steps-list">
-                            <div class="proposed-step-row" *ngFor="let step of stream.steps">
-                                <span class="step-order-badge">{{ step.order }}</span>
-                                <span class="step-name">{{ step.stepName }}</span>
-                                <span class="team-type-label" [ngClass]="step.teamType === 'Technical' ? 'technical' : 'business'"
-                                    style="font-size:10px; padding:2px 8px">
-                                    {{ step.teamType }}
-                                </span>
-                                <span class="tool-badge">{{ step.pluginId }}</span>
-                            </div>
-                        </div>
-            
-                    </ng-container>
-            
-                    <!-- ===== MODE ÉDITION ===== -->
-                    <ng-container *ngIf="tab.editingStreamIndex === i">
-            
-                        <div class="edit-stream-header">
-                            <span class="team-type-label business" style="font-size:11px">Editing stream</span>
-                            <button class="btn-stream-delete" (click)="removeStream(tabId, i)">
-                                <lucide-icon [img]="Trash2" size="13"></lucide-icon>
-                                Delete stream
-                            </button>
-                        </div>
-            
-                        <!-- Nom -->
-                        <div class="form-group" style="margin-top:10px">
-                            <label>Stream name</label>
-                            <input type="text" [ngModel]="stream.name" (ngModelChange)="updateStreamName(tabId, i, $event)"
+                    <!-- FORMULAIRE MANUEL -->
+                    <div class="selected-form-panel" *ngIf="tab.selectedMode === 'manual'">
+                        <div class="form-group">
+                            <label>{{ 'PM.STREAM_NAME' | translate }} *</label>
+                            <input type="text" [(ngModel)]="tab.streamName" placeholder="e.g. Functional Stream 1"
                                 class="form-input">
                         </div>
-            
-                        <!-- Leads + consultants -->
-                        <div class="stream-diagram" style="margin-top:8px">
-            
+                        <div class="stream-diagram">
                             <div class="diagram-col">
                                 <div class="diagram-card">
                                     <div class="diagram-col-header">
                                         <span class="team-label business">{{ 'PM.BIZ_LEAD' | translate }}</span>
                                     </div>
-                                    <select class="form-input" [ngModel]="stream.businessLeadId"
-                                        (ngModelChange)="updateStreamLead(tabId, i, $event, 'business')">
-                                        <option value="">— None —</option>
-                                        <option *ngFor="let u of bizLeads" [value]="u.id">
-                                            {{ u.fullName }}
-                                        </option>
-                                    </select>
-            
-                                    <div class="consultant-section" style="margin-top:10px">
-                                        <span class="consultant-section-label">{{ 'PM.BIZ_CONSULTANTS' | translate }}</span>
+                                    <div class="form-group">
+                                        <select class="form-input" [(ngModel)]="tab.selectedBizLeadId">
+                                            <option value="">{{ 'PM.SELECT_BIZ_LEAD' | translate }}</option>
+                                            <option *ngFor="let u of bizLeads" [value]="u.id">
+                                                {{ u.fullName }} ({{ u.streamCount ?? 0 }} {{ 'PM.STREAMS_COUNT' |
+                                                translate }})
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <ng-container *ngIf="getLeadById(tab.selectedBizLeadId, 'biz') as lead">
+                                        <div class="selected-lead-display">
+                                            <div class="lead-avatar av-biz">{{ getInitials(lead.fullName) }}</div>
+                                            <div class="lead-info">
+                                                <span class="lead-name">{{ lead.fullName }}</span>
+                                                <span class="lead-email">{{ lead.email }}</span>
+                                            </div>
+                                        </div>
+                                    </ng-container>
+                                    <div class="consultant-section">
+                                        <span class="consultant-section-label">{{ 'PM.BIZ_CONSULTANTS' | translate
+                                            }}</span>
                                         <div class="consultant-nodes">
-                                            <div class="consultant-node" *ngFor="let c of consultants"
-                                                [class.selected]="isStreamConsultantSelected(tabId, i, c.id, 'business')"
-                                                (click)="toggleStreamConsultant(tabId, i, c.id, 'business')" style="cursor:pointer">
+                                            <div class="empty-consultants"
+                                                *ngIf="getConsultantsForTab(tabId, 'business').length === 0">
+                                                {{ 'PM.NO_CONSULTANTS' | translate }}
+                                            </div>
+                                            <div class="consultant-node"
+                                                *ngFor="let c of getConsultantsForTab(tabId, 'business')">
                                                 <div class="lead-avatar av-cons">{{ getInitials(c.fullName) }}</div>
                                                 <span class="c-node-name">{{ c.fullName }}</span>
-                                                <lucide-icon [img]="Check" size="13"
-                                                    *ngIf="isStreamConsultantSelected(tabId, i, c.id, 'business')"
-                                                    style="color:var(--accent); margin-left:auto">
-                                                </lucide-icon>
+                                                <button class="c-remove-btn"
+                                                    (click)="toggleConsultant(tabId, c.id, 'business')">
+                                                    <i class="pi pi-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="add-consultant-wrap" clickOutside
+                                            (clickOutside)="closeDrop('biz-'+tabId)">
+                                            <button class="add-consultant-btn" (click)="toggleDrop('biz-'+tabId)">
+                                                <i class="pi pi-plus"></i> {{ 'PM.ADD_CONSULTANT' | translate }}
+                                            </button>
+                                            <div class="consultant-dropdown" *ngIf="openDrop === 'biz-'+tabId">
+                                                <div class="consultant-dropdown-item" *ngFor="let c of consultants"
+                                                    [class.used]="isConsultantSelected(tabId, c.id, 'business') || isConsultantSelected(tabId, c.id, 'technical')"
+                                                    (click)="addConsultantFromDrop(tabId, c, 'business')">
+                                                    <div class="lead-avatar av-cons"
+                                                        style="width:24px;height:24px;font-size:9px">
+                                                        {{ getInitials(c.fullName) }}
+                                                    </div>
+                                                    {{ c.fullName }}
+                                                    <span class="used-badge"
+                                                        *ngIf="isConsultantSelected(tabId, c.id, 'business') || isConsultantSelected(tabId, c.id, 'technical')">
+                                                        {{ 'PM.ASSIGNED' | translate }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-            
                             <div class="diagram-col">
                                 <div class="diagram-card">
                                     <div class="diagram-col-header">
                                         <span class="team-label technical">{{ 'PM.TECH_LEAD' | translate }}</span>
                                     </div>
-                                    <select class="form-input" [ngModel]="stream.technicalLeadId"
-                                        (ngModelChange)="updateStreamLead(tabId, i, $event, 'technical')">
-                                        <option value="">— None —</option>
-                                        <option *ngFor="let u of techLeads" [value]="u.id">
-                                            {{ u.fullName }}
-                                        </option>
-                                    </select>
-            
-                                    <div class="consultant-section" style="margin-top:10px">
-                                        <span class="consultant-section-label">{{ 'PM.TECH_CONSULTANTS' | translate }}</span>
+                                    <div class="form-group">
+                                        <select class="form-input" [(ngModel)]="tab.selectedTechLeadId">
+                                            <option value="">{{ 'PM.SELECT_TECH_LEAD' | translate }}</option>
+                                            <option *ngFor="let u of techLeads" [value]="u.id">
+                                                {{ u.fullName }} ({{ u.streamCount ?? 0 }} {{ 'PM.STREAMS_COUNT' |
+                                                translate }})
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <ng-container *ngIf="getLeadById(tab.selectedTechLeadId, 'tech') as lead">
+                                        <div class="selected-lead-display">
+                                            <div class="lead-avatar av-tech">{{ getInitials(lead.fullName) }}</div>
+                                            <div class="lead-info">
+                                                <span class="lead-name">{{ lead.fullName }}</span>
+                                                <span class="lead-email">{{ lead.email }}</span>
+                                            </div>
+                                        </div>
+                                    </ng-container>
+                                    <div class="consultant-section">
+                                        <span class="consultant-section-label">{{ 'PM.TECH_CONSULTANTS' | translate
+                                            }}</span>
                                         <div class="consultant-nodes">
-                                            <div class="consultant-node" *ngFor="let c of consultants"
-                                                [class.selected]="isStreamConsultantSelected(tabId, i, c.id, 'technical')"
-                                                (click)="toggleStreamConsultant(tabId, i, c.id, 'technical')"
-                                                style="cursor:pointer">
+                                            <div class="empty-consultants"
+                                                *ngIf="getConsultantsForTab(tabId, 'technical').length === 0">
+                                                {{ 'PM.NO_CONSULTANTS' | translate }}
+                                            </div>
+                                            <div class="consultant-node"
+                                                *ngFor="let c of getConsultantsForTab(tabId, 'technical')">
                                                 <div class="lead-avatar av-cons">{{ getInitials(c.fullName) }}</div>
                                                 <span class="c-node-name">{{ c.fullName }}</span>
-                                                <lucide-icon [img]="Check" size="13"
-                                                    *ngIf="isStreamConsultantSelected(tabId, i, c.id, 'technical')"
-                                                    style="color:var(--accent); margin-left:auto">
-                                                </lucide-icon>
+                                                <button class="c-remove-btn"
+                                                    (click)="toggleConsultant(tabId, c.id, 'technical')">
+                                                    <i class="pi pi-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="add-consultant-wrap" clickOutside
+                                            (clickOutside)="closeDrop('tech-'+tabId)">
+                                            <button class="add-consultant-btn" (click)="toggleDrop('tech-'+tabId)">
+                                                <i class="pi pi-plus"></i> {{ 'PM.ADD_CONSULTANT' | translate }}
+                                            </button>
+                                            <div class="consultant-dropdown" *ngIf="openDrop === 'tech-'+tabId">
+                                                <div class="consultant-dropdown-item" *ngFor="let c of consultants"
+                                                    [class.used]="isConsultantSelected(tabId, c.id, 'business') || isConsultantSelected(tabId, c.id, 'technical')"
+                                                    (click)="addConsultantFromDrop(tabId, c, 'technical')">
+                                                    <div class="lead-avatar av-cons"
+                                                        style="width:24px;height:24px;font-size:9px">
+                                                        {{ getInitials(c.fullName) }}
+                                                    </div>
+                                                    {{ c.fullName }}
+                                                    <span class="used-badge"
+                                                        *ngIf="isConsultantSelected(tabId, c.id, 'business') || isConsultantSelected(tabId, c.id, 'technical')">
+                                                        {{ 'PM.ASSIGNED' | translate }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-            
                         </div>
-            
-                        <div class="edit-stream-footer">
-                            <button class="btn-primary" (click)="cancelEditStream(tabId)">Done</button>
-                        </div>
-            
-                    </ng-container>
-            
-                </div>
-            
-                <!-- Chat d'affinage -->
-                <div class="ai-refine-chat">
-                    <div class="chat-history" *ngIf="tab.chatHistory.length > 0">
-                        <div class="chat-msg" *ngFor="let msg of tab.chatHistory" [class.user-msg]="msg.role === 'user'">
-                            {{ msg.content }}
+                        <div class="bottom-actions">
+                            <button class="btn-primary" (click)="createStream(tabId)"
+                                [disabled]="!tab.streamName || loading">
+                                {{ loading ? ('COMMON.LOADING' | translate) : ('PM.CREATE_STREAM' | translate) }}
+                            </button>
                         </div>
                     </div>
-                    <div class="chat-input-row">
-                        <input type="text" [(ngModel)]="tab.refineMessage" [placeholder]="'PM.REFINE_PLACEHOLDER' | translate"
-                            class="form-input" (keyup.enter)="sendRefineMessage(tabId)">
-                        <button class="btn-send-icon" (click)="sendRefineMessage(tabId)"
-                            [disabled]="!tab.refineMessage.trim() || refiningPlan">
-                            <lucide-icon [img]="Send" size="15"></lucide-icon>
-                        </button>
+
+                    <!-- FORMULAIRE IA - UPLOAD -->
+                    <div class="selected-form-panel" *ngIf="tab.selectedMode === 'ai' && tab.aiSubStep === 'upload'">
+                        <div class="numbered-steps-grid">
+                            <div class="numbered-step">
+                                <div class="step-num-row">
+                                    <span class="step-num">1</span>
+                                    <span class="step-title">{{ 'PM.GUIDELINES' | translate }}</span>
+                                </div>
+                                <div class="form-group">
+                                    <textarea [(ngModel)]="tab.guidelines" class="form-input" rows="4"
+                                        [placeholder]="'PM.GUIDELINES_PLACEHOLDER' | translate"></textarea>
+                                </div>
+                            </div>
+                            <div class="numbered-step">
+                                <div class="step-num-row">
+                                    <span class="step-num">2</span>
+                                    <span class="step-title">{{ 'PM.UPLOAD_FSD' | translate }}</span>
+                                </div>
+                                <label class="fsd-upload-zone" [class.has-file]="tab.file">
+                                    <input type="file" accept=".pdf,.docx" (change)="onFsdFileSelected($event, tabId)"
+                                        hidden>
+                                    <ng-container *ngIf="!tab.file">
+                                        <lucide-icon [img]="FileUp" size="22"></lucide-icon>
+                                        <span class="upload-text">{{ 'PM.CLICK_TO_UPLOAD' | translate }}</span>
+                                        <span class="upload-hint">PDF, DOCX</span>
+                                    </ng-container>
+                                    <ng-container *ngIf="tab.file">
+                                        <lucide-icon [img]="Check" size="22"></lucide-icon>
+                                        <span class="upload-text">{{ tab.file.name }}</span>
+                                    </ng-container>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="bottom-actions">
+                            <button class="btn-primary" (click)="generatePlan(tabId)"
+                                [disabled]="!tab.file || generatingPlan">
+                                {{ generatingPlan ? ('PM.GENERATING_PLAN' | translate) : ('PM.GENERATE_PLAN' |
+                                translate) }}
+                            </button>
+                        </div>
+                        <div class="ai-loading-banner" *ngIf="generatingPlan">
+                            <div class="ai-spinner"></div>
+                            <span>{{ 'PM.AI_ANALYZING' | translate }}</span>
+                        </div>
                     </div>
-                </div>
-            
-                <div class="bottom-actions">
-                    <button class="btn-primary" (click)="approvePlan(tabId)" [disabled]="approvingPlan">
-                        {{ approvingPlan ? ('PM.APPROVING' | translate) : ('PM.APPROVE_PLAN' | translate) }}
-                    </button>
+
+                    <!-- FORMULAIRE IA - REVIEW -->
+                    <div class="selected-form-panel" *ngIf="tab.selectedMode === 'ai' && tab.aiSubStep === 'review'">
+                        <div class="review-header-row">
+                            <span class="review-label">{{ 'PM.PROPOSED_PLAN' | translate }}</span>
+                            <span class="streams-count-badge">{{ tab.plan?.streams?.length || 0 }} streams</span>
+                        </div>
+                        <div class="proposed-stream-card" *ngFor="let stream of tab.plan?.streams; let i = index"
+                            [class.editing]="tab.editingStreamIndex === i">
+                            <ng-container *ngIf="tab.editingStreamIndex !== i">
+                                <div class="proposed-stream-header">
+                                    <h3>{{ stream.name }}</h3>
+                                    <div style="display:flex; gap:8px; align-items:center">
+                                        <span class="stream-meta-badge">{{ stream.steps?.length || 0 }} steps</span>
+                                        <button class="btn-stream-edit" (click)="startEditStream(tabId, i)">
+                                            <lucide-icon [img]="Edit" size="13"></lucide-icon>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-secondary" style="font-size:13px; margin: 4px 0 10px">{{
+                                    stream.description }}</p>
+                                <div class="proposed-rationale" *ngIf="stream.rationale">{{ stream.rationale }}</div>
+                                <div class="proposed-teams-row">
+                                    <div class="proposed-team-block">
+                                        <span class="team-type-label business">Business</span>
+                                        <div class="proposed-member-list">
+                                            <span class="proposed-member" *ngIf="stream.businessLeadId">
+                                                <span class="role-pill btl">BTL</span> {{
+                                                getLeadName(stream.businessLeadId) }}
+                                            </span>
+                                            <span class="proposed-member"
+                                                *ngFor="let cid of stream.businessConsultantIds">
+                                                <span class="role-pill dev">DEV</span> {{ getConsultantName(cid) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="proposed-team-block">
+                                        <span class="team-type-label technical">Technical</span>
+                                        <div class="proposed-member-list">
+                                            <span class="proposed-member" *ngIf="stream.technicalLeadId">
+                                                <span class="role-pill ttl">TTL</span> {{
+                                                getLeadName(stream.technicalLeadId) }}
+                                            </span>
+                                            <span class="proposed-member"
+                                                *ngFor="let cid of stream.technicalConsultantIds">
+                                                <span class="role-pill dev">DEV</span> {{ getConsultantName(cid) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="proposed-steps-list">
+                                    <div class="proposed-step-row" *ngFor="let step of stream.steps">
+                                        <span class="step-order-badge">{{ step.order }}</span>
+                                        <span class="step-name">{{ step.stepName }}</span>
+                                        <span class="team-type-label"
+                                            [ngClass]="step.teamType === 'Technical' ? 'technical' : 'business'"
+                                            style="font-size:10px; padding:2px 8px">{{ step.teamType }}</span>
+                                        <span class="tool-badge">{{ step.pluginId }}</span>
+                                    </div>
+                                </div>
+                            </ng-container>
+                            <ng-container *ngIf="tab.editingStreamIndex === i">
+                                <div class="edit-stream-header">
+                                    <span class="team-type-label business" style="font-size:11px">Editing stream</span>
+                                    <button class="btn-stream-delete" (click)="removeStream(tabId, i)">
+                                        <lucide-icon [img]="Trash2" size="13"></lucide-icon>
+                                        Delete stream
+                                    </button>
+                                </div>
+                                <div class="form-group" style="margin-top:10px">
+                                    <label>Stream name</label>
+                                    <input type="text" [ngModel]="stream.name"
+                                        (ngModelChange)="updateStreamName(tabId, i, $event)" class="form-input">
+                                </div>
+                                <div class="edit-stream-footer">
+                                    <button class="btn-primary" (click)="cancelEditStream(tabId)">Done</button>
+                                </div>
+                            </ng-container>
+                        </div>
+                        <div class="ai-refine-chat">
+                            <div class="chat-history" *ngIf="tab.chatHistory.length > 0">
+                                <div class="chat-msg" *ngFor="let msg of tab.chatHistory"
+                                    [class.user-msg]="msg.role === 'user'">{{ msg.content }}</div>
+                            </div>
+                            <div class="chat-input-row">
+                                <input type="text" [(ngModel)]="tab.refineMessage"
+                                    [placeholder]="'PM.REFINE_PLACEHOLDER' | translate" class="form-input"
+                                    (keyup.enter)="sendRefineMessage(tabId)">
+                                <button class="btn-send-icon" (click)="sendRefineMessage(tabId)"
+                                    [disabled]="!tab.refineMessage.trim() || refiningPlan">
+                                    <lucide-icon [img]="Send" size="15"></lucide-icon>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bottom-actions">
+                            <button class="btn-primary" (click)="approvePlan(tabId)" [disabled]="approvingPlan">
+                                {{ approvingPlan ? ('PM.APPROVING' | translate) : ('PM.APPROVE_PLAN' | translate) }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- IA - DONE -->
+                    <div class="selected-form-panel ai-done-state"
+                        *ngIf="tab.selectedMode === 'ai' && tab.aiSubStep === 'done'">
+                        <div class="ai-done-icon">
+                            <lucide-icon [img]="Check" size="26"></lucide-icon>
+                        </div>
+                        <h2>{{ 'PM.PLAN_APPROVED' | translate }}</h2>
+                        <p class="text-secondary">{{ 'PM.STREAMS_BEING_CREATED' | translate }}</p>
+                    </div>
+
                 </div>
             </div>
-
-                <!-- ===== IA - DONE ===== -->
-                <div class="selected-form-panel ai-done-state"
-                    *ngIf="tab.selectedMode === 'ai' && tab.aiSubStep === 'done'">
-                    <div class="ai-done-icon">
-                        <lucide-icon [img]="Check" size="26"></lucide-icon>
-                    </div>
-                    <h2>{{ 'PM.PLAN_APPROVED' | translate }}</h2>
-                    <p class="text-secondary">{{ 'PM.STREAMS_BEING_CREATED' | translate }}</p>
-                </div>
-
-            </div>
-        </div>
+        </ng-container>
     </ng-container>
-</ng-container>
+
 </div>

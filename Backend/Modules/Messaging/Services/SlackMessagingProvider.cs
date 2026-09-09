@@ -5,25 +5,39 @@ namespace Backend.Modules.Messaging.Services;
 
 public class SlackMessagingProvider : IMessagingProvider
 {
-    private readonly ISlackApiClient _slack;
+    private readonly ISlackApiClient? _slack;
     private readonly ILogger<SlackMessagingProvider> _logger;
+    private readonly bool _isConfigured;
     private string? _teamId;
 
     public SlackMessagingProvider(IConfiguration config, ILogger<SlackMessagingProvider> logger)
     {
-        var botToken = config["Messaging:Slack:BotToken"]!;
-        _slack = new SlackServiceBuilder().UseApiToken(botToken).GetApiClient();
         _logger = logger;
+        var botToken = config["Messaging:Slack:BotToken"];
+
+        _isConfigured = !string.IsNullOrWhiteSpace(botToken);
+
+        if (!_isConfigured)
+        {
+            _logger.LogWarning(
+                "Messaging:Slack:BotToken est vide ou absent — SlackMessagingProvider est désactivé (no-op).");
+            return;
+        }
+
+        _slack = new SlackServiceBuilder().UseApiToken(botToken).GetApiClient();
     }
 
     public async Task<(string?, string?)> CreateStreamChannelAsync(
         string projectName, string streamName, List<string> memberEmails)
     {
+        if (!_isConfigured || _slack == null)
+            return (null, null); // no-op silencieux si Slack n'est pas configuré
+
         var channelName = SanitizeChannelName($"proj-{projectName}-{streamName}");
 
         try
         {
-            var channel = await _slack.Conversations.Create(channelName, isPrivate: false );
+            var channel = await _slack.Conversations.Create(channelName, isPrivate: false);
 
             foreach (var email in memberEmails)
             {
@@ -43,6 +57,8 @@ public class SlackMessagingProvider : IMessagingProvider
 
     public async Task AddMemberAsync(string channelId, string userEmail)
     {
+        if (!_isConfigured || _slack == null) return;
+
         try
         {
             var user = await _slack.Users.LookupByEmail(userEmail);
@@ -56,6 +72,9 @@ public class SlackMessagingProvider : IMessagingProvider
 
     public async Task<(string?, string?)> PostThreadMessageAsync(string channelId, string message)
     {
+        if (!_isConfigured || _slack == null)
+            return (null, null);
+
         try
         {
             var response = await _slack.Chat.PostMessage(new Message
@@ -77,6 +96,8 @@ public class SlackMessagingProvider : IMessagingProvider
 
     public async Task ReplyToThreadAsync(string channelId, string threadId, string message)
     {
+        if (!_isConfigured || _slack == null) return;
+
         try
         {
             await _slack.Chat.PostMessage(new Message
@@ -102,12 +123,16 @@ public class SlackMessagingProvider : IMessagingProvider
     private async Task<string> GetTeamIdAsync()
     {
         if (_teamId != null) return _teamId;
+        if (_slack == null) return string.Empty;
         var authTest = await _slack.Auth.Test();
         _teamId = authTest.TeamId;
         return _teamId;
     }
+
     public async Task<string> GetUserNameAsync(string slackUserId)
     {
+        if (!_isConfigured || _slack == null) return "Slack User";
+
         try
         {
             var user = await _slack.Users.Info(slackUserId);

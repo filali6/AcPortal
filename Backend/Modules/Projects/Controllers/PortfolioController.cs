@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using Backend.Modules.Tasks.Models;
 
 namespace Backend.Modules.Projects.Controllers;
 
@@ -65,7 +66,38 @@ public class PortfoliosController : ControllerBase
         var portfolios = await _db.Portfolios
             .Include(p => p.PortfolioDirector)
             .Include(p => p.Projects)
-            .Select(p => new
+                .ThenInclude(proj => proj.Streams)
+            .ToListAsync();
+
+        // Récupérer toutes les tâches en une seule requête
+        var allStreamIds = portfolios
+            .SelectMany(p => p.Projects)
+            .SelectMany(proj => proj.Streams)
+            .Select(s => s.Id)
+            .ToList();
+
+        var allTasks = await _db.AcpTasks
+            .Where(t => t.StreamId != null && allStreamIds.Contains(t.StreamId.Value))
+            .ToListAsync();
+
+        var result = portfolios.Select(p =>
+        {
+            var portfolioStreamIds = p.Projects
+                .SelectMany(proj => proj.Streams)
+                .Select(s => s.Id)
+                .ToList();
+
+            var portfolioTasks = allTasks
+                .Where(t => t.StreamId.HasValue && portfolioStreamIds.Contains(t.StreamId.Value))
+                .ToList();
+
+            var progress = portfolioTasks.Any()
+                ? (int)Math.Round(
+                    portfolioTasks.Count(t => t.Status == AcpTaskStatus.Done) * 100.0
+                    / portfolioTasks.Count)
+                : 0;
+
+            return new
             {
                 p.Id,
                 p.Name,
@@ -77,11 +109,12 @@ public class PortfoliosController : ControllerBase
                     p.PortfolioDirector.FullName,
                     p.PortfolioDirector.Email
                 },
-                projectCount = p.Projects.Count
-            })
-            .ToListAsync();
+                projectCount = p.Projects.Count,
+                progress
+            };
+        });
 
-        return Ok(portfolios);
+        return Ok(result);
     }
 
     // Détail d'un portfolio
@@ -195,7 +228,51 @@ public class PortfoliosController : ControllerBase
 
         return Ok(directors);
     }
+    // Modifier nom + description d'un portfolio
+    [HttpPatch("{id:guid}")]
+    [Authorize(Roles = "HeadOfCDS")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePortfolioRequest request)
+    {
+        var portfolio = await _db.Portfolios.FindAsync(id);
+        if (portfolio == null)
+            return NotFound(new { message = "Portfolio introuvable" });
+
+        if (!string.IsNullOrEmpty(request.Name))
+            portfolio.Name = request.Name;
+
+        if (request.Description != null)
+            portfolio.Description = request.Description;
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Portfolio mis à jour",
+            data = new
+            {
+                portfolio.Id,
+                portfolio.Name,
+                portfolio.Description
+            }
+        });
+    }
+
+    // Supprimer un portfolio
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "HeadOfCDS")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var portfolio = await _db.Portfolios.FindAsync(id);
+        if (portfolio == null)
+            return NotFound(new { message = "Portfolio introuvable" });
+
+        _db.Portfolios.Remove(portfolio);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Portfolio supprimé avec succès" });
+    }
 }
+
 
 public class CreatePortfolioRequest
 {
@@ -210,4 +287,9 @@ public class AssignDirectorRequest
 {
     [Required]
     public Guid PortfolioDirectorId { get; set; }
+}
+public class UpdatePortfolioRequest
+{
+    public string? Name { get; set; }
+    public string? Description { get; set; }
 }

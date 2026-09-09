@@ -1712,3 +1712,200 @@ select.form-input {
         transform: scale(0.97);
     }
 }
+.project-name-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.stream-count-chip {
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: var(--bg-subtle);
+    padding: 1px 6px;
+    border-radius: 4px;
+    width: fit-content;
+}
+
+.date-chip {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+
+    &.date-overdue {
+        background: var(--danger-bg, #fee2e2);
+        color: var(--danger-text, #dc2626);
+    }
+
+    &.date-soon {
+        background: var(--warning-bg, #fef3c7);
+        color: var(--warning-text, #d97706);
+    }
+}
+
+.progress-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progress-wrap-sm {
+    width: 80px;
+    height: 5px;
+    background: var(--border-subtle);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar-sm {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.progress-pct-sm {
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 32px;
+}
+// ══════════════════════════════════════════
+// STREAM TASKS SECTION
+// ══════════════════════════════════════════
+
+.stream-tasks-section {
+    margin-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+.stream-tasks-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.15s ease;
+    user-select: none;
+
+    &:hover {
+        background: var(--surface-1, #f5f5f5);
+    }
+
+    .stream-tasks-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .tasks-count-pill {
+            background: var(--bg-accent, #e8f0fe);
+            color: var(--text-accent, #1a73e8);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 7px;
+            border-radius: 20px;
+        }
+    }
+
+    lucide-icon {
+        color: var(--text-secondary);
+        transition: transform 0.2s ease;
+    }
+
+    &.open lucide-icon {
+        transform: rotate(180deg);
+    }
+}
+
+.stream-tasks-list {
+    padding: 4px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: fadeSlideIn 0.15s ease;
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stream-task-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: var(--surface-0, #fafafa);
+    border: 1px solid var(--border, #eee);
+    transition: background 0.12s ease, border-color 0.12s ease;
+    cursor: default;
+
+    &:hover {
+        background: var(--surface-1, #f0f4ff);
+        border-color: var(--border-strong, #d0d7e8);
+    }
+
+    .task-status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+
+        &.dot-done {
+            background: #22c55e;
+        }
+
+        &.dot-pending {
+            background: #f59e0b;
+        }
+
+        &.dot-blocked {
+            background: #ef4444;
+        }
+    }
+
+    .stream-task-title {
+        flex: 1;
+        font-size: 13px;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .status-badge {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 2px 8px;
+        border-radius: 20px;
+        flex-shrink: 0;
+
+        &.status-done {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        &.status-pending {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        &.status-blocked {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+    }
+}

@@ -7,26 +7,53 @@ namespace Backend.Modules.Git.Services;
 
 public class GitHubProvider : IGitProvider
 {
-    private readonly GitHubClient _client;
-    private readonly string _organization;
+    private readonly GitHubClient? _client;
+    private readonly string _organization = string.Empty;
     private readonly string _repoPrefix;
+    private readonly bool _isConfigured;
 
     public GitHubProvider(IConfiguration configuration)
     {
-        var token = configuration["Git:GitHub:Token"]!;
-        _organization = configuration["Git:GitHub:Organization"]!;
+        var token = configuration["Git:GitHub:Token"];
+        var organization = configuration["Git:GitHub:Organization"];
         _repoPrefix = configuration["Git:GitHub:RepoPrefix"] ?? "acportal-stream";
 
+        _isConfigured = !string.IsNullOrWhiteSpace(token) && !string.IsNullOrWhiteSpace(organization);
+
+        if (!_isConfigured)
+        {
+            // Git:GitHub:Token / Git:GitHub:Organization manquants dans la config.
+            // On ne crash pas : le provider reste juste inactif.
+            // TODO: brancher un vrai ILogger ici si tu veux tracer ça au démarrage.
+            return;
+        }
+
+        _organization = organization!;
         _client = new GitHubClient(new ProductHeaderValue("ACPortal"))
         {
             Credentials = new Credentials(token)
         };
     }
 
+    /// <summary>
+    /// Lève une erreur claire si on essaie d'utiliser GitHub sans configuration valide.
+    /// Appelé au début de chaque méthode qui a réellement besoin du client GitHub.
+    /// </summary>
+    private void EnsureConfigured()
+    {
+        if (!_isConfigured || _client == null)
+            throw new InvalidOperationException(
+                "GitHub n'est pas configuré (Git:GitHub:Token / Git:GitHub:Organization manquants ou vides dans appsettings). " +
+                "La fonctionnalité Git est désactivée tant que la configuration n'est pas renseignée.");
+    }
+
     private string GetRepoName(Guid streamId) => $"{_repoPrefix}-{streamId}";
 
     public async Task<string> CreateRepoAsync(Guid streamId, string streamName, Guid projectId)
     {
+        if (!_isConfigured)
+            return string.Empty; // no-op silencieux : pas de repo créé si Git n'est pas configuré
+
         var repoName = GetRepoName(streamId);
 
         var newRepo = new NewRepository(repoName)
@@ -41,18 +68,18 @@ public class GitHubProvider : IGitProvider
             Repository repo;
             try
             {
-                repo = await _client.Repository.Create(_organization, newRepo);
+                repo = await _client!.Repository.Create(_organization, newRepo);
             }
             catch
             {
-                repo = await _client.Repository.Create(newRepo);
+                repo = await _client!.Repository.Create(newRepo);
             }
 
-            await _client.Repository.ReplaceAllTopics(
-    _organization,
-    repoName,
-    new RepositoryTopics(new List<string> { $"project-{projectId}", "acportal" })
-);
+            await _client!.Repository.ReplaceAllTopics(
+                _organization,
+                repoName,
+                new RepositoryTopics(new List<string> { $"project-{projectId}", "acportal" })
+            );
 
             return repo.HtmlUrl;
         }
@@ -64,6 +91,9 @@ public class GitHubProvider : IGitProvider
 
     public async Task<string> PushFileAsync(Guid streamId, string stepName, string toolName, string fileName, string content)
     {
+        if (!_isConfigured)
+            return string.Empty; // no-op silencieux
+
         var repoName = GetRepoName(streamId);
         var filePath = $"{stepName}-{toolName}/{fileName}";
 
@@ -71,7 +101,7 @@ public class GitHubProvider : IGitProvider
         {
             try
             {
-                var existingFile = await _client.Repository.Content.GetAllContents(
+                var existingFile = await _client!.Repository.Content.GetAllContents(
                     _organization, repoName, filePath);
 
                 var updateRequest = new UpdateFileRequest(
@@ -80,7 +110,7 @@ public class GitHubProvider : IGitProvider
                     existingFile[0].Sha
                 );
 
-                var result = await _client.Repository.Content.UpdateFile(
+                var result = await _client!.Repository.Content.UpdateFile(
                     _organization, repoName, filePath, updateRequest);
 
                 return result.Commit.Sha;
@@ -92,7 +122,7 @@ public class GitHubProvider : IGitProvider
                     content
                 );
 
-                var result = await _client.Repository.Content.CreateFile(
+                var result = await _client!.Repository.Content.CreateFile(
                     _organization, repoName, filePath, createRequest);
 
                 return result.Commit.Sha;
@@ -106,17 +136,20 @@ public class GitHubProvider : IGitProvider
 
     public async Task<List<GitFileDto>> GetFilesAsync(Guid streamId)
     {
+        if (!_isConfigured)
+            return new List<GitFileDto>(); // liste vide si Git n'est pas configuré
+
         var repoName = GetRepoName(streamId);
         var files = new List<GitFileDto>();
 
         try
         {
-            var contents = await _client.Repository.Content.GetAllContents(
+            var contents = await _client!.Repository.Content.GetAllContents(
                 _organization, repoName);
 
             foreach (var item in contents.Where(c => c.Type == ContentType.Dir))
             {
-                var dirContents = await _client.Repository.Content.GetAllContents(
+                var dirContents = await _client!.Repository.Content.GetAllContents(
                     _organization, repoName, item.Path);
 
                 foreach (var file in dirContents.Where(f => f.Type == ContentType.File))
@@ -140,10 +173,13 @@ public class GitHubProvider : IGitProvider
 
     public async Task<string> GetRepoUrlAsync(Guid streamId)
     {
+        if (!_isConfigured)
+            return string.Empty;
+
         var repoName = GetRepoName(streamId);
         try
         {
-            var repo = await _client.Repository.Get(_organization, repoName);
+            var repo = await _client!.Repository.Get(_organization, repoName);
             return repo.HtmlUrl;
         }
         catch
@@ -154,9 +190,12 @@ public class GitHubProvider : IGitProvider
 
     public async Task CreateTagAsync(Guid streamId, string tag, string message)
     {
+        if (!_isConfigured)
+            return; // no-op silencieux
+
         var repoName = GetRepoName(streamId);
 
-        var commits = await _client.Repository.Commit.GetAll(_organization, repoName);
+        var commits = await _client!.Repository.Commit.GetAll(_organization, repoName);
         var latestSha = commits[0].Sha;
 
         var newTag = new NewTag
@@ -167,6 +206,6 @@ public class GitHubProvider : IGitProvider
             Type = TaggedType.Commit
         };
 
-        await _client.Git.Tag.Create(_organization, repoName, newTag);
+        await _client!.Git.Tag.Create(_organization, repoName, newTag);
     }
 }

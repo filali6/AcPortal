@@ -1,4 +1,4 @@
-using Backend.Modules.Sla.Models;
+//using Backend.Modules.Sla.Models;
 
 namespace Backend.Modules.Tasks.Models;
 
@@ -41,7 +41,7 @@ public class AcpTask
     // Ajouter dans AcpTask.cs
     public DateTime? DueDate { get; set; }
     public Guid? SlaRuleId { get; set; }
-    public SlaStatus SlaStatus { get; set; } = SlaStatus.OnTrack;
+    //public SlaStatus SlaStatus { get; set; } = SlaStatus.OnTrack;
 
 
 }

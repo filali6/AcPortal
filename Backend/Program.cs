@@ -22,7 +22,7 @@ using Backend.Modules.Planning.Services;
 using Backend.Modules.Planning.Tools;
 
 using Backend.Modules.Messaging.Services;
-using Backend.Modules.Sla.Services;
+//using Backend.Modules.Sla.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -83,7 +83,7 @@ builder.Services.AddScoped<IActionHandler, SendCommentEmailHandler>();
 builder.Services.AddScoped<PlanningTools>();
 builder.Services.AddScoped<FsdPlanningService>();
 // Ajouter dans Program.cs
-builder.Services.AddHostedService<SlaMonitoringService>();
+//builder.Services.AddHostedService<SlaMonitoringService>();
 
 
 builder.Services.AddMemoryCache();

@@ -1,5 +1,5 @@
 using Backend.Modules.Auth.Models;
-using Backend.Modules.Sla.Models;
+//using Backend.Modules.Sla.Models;
 
 namespace Backend.Modules.Projects.Models;
 
@@ -28,5 +28,5 @@ public class Stream
     public string? MessagingChannelUrl { get; set; }
     // Ajouter dans Stream.cs
     public DateTime? DueDate { get; set; }
-    public SlaStatus SlaStatus { get; set; } = SlaStatus.OnTrack;
+    //public SlaStatus SlaStatus { get; set; } = SlaStatus.OnTrack;
 }

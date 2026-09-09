@@ -16,7 +16,9 @@
     "DESCRIPTION": "Description",
     "CLOSE": "Fermer",
     "SELECT": "séléctionné(s)" ,
-    "FUNCTIONALDOMAIN":"Domaine Fonctionnel"
+    "FUNCTIONALDOMAIN":"Domaine Fonctionnel",
+     "EDIT": "Modifier",
+  "DELETE": "Supprimer"
   },
   "AUTH": {
     "LOGOUT": "Se déconnecter"
@@ -63,7 +65,9 @@
   "TTL": "TTL",
    "EDIT": "Modifier le projet",
   "SAVE_CHANGES": "Enregistrer les modifications",
-  "DESCRIPTION": "Description du projet"
+  "DESCRIPTION": "Description du projet",
+    "PROGRESS": "Avancement",
+  "TARGET_DATE": "Target Date"
   },
   "CONTRACTS": {
     "TITLE": "Contrats",
@@ -154,6 +158,7 @@
   },
   "STREAMS": {
   "TITLE": "Mes streams",
+  "TITLE2": "streams",
   "MY_STREAMS": "Mes streams",
   "DETAIL": "Détail du stream",
   "TEAM": "Équipe",
@@ -170,7 +175,8 @@
   "ACTIVE": "Streams actifs",
   "NEXT_DELIVERY": "Prochaine livraison",
   "COMPLETION_RATE": "Taux de complétion",
-  "PENDING_TASKS": "Tâches en attente"
+  "PENDING_TASKS": "Tâches en attente",
+  "STREAM_TASKS": "Tâches du stream"
 },
 "CHARTS": {
   "TASK_DISTRIBUTION": "Répartition des tâches",
@@ -201,7 +207,11 @@
   "SELECT_DIRECTOR": "Sélectionner un nouveau directeur",
   "SELECT_PLACEHOLDER": "-- Sélectionner --",
   "PORTFOLIO_NAME": "Nom du portfolio",
-  "CREATE": "Créer le portfolio"
+  "CREATE": "Créer le portfolio",
+  "EDIT": "Modifier portfolio",
+  "DELETE_CONFIRM_TITLE": "Confirmez suppression",
+  "DELETE_CONFIRM_MSG": "Vous ètes  sure vous voulez supprimer ",
+  "DELETE_WARNING": "Cette action est irreversible."
 },
 "AI": {
   "SUMMARY": "Résumé IA",

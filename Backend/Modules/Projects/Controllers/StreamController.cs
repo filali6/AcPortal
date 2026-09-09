@@ -286,6 +286,7 @@ public class StreamController : ControllerBase
         if (stream.BusinessTeamLead != null)
             members.Add(new
             {
+                consultantId = stream.BusinessTeamLead.Id,
                 keycloakId = stream.BusinessTeamLead.KeycloakId,
                 fullName = stream.BusinessTeamLead.FullName,
                 role = "Business Team Lead"
@@ -294,6 +295,7 @@ public class StreamController : ControllerBase
         if (stream.TechnicalTeamLead != null)
             members.Add(new
             {
+                consultantId = stream.TechnicalTeamLead.Id,
                 keycloakId = stream.TechnicalTeamLead.KeycloakId,
                 fullName = stream.TechnicalTeamLead.FullName,
                 role = "Technical Team Lead"
@@ -302,6 +304,7 @@ public class StreamController : ControllerBase
         foreach (var m in stream.Members)
             members.Add(new
             {
+                consultantId = m.ConsultantId,
                 keycloakId = m.Consultant.KeycloakId,
                 fullName = m.Consultant.FullName,
                 role = m.TeamType.ToString()
