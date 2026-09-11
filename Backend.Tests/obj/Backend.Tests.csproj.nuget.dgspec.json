@@ -505,6 +505,10 @@
               "target": "Package",
               "version": "[14.0.0, )"
             },
+            "SlackNet": {
+              "target": "Package",
+              "version": "[0.17.10, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[10.1.4, )"

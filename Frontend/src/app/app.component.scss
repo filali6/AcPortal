@@ -226,7 +226,9 @@
     transition: all 0.15s ease;
     text-decoration: none;
 
-    .nav-icon {
+.nav-icon {
+        display: flex;   
+        align-items: center;
         flex-shrink: 0;
         opacity: 0.8;
     }
@@ -378,4 +380,8 @@
         transform: translateX(0);
         opacity: 1;
     }
+}
+lucide-icon {
+    display: flex !important;
+    align-items: center;
 }

@@ -281,15 +281,6 @@ namespace Backend.Migrations
                     b.Property<DateTime?>("TargetDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("TeamsSetupFailed")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("TeamsTeamId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("TeamsTeamUrl")
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
 
                     b.HasIndex("PortfolioId");
@@ -395,18 +386,18 @@ namespace Backend.Migrations
                     b.Property<string>("GitRepoUrl")
                         .HasColumnType("text");
 
+                    b.Property<string>("MessagingChannelId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MessagingChannelUrl")
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("TeamsChannelId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("TeamsChannelUrl")
-                        .HasColumnType("text");
 
                     b.Property<Guid?>("TechnicalTeamLeadId")
                         .HasColumnType("uuid");
@@ -469,6 +460,12 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("MessagingThreadId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MessagingThreadUrl")
+                        .HasColumnType("text");
+
                     b.Property<Guid?>("ProjectId")
                         .HasColumnType("uuid");
 
@@ -483,12 +480,6 @@ namespace Backend.Migrations
 
                     b.Property<Guid?>("StreamId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("TeamsThreadId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("TeamsThreadUrl")
-                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -530,21 +521,21 @@ namespace Backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("FromTeams")
+                    b.Property<bool>("FromMessaging")
                         .HasColumnType("boolean");
 
                     b.PrimitiveCollection<string>("Mentions")
                         .IsRequired()
                         .HasColumnType("jsonb");
 
+                    b.Property<string>("MessagingMessageId")
+                        .HasColumnType("text");
+
                     b.Property<Guid?>("ParentCommentId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("TaskId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("TeamsMessageId")
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 

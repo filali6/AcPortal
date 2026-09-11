@@ -1,3 +1,5 @@
+$gap: 24px;
+
 .sa-page {
   width: 100%;
   max-width: 100%;
@@ -5,7 +7,7 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $gap;
 }
 
 .card {
@@ -22,7 +24,13 @@
   align-items: center;
   padding: 12px 20px;
   border-bottom: 1px solid var(--border);
-  h2 { font-size: 14px; font-weight: 600; }
+
+  h2 {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+  }
 }
 
 .card-body {
@@ -32,20 +40,56 @@
   gap: 8px;
 }
 
+/* Row 1 — KPI stat cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $gap;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Row 2 / Row 3 — chart cards & access cards */
 .charts-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-  @media (max-width: 1024px) { grid-template-columns: 1fr 1fr; }
-  @media (max-width: 640px) { grid-template-columns: 1fr; }
+  gap: $gap;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .chart-card {
-  transition: all 0.15s;
-  &:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  /* pas de hover par défaut — seulement les cards cliquables (access-card) en ont un */
+  transition: none;
 }
 
-.quick-stats { display: flex; flex-direction: column; gap: 8px; }
+.chart-card.access-card {
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: var(--accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.quick-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 .qs-item {
   display: flex;
@@ -53,17 +97,38 @@
   align-items: center;
   padding-bottom: 8px;
   border-bottom: 1px solid #f1f5f9;
-  &:last-child { border-bottom: none; }
+
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
-.qs-label { font-size: 12px; font-weight: 500; color: #6b7280; }
-.qs-value { font-size: 20px; font-weight: 700; color: #1e293b; }
+.qs-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+}
 
-.table-wrapper { overflow-x: auto; }
+.qs-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Conteneur des charts Chart.js — hauteur fixe requise car maintainAspectRatio:false */
+.chart-container {
+  position: relative;
+  height: 210px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
 
 .tasks-table {
   width: 100%;
   border-collapse: collapse;
+
   th {
     padding: 10px 20px;
     text-align: left;
@@ -75,17 +140,30 @@
     border-bottom: 1px solid var(--border);
     background: #fafafa;
   }
+
   td {
     padding: 12px 20px;
     border-bottom: 1px solid #f3f4f6;
     font-size: 13px;
   }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #fafafa; }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:hover td {
+    background: #fafafa;
+  }
 }
 
-.task-title { font-weight: 500; }
-.text-secondary { color: var(--text-secondary); font-size: 12px; }
+.task-title {
+  font-weight: 500;
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
 
 .status-badge {
   padding: 2px 8px;
@@ -94,7 +172,10 @@
   font-weight: 500;
 }
 
-.row-actions { display: flex; gap: 6px; }
+.row-actions {
+  display: flex;
+  gap: 6px;
+}
 
 .btn-primary {
   display: flex;
@@ -108,8 +189,15 @@
   font-size: 13px;
   cursor: pointer;
   font-family: 'DM Sans', sans-serif;
-  &:hover:not(:disabled) { opacity: 0.85; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .btn-small {
@@ -120,7 +208,10 @@
   font-size: 12px;
   cursor: pointer;
   font-family: 'DM Sans', sans-serif;
-  &:hover { background: #f3f4f6; }
+
+  &:hover {
+    background: #f3f4f6;
+  }
 }
 
 .btn-delete {
@@ -132,7 +223,10 @@
   font-size: 12px;
   cursor: pointer;
   font-family: 'DM Sans', sans-serif;
-  &:hover { background: #fee2e2; }
+
+  &:hover {
+    background: #fee2e2;
+  }
 }
 
 .form-group {
@@ -140,7 +234,12 @@
   flex-direction: column;
   gap: 6px;
   margin-bottom: 12px;
-  label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
 }
 
 .form-input {
@@ -149,8 +248,16 @@
   border-radius: 6px;
   font-size: 13px;
   font-family: 'DM Sans', sans-serif;
-  &:focus { outline: none; border-color: var(--accent); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .target-values {
@@ -169,6 +276,7 @@
   padding: 3px 8px;
   border-radius: 4px;
   font-size: 12px;
+
   button {
     background: none;
     border: none;
@@ -182,7 +290,10 @@
 .target-input {
   display: flex;
   gap: 8px;
-  .form-input { flex: 1; }
+
+  .form-input {
+    flex: 1;
+  }
 }
 
 .modal-footer {

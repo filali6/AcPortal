@@ -21,6 +21,8 @@ public class Stream
 
     public string? GitRepoUrl{get;set;}
 
-    public string? TeamsChannelId { get; set; }   
-    public string? TeamsChannelUrl { get; set; }   
+  
+
+    public string? MessagingChannelId { get; set; }
+    public string? MessagingChannelUrl { get; set; }
 }

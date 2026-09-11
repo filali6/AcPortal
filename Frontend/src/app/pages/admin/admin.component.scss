@@ -478,7 +478,7 @@ tr.selected td {
 }
 .bottom-actions {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     margin-top: 1rem;
 
@@ -825,4 +825,8 @@ tr.selected td {
     margin-top: 12px;
     font-size: 13px;
     color: #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
+

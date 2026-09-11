@@ -1923,6 +1923,23 @@
           "buildTransitive/netstandard2.0/OpenAI.targets": {}
         }
       },
+      "SlackNet/0.17.10": {
+        "type": "package",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3",
+          "System.Reactive": "6.0.1"
+        },
+        "compile": {
+          "lib/net8.0/SlackNet.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/SlackNet.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Std.UriTemplate/2.0.8": {
         "type": "package",
         "compile": {
@@ -2148,6 +2165,22 @@
         },
         "build": {
           "buildTransitive/net8.0/_._": {}
+        }
+      },
+      "System.Reactive/6.0.1": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/System.Reactive.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/System.Reactive.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net6.0/_._": {}
         }
       },
       "System.Security.Cryptography.Pkcs/10.0.0": {
@@ -2393,6 +2426,7 @@
           "Microsoft.SemanticKernel.Connectors.Google": "1.76.0-alpha",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.0",
           "Octokit": "14.0.0",
+          "SlackNet": "0.17.10",
           "Swashbuckle.AspNetCore": "10.1.4",
           "System.IdentityModel.Tokens.Jwt": "8.18.0",
           "UglyToad.PdfPig": "1.7.0-custom-5"
@@ -5296,6 +5330,21 @@
         "openai.nuspec"
       ]
     },
+    "SlackNet/0.17.10": {
+      "sha512": "dNh84eMrn7QGrAz4j9si4GhrzcH8+fiesYvlEbqxs0tk6ukMzA86I+4HHJaxWndVV3DtGy/Dr72x49Op/3Ru0w==",
+      "type": "package",
+      "path": "slacknet/0.17.10",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net8.0/SlackNet.dll",
+        "lib/net8.0/SlackNet.xml",
+        "lib/netstandard2.0/SlackNet.dll",
+        "lib/netstandard2.0/SlackNet.xml",
+        "slacknet.0.17.10.nupkg.sha512",
+        "slacknet.nuspec"
+      ]
+    },
     "Std.UriTemplate/2.0.8": {
       "sha512": "IAR4gJlLVD4r/FsU/rDb1+9sbB3/tCFVZz5IzlbM2yHoiUisBi5Ek/KXRUF7RcqNARka79EoaOz9INnXvQ/O6w==",
       "type": "package",
@@ -5604,6 +5653,34 @@
         "system.numerics.tensors.10.0.6.nupkg.sha512",
         "system.numerics.tensors.nuspec",
         "useSharedDesignerContext.txt"
+      ]
+    },
+    "System.Reactive/6.0.1": {
+      "sha512": "rHaWtKDwCi9qJ3ObKo8LHPMuuwv33YbmQi7TcUK1C264V3MFnOr5Im7QgCTdLniztP3GJyeiSg5x8NqYJFqRmg==",
+      "type": "package",
+      "path": "system.reactive/6.0.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "build/net6.0-windows10.0.19041/_._",
+        "build/net6.0/_._",
+        "buildTransitive/net6.0-windows10.0.19041/_._",
+        "buildTransitive/net6.0/_._",
+        "icon.png",
+        "lib/net472/System.Reactive.dll",
+        "lib/net472/System.Reactive.xml",
+        "lib/net6.0-windows10.0.19041/System.Reactive.dll",
+        "lib/net6.0-windows10.0.19041/System.Reactive.xml",
+        "lib/net6.0/System.Reactive.dll",
+        "lib/net6.0/System.Reactive.xml",
+        "lib/netstandard2.0/System.Reactive.dll",
+        "lib/netstandard2.0/System.Reactive.xml",
+        "lib/uap10.0.18362/System.Reactive.dll",
+        "lib/uap10.0.18362/System.Reactive.pri",
+        "lib/uap10.0.18362/System.Reactive.xml",
+        "readme.md",
+        "system.reactive.6.0.1.nupkg.sha512",
+        "system.reactive.nuspec"
       ]
     },
     "System.Security.Cryptography.Pkcs/10.0.0": {
