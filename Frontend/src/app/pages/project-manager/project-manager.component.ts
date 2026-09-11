@@ -404,6 +404,9 @@ getInitials(fullName: string): string {
   if (!fullName) return '?';
   return fullName.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
 }
+openExternalLink(url: string): void {
+    window.open(url, '_blank');
+}
 
 getLeadById(id: string, type: 'biz' | 'tech') {
   if (!id) return null;
@@ -436,5 +439,6 @@ addConsultantFromDrop(tabId: string, c: any, side: 'business' | 'technical') {
   this.toggleConsultant(tabId, c.id, side);
   this.openDrop = null;
 }
+
 
 }

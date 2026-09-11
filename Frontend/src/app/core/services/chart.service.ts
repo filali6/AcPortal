@@ -1,5 +1,27 @@
 import { Injectable } from '@angular/core';
-import { Chart } from 'chart.js';
+import {
+  Chart,
+  DoughnutController,
+  BarController,
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Legend,
+  Tooltip
+} from 'chart.js';
+
+ 
+Chart.register(
+  DoughnutController,
+  BarController,
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Legend,
+  Tooltip
+);
 
 @Injectable({ providedIn: 'root' })
 export class ChartService {
@@ -13,7 +35,14 @@ export class ChartService {
   ): Chart | null {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!canvas) return null;
+
+    // Détruit la référence qu'on nous donne...
     if (existingChart) existingChart.destroy();
+    // ...ET tout chart déjà attaché à ce canvas (sécurité, au cas où la
+    // référence passée en paramètre serait périmée — c'est ça qui causait
+    // l'erreur "Canvas is already in use").
+    const stale = Chart.getChart(canvas);
+    if (stale) stale.destroy();
 
     return new Chart(canvas, {
       type: 'doughnut',
@@ -48,7 +77,10 @@ export class ChartService {
   ): Chart | null {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!canvas) return null;
+
     if (existingChart) existingChart.destroy();
+    const stale = Chart.getChart(canvas);
+    if (stale) stale.destroy();
 
     return new Chart(canvas, {
       type: 'bar',

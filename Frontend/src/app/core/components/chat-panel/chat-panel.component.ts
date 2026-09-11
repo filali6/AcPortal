@@ -22,6 +22,7 @@ export class ChatPanelComponent implements OnInit, OnChanges, AfterViewChecked {
   @Input() title: string = 'Chat';
   @Input() isOpen: boolean = false;
   @Input() taskStatus: number | null = null;
+  @Input() messagingChannelUrl: string | null = null;
 @Input() toolName: string | null = null
 
   @ViewChild('messagesEnd') messagesEnd!: ElementRef;
@@ -146,7 +147,9 @@ getStatusColor(status: number): string {
     };
     return colors[status] || '#9ca3af';
 }
-
+openExternalLink(url: string): void {
+    window.open(url, '_blank');
+}
 getStatusLabel(status: number): string {
     const labels: { [key: number]: string } = {
         0: 'Pending',

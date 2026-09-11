@@ -3,9 +3,8 @@
     <!-- DASHBOARD TAB -->
     <ng-container *ngIf="activeTabId === 'tasks'">
 
-        <!-- Row 1 — Stats globales -->
-        <div class="quick-stats"
-            style="display:grid; grid-template-columns: repeat(4,1fr); gap:16px; margin-bottom:20px">
+        <!-- Row 1 — Stats globales (KPI cards, un seul chiffre) -->
+        <div class="stats-grid">
             <div class="card">
                 <div class="card-body">
                     <div class="qs-item">
@@ -40,8 +39,45 @@
             </div>
         </div>
 
-        <!-- Row 2 — Monitoring -->
-        <div class="charts-grid" style="margin-bottom:20px">
+        <!-- Row 2 — Accès rapide (cliquables → hover conservé) -->
+        <div class="charts-grid">
+            <div class="card chart-card access-card" (click)="openTab('users')">
+                <div class="card-header">
+                    <h2>
+                        <lucide-icon [img]="Users" size="15" style="margin-right:6px"></lucide-icon>
+                        {{ 'DASHBOARD.MANAGE_USERS' | translate }}
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-secondary" style="font-size:13px">{{ 'SA.MANAGE_USERS_DESC' | translate }}</p>
+                </div>
+            </div>
+            <div class="card chart-card access-card" (click)="openTab('tools')">
+                <div class="card-header">
+                    <h2>
+                        <lucide-icon [img]="Wrench" size="15" style="margin-right:6px"></lucide-icon>
+                        {{ 'DASHBOARD.MANAGE_TOOLS' | translate }}
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-secondary" style="font-size:13px">{{ 'SA.MANAGE_TOOLS_DESC' | translate }}</p>
+                </div>
+            </div>
+            <div class="card chart-card access-card" (click)="openTab('workflow')">
+                <div class="card-header">
+                    <h2>
+                        <lucide-icon [img]="GitBranch" size="15" style="margin-right:6px"></lucide-icon>
+                        {{ 'DASHBOARD.MANAGE_WORKFLOW' | translate }}
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-secondary" style="font-size:13px">{{ 'SA.MANAGE_WORKFLOW_DESC' | translate }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3 — Monitoring (charts) -->
+        <div class="charts-grid">
 
             <!-- Tasks Overview -->
             <div class="card chart-card">
@@ -49,19 +85,8 @@
                     <h2>{{ 'DASHBOARD.TASKS_OVERVIEW' | translate }}</h2>
                 </div>
                 <div class="card-body">
-                    <div class="quick-stats">
-                        <div class="qs-item">
-                            <span class="qs-label">{{ 'TASKS.PENDING' | translate }}</span>
-                            <span class="qs-value" style="color:#f59e0b">{{ stats.tasksPending }}</span>
-                        </div>
-                        <div class="qs-item">
-                            <span class="qs-label">{{ 'TASKS.BLOCKED' | translate }}</span>
-                            <span class="qs-value" style="color:#ef4444">{{ stats.tasksBlocked }}</span>
-                        </div>
-                        <div class="qs-item">
-                            <span class="qs-label">{{ 'TASKS.DONE' | translate }}</span>
-                            <span class="qs-value" style="color:#10b981">{{ stats.tasksDone }}</span>
-                        </div>
+                    <div class="chart-container">
+                        <canvas id="chartTasksOverview"></canvas>
                     </div>
                 </div>
             </div>
@@ -72,19 +97,8 @@
                     <h2>{{ 'DASHBOARD.SYSTEM_STATUS' | translate }}</h2>
                 </div>
                 <div class="card-body">
-                    <div class="quick-stats">
-                        <div class="qs-item">
-                            <span class="qs-label">{{ 'TOOLS.TITLE' | translate }}</span>
-                            <span class="qs-value" style="color:var(--accent)">{{ stats.totalTools }}</span>
-                        </div>
-                        <div class="qs-item">
-                            <span class="qs-label">{{ 'DASHBOARD.WORKFLOW_RULES' | translate }}</span>
-                            <span class="qs-value" style="color:var(--accent)">{{ stats.totalRules }}</span>
-                        </div>
-                        <div class="qs-item">
-                            <span class="qs-label">{{ 'SA.ROLES' | translate }}</span>
-                            <span class="qs-value" style="color:var(--accent)">{{ stats.usersByRole.length }}</span>
-                        </div>
+                    <div class="chart-container">
+                        <canvas id="chartSystemStatus"></canvas>
                     </div>
                 </div>
             </div>
@@ -95,57 +109,12 @@
                     <h2>{{ 'DASHBOARD.USERS_BY_ROLE' | translate }}</h2>
                 </div>
                 <div class="card-body">
-                    <div class="quick-stats">
-                        <div class="qs-item" *ngFor="let r of stats.usersByRole">
-                            <span class="qs-label">{{ r.role }}</span>
-                            <span class="qs-value" style="font-size:16px" [style.color]="getRoleColor(r.role)">
-                                {{ r.count }}
-                            </span>
-                        </div>
+                    <div class="chart-container">
+                        <canvas id="chartUsersByRole"></canvas>
                     </div>
                 </div>
             </div>
 
-        </div>
-
-        <!-- Row 3 — Accès rapide -->
-        <div class="charts-grid">
-            <div class="card chart-card access-card" (click)="openTab('users')" style="cursor:pointer">
-                <div class="card-header">
-                    <h2>
-                        <lucide-icon [img]="Users" size="15" style="margin-right:6px"></lucide-icon>
-                        {{ 'DASHBOARD.MANAGE_USERS' | translate }}
-                    </h2>
-                    <lucide-icon [img]="ChevronRight" size="14" class="text-secondary"></lucide-icon>
-                </div>
-                <div class="card-body">
-                    <p class="text-secondary" style="font-size:13px">{{ 'SA.MANAGE_USERS_DESC' | translate }}</p>
-                </div>
-            </div>
-            <div class="card chart-card access-card" (click)="openTab('tools')" style="cursor:pointer">
-                <div class="card-header">
-                    <h2>
-                        <lucide-icon [img]="Wrench" size="15" style="margin-right:6px"></lucide-icon>
-                        {{ 'DASHBOARD.MANAGE_TOOLS' | translate }}
-                    </h2>
-                    <lucide-icon [img]="ChevronRight" size="14" class="text-secondary"></lucide-icon>
-                </div>
-                <div class="card-body">
-                    <p class="text-secondary" style="font-size:13px">{{ 'SA.MANAGE_TOOLS_DESC' | translate }}</p>
-                </div>
-            </div>
-            <div class="card chart-card access-card" (click)="openTab('workflow')" style="cursor:pointer">
-                <div class="card-header">
-                    <h2>
-                        <lucide-icon [img]="GitBranch" size="15" style="margin-right:6px"></lucide-icon>
-                        {{ 'DASHBOARD.MANAGE_WORKFLOW' | translate }}
-                    </h2>
-                    <lucide-icon [img]="ChevronRight" size="14" class="text-secondary"></lucide-icon>
-                </div>
-                <div class="card-body">
-                    <p class="text-secondary" style="font-size:13px">{{ 'SA.MANAGE_WORKFLOW_DESC' | translate }}</p>
-                </div>
-            </div>
         </div>
 
     </ng-container>

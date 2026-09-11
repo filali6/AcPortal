@@ -31,10 +31,14 @@
     border-bottom: 1px solid #e5e7eb;
     flex-shrink: 0;
     background: white;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .drawer-close {
-    float: right;
+    order: 99;
     background: none;
     border: none;
     cursor: pointer;
@@ -42,7 +46,6 @@
     font-size: 14px;
     padding: 2px 6px;
     border-radius: 4px;
-    margin-top: -2px;
 
     &:hover {
         background: #f5f5f5;
@@ -54,19 +57,19 @@
     font-size: 13px;
     font-weight: 600;
     color: #1a1f2e;
-    margin-bottom: 6px;
-    padding-right: 32px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1 1 100%;
+    order: 1;
 }
 
 .drawer-badges {
     display: flex;
     gap: 6px;
     margin-bottom: 4px;
+    order: 3;
 }
-
 .status-badge {
     padding: 2px 8px;
     border-radius: 4px;
@@ -407,4 +410,25 @@
     border-radius: 99px;
     white-space: nowrap;
     flex-shrink: 0;
+}
+.btn-slack-mini {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    color: #1a1a1a;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    order: 2;
+    margin-left: auto;
+
+    &:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+    }
 }

@@ -32,7 +32,7 @@
     "PENDING": "Pending",
     "BLOCKED": "Blocked",
     "DONE": "Done",
-    "ALL_STATUSES": "All statuses",
+    "ALL_STATUSES": "All stats",
     "ALL_PROJECTS": "All projects",
     "ALL_STREAMS": "All streams",
     "MARK_DONE": "Mark Done",
@@ -209,7 +209,8 @@
 "AI": {
   "SUMMARY": "AI Summary",
   "SUMMARY_PENDING": "AI Summary is being generated...",
-  "SUMMARY_FAILED": "Summary generation failed."
+  "SUMMARY_FAILED": "Summary generation failed.",
+  "RETRY_SUMMARY": "Regenerate Summary "
 },
 "CONSULTANT": {
   "STREAMS_ASSIGNED": "streams assigned",
@@ -280,5 +281,26 @@
   "AVAILABLE":"AVAILABLE"
 },"ADMIN": {
   "ACTIVE_PROJECTS": "Active Projects"
+},
+"TOOLTIP": {
+  "HOME": "Home",
+  "DASHBOARD": "Dashboard",
+  "USERS": "Users",
+  "TOOLS": "Tools",
+  "WORKFLOW": "Workflow",
+  "LOGOUT": "Log out",
+  "DISCUSSIONS": "Discussions",
+  "CONTRACTS": "Contracts",
+  "NOTIFICATIONS": "Notifications",
+  "PROFILE": "My profile",
+  "LANG_FR": "Passer en français",
+  "LANG_EN": "Switch to English",
+  "CLOSE": "Close"
+},
+"AI_BRIEFING": {
+  "TITLE": "AI Briefing",
+  "TOOLTIP": "View today's briefing",
+  "ERROR": "Unable to load briefing",
+  "EMPTY": "No briefing available"
 }
 }

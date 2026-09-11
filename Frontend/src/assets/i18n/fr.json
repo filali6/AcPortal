@@ -205,7 +205,8 @@
 "AI": {
   "SUMMARY": "Résumé IA",
   "SUMMARY_PENDING": "Résumé IA en cours de génération...",
-  "SUMMARY_FAILED": "Échec de la génération du résumé."
+  "SUMMARY_FAILED": "Échec de la génération du résumé.",
+  "RETRY_SUMMARY": "Relancer le résumé"
 },
 "CONSULTANT": {
   "STREAMS_ASSIGNED": "streams assignés",
@@ -273,6 +274,26 @@
 },
 "ADMIN": {
   "ACTIVE_PROJECTS": "Projets actifs"
+},
+"TOOLTIP": {
+  "HOME": "Accueil",
+  "DASHBOARD": "Tableau de bord",
+  "USERS": "Utilisateurs",
+  "TOOLS": "Outils",
+  "WORKFLOW": "Workflow",
+  "LOGOUT": "Se déconnecter",
+  "DISCUSSIONS": "Discussions",
+  "CONTRACTS": "Contrats",
+  "NOTIFICATIONS": "Notifications",
+  "PROFILE": "Mon profil",
+  "LANG_FR": "Passer en français",
+  "LANG_EN": "Switch to English",
+  "CLOSE": "Fermer"
+},
+"AI_BRIEFING": {
+  "TITLE": "Briefing IA",
+  "TOOLTIP": "Voir le briefing du jour",
+  "ERROR": "Impossible de charger le briefing",
+  "EMPTY": "Aucun briefing disponible"
 }
-
 }

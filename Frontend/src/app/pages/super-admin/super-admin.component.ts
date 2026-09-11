@@ -7,16 +7,19 @@ import { WorkflowService } from '../../core/services/Workflow.service';
 import { ToastService } from '../../core/services/toast.service';
 import { UtilsService } from '../../core/services/utils.service';
 import { TabsService } from '../../core/services/tabs.service';
+import { ChartService } from '../../core/services/chart.service';
 import { ModalComponent } from '../../core/components/modal/modal.component';
 import { LucideAngularModule, Users, Wrench, GitBranch, LayoutDashboard, Plus, Trash2, Edit, ChevronRight } from 'lucide-angular';
 import { Subscription } from 'rxjs';
 import { ProjectsService } from '../../core/services/projects.service';
 import { TasksService } from '../../core/services/tasks.service';
-import { TranslateModule ,TranslateService} from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Chart } from 'chart.js';
+
 @Component({
   selector: 'app-super-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, ModalComponent,TranslateModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, ModalComponent, TranslateModule],
   templateUrl: './super-admin.component.html',
   styleUrl: './super-admin.component.scss'
 })
@@ -41,7 +44,7 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
   editingTool: PluginDto | null = null;
   toolForm: PluginDto = {
     id: '', name: '', description: '',
-    category: '', url: '', icon: '', ssoEnabled: false,isActive: true, allowedRoles: []
+    category: '', url: '', icon: '', ssoEnabled: false, isActive: true, allowedRoles: []
   };
 
   // Workflow
@@ -60,25 +63,34 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     eventCode: '', actionType: 'CREATE_TASK', taskTitle: '',
     taskDescription: '', targetType: 'ROLE', targetValues: []
   };
-  
+
 
   // Stats
- stats = {
-  totalUsers: 0,
-  totalTools: 0,
-  totalRules: 0,
-  totalProjects: 0,
-  totalPortfolios: 0,
-  tasksPending: 0,
-  tasksBlocked: 0,
-  tasksDone: 0,
-  usersByRole: [] as { role: string; count: number }[]
-};
+  stats = {
+    totalUsers: 0,
+    totalTools: 0,
+    totalRules: 0,
+    totalProjects: 0,
+    totalPortfolios: 0,
+    tasksPending: 0,
+    tasksBlocked: 0,
+    tasksDone: 0,
+    usersByRole: [] as { role: string; count: number }[]
+  };
   showConfirmModal = false;
-confirmMessage = '';
-confirmAction: (() => void) | null = null;
+  confirmMessage = '';
+  confirmAction: (() => void) | null = null;
 
   loading = false;
+
+  // Instances Chart.js — gardées en mémoire pour pouvoir les détruire/recréer
+  private tasksChart: Chart | null = null;
+  private systemChart: Chart | null = null;
+  private rolesChart: Chart | null = null;
+  // Anti-rafale : computeStats() est appelé 4 fois au chargement (users, tools,
+  // workflow, dashboard) — sans ce verrou, renderCharts() se déclencherait 4 fois
+  // quasi simultanément et ferait planter Chart.js.
+  private chartsRenderScheduled = false;
 
   readonly Users = Users;
   readonly Wrench = Wrench;
@@ -98,26 +110,37 @@ confirmAction: (() => void) | null = null;
     public tabsService: TabsService,
     private projectsService: ProjectsService,
     private tasksService: TasksService,
+    private chartService: ChartService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
     this.loadAll();
     this.subs.push(
-      this.tabsService.activeTabId.subscribe(id => this.activeTabId = id)
+      this.tabsService.activeTabId.subscribe(id => {
+        this.activeTabId = id;
+        // Le canvas est détruit/recréé par *ngIf à chaque changement d'onglet
+        // → il faut redessiner les charts à chaque fois qu'on revient sur "tasks"
+        if (id === 'tasks') {
+          this.renderCharts();
+        }
+      })
     );
-     
   }
 
   ngOnDestroy(): void {
     this.subs.forEach(s => s.unsubscribe());
+    this.tasksChart?.destroy();
+    this.systemChart?.destroy();
+    this.rolesChart?.destroy();
   }
 
- loadAll(): void {
-  this.loadDashboard();
-  this.loadUsers();
-  this.loadTools();
-  this.loadWorkflow();
-}
+  loadAll(): void {
+    this.loadDashboard();
+    this.loadUsers();
+    this.loadTools();
+    this.loadWorkflow();
+  }
 
   // ===== NAVIGATION =====
   openTab(type: 'users' | 'tools' | 'workflow'): void {
@@ -141,6 +164,70 @@ confirmAction: (() => void) | null = null;
     this.stats.usersByRole = Object.keys(roleCount).map(role => ({
       role, count: roleCount[role]
     }));
+    this.renderCharts();
+  }
+
+  // ===== CHARTS =====
+  private renderCharts(): void {
+    if (this.activeTabId !== 'tasks') return;
+
+    // Anti-rafale : si un rendu est déjà programmé pour ce tick, on ne
+    // reprogramme pas un deuxième passage par-dessus.
+    if (this.chartsRenderScheduled) return;
+    this.chartsRenderScheduled = true;
+
+    // setTimeout(0) : on attend que Angular ait fini de (re)créer le <canvas> dans le DOM
+    // suite au *ngIf, sinon getElementById ne trouve rien.
+    setTimeout(() => {
+      this.chartsRenderScheduled = false;
+
+      // Chaque chart est créé indépendamment : si l'un échoue, les deux
+      // autres doivent quand même s'afficher (avant, une erreur sur le
+      // premier bloquait silencieusement la création des deux suivants).
+      try {
+        this.tasksChart = this.chartService.createDoughnut(
+          'chartTasksOverview',
+          [
+            this.translate.instant('TASKS.PENDING'),
+            this.translate.instant('TASKS.BLOCKED'),
+            this.translate.instant('TASKS.DONE')
+          ],
+          [this.stats.tasksPending, this.stats.tasksBlocked, this.stats.tasksDone],
+          ['#f59e0b', '#ef4444', '#10b981'],
+          this.tasksChart
+        );
+      } catch (e) {
+        console.error('Erreur création chart Tasks Overview', e);
+      }
+
+      try {
+        this.systemChart = this.chartService.createBar(
+          'chartSystemStatus',
+          [
+            this.translate.instant('TOOLS.TITLE'),
+            this.translate.instant('DASHBOARD.WORKFLOW_RULES'),
+            this.translate.instant('SA.ROLES')
+          ],
+          [this.stats.totalTools, this.stats.totalRules, this.stats.usersByRole.length],
+          '#0080ff',
+          this.systemChart
+        );
+      } catch (e) {
+        console.error('Erreur création chart System Status', e);
+      }
+
+      try {
+        this.rolesChart = this.chartService.createDoughnut(
+          'chartUsersByRole',
+          this.stats.usersByRole.map(r => r.role),
+          this.stats.usersByRole.map(r => r.count),
+          this.stats.usersByRole.map(r => this.getRoleColor(r.role)),
+          this.rolesChart
+        );
+      } catch (e) {
+        console.error('Erreur création chart Users by Role', e);
+      }
+    });
   }
 
   // ===== USERS =====
@@ -206,22 +293,22 @@ confirmAction: (() => void) | null = null;
   }
 
   deleteUser(user: any): void {
-  this.openConfirm(`Delete ${user.fullName}?`, () => {
-    this.usersService.deleteUser(user.id).subscribe({
-      next: () => { this.toastService.show('User deleted!', 'success'); this.loadUsers(); },
-      error: () => this.toastService.show('Error deleting user', 'error')
+    this.openConfirm(`Delete ${user.fullName}?`, () => {
+      this.usersService.deleteUser(user.id).subscribe({
+        next: () => { this.toastService.show('User deleted!', 'success'); this.loadUsers(); },
+        error: () => this.toastService.show('Error deleting user', 'error')
+      });
     });
-  });
-}
+  }
 
- 
+
   loadTools(): void {
     this.pluginsAdminService.getAll().subscribe({
       next: (tools) => { this.tools = tools; this.computeStats(); }
     });
   }
 
- 
+
 
   openEditToolModal(tool: PluginDto): void {
     this.editingTool = tool;
@@ -229,59 +316,59 @@ confirmAction: (() => void) | null = null;
     this.showToolModal = true;
   }
   openCreateToolModal(): void {
-  this.editingTool = null;
-  this.toolForm = {
-    id: '', name: '', description: '',
-    category: '', url: '', icon: '',
-    ssoEnabled: false, isActive: true, allowedRoles: []
-  };
-  this.showToolModal = true;
-}
-deleteTool(tool: PluginDto): void {
-  this.openConfirm(`Delete ${tool.name}?`, () => {
-    this.pluginsAdminService.delete(tool.id).subscribe({
-      next: () => { this.toastService.show('Tool deleted!', 'success'); this.loadTools(); },
-      error: () => this.toastService.show('Error deleting tool', 'error')
-    });
-  });
-}
-
-saveTool(): void {
-  if (!this.toolForm.name || (!this.editingTool && !this.toolForm.id)) {
-    this.toastService.show('ID and Name are required', 'error');
-    return;
+    this.editingTool = null;
+    this.toolForm = {
+      id: '', name: '', description: '',
+      category: '', url: '', icon: '',
+      ssoEnabled: false, isActive: true, allowedRoles: []
+    };
+    this.showToolModal = true;
   }
-  this.loading = true;
-
-  const payload = {
-    ...this.toolForm,
-    allowedRoles: JSON.stringify(this.toolForm.allowedRoles)
-  };
-
-  if (this.editingTool) {
-    this.pluginsAdminService.update(this.editingTool.id, payload as any).subscribe({
-      next: () => {
-        this.toastService.show('Tool updated!', 'success');
-        this.loading = false;
-        this.showToolModal = false;
-        this.loadTools();
-      },
-      error: () => { this.toastService.show('Error updating tool', 'error'); this.loading = false; }
-    });
-  } else {
-    this.pluginsAdminService.create(payload as any).subscribe({
-      next: () => {
-        this.toastService.show('Tool created!', 'success');
-        this.loading = false;
-        this.showToolModal = false;
-        this.loadTools();
-      },
-      error: () => { this.toastService.show('Error creating tool', 'error'); this.loading = false; }
+  deleteTool(tool: PluginDto): void {
+    this.openConfirm(`Delete ${tool.name}?`, () => {
+      this.pluginsAdminService.delete(tool.id).subscribe({
+        next: () => { this.toastService.show('Tool deleted!', 'success'); this.loadTools(); },
+        error: () => this.toastService.show('Error deleting tool', 'error')
+      });
     });
   }
-}
-  
- 
+
+  saveTool(): void {
+    if (!this.toolForm.name || (!this.editingTool && !this.toolForm.id)) {
+      this.toastService.show('ID and Name are required', 'error');
+      return;
+    }
+    this.loading = true;
+
+    const payload = {
+      ...this.toolForm,
+      allowedRoles: JSON.stringify(this.toolForm.allowedRoles)
+    };
+
+    if (this.editingTool) {
+      this.pluginsAdminService.update(this.editingTool.id, payload as any).subscribe({
+        next: () => {
+          this.toastService.show('Tool updated!', 'success');
+          this.loading = false;
+          this.showToolModal = false;
+          this.loadTools();
+        },
+        error: () => { this.toastService.show('Error updating tool', 'error'); this.loading = false; }
+      });
+    } else {
+      this.pluginsAdminService.create(payload as any).subscribe({
+        next: () => {
+          this.toastService.show('Tool created!', 'success');
+          this.loading = false;
+          this.showToolModal = false;
+          this.loadTools();
+        },
+        error: () => { this.toastService.show('Error creating tool', 'error'); this.loading = false; }
+      });
+    }
+  }
+
+
 
   // ===== WORKFLOW =====
   loadWorkflow(): void {
@@ -359,33 +446,34 @@ saveTool(): void {
     return colors[role] || '#888';
   }
   openConfirm(message: string, action: () => void): void {
-  this.confirmMessage = message;
-  this.confirmAction = action;
-  this.showConfirmModal = true;
-}
+    this.confirmMessage = message;
+    this.confirmAction = action;
+    this.showConfirmModal = true;
+  }
 
-executeConfirm(): void {
-  if (this.confirmAction) this.confirmAction();
-  this.showConfirmModal = false;
-}
-loadDashboard(): void {
-  this.projectsService.getAll().subscribe({
-    next: (projects) => { this.stats.totalProjects = projects.length; }
-  });
-  this.projectsService.getAllPortfolios().subscribe({
-    next: (portfolios) => { this.stats.totalPortfolios = portfolios.length; }
-  });
-  this.tasksService.getAll().subscribe({
-    next: (tasks) => {
-      this.stats.tasksPending = tasks.filter(t => t.status === 0).length;
-      this.stats.tasksBlocked = tasks.filter(t => t.status === 1).length;
-      this.stats.tasksDone   = tasks.filter(t => t.status === 2).length;
-    }
-  });
-}
-toggleRole(role: string): void {
-  const idx = this.toolForm.allowedRoles.indexOf(role);
-  if (idx > -1) this.toolForm.allowedRoles.splice(idx, 1);
-  else this.toolForm.allowedRoles.push(role);
-}
+  executeConfirm(): void {
+    if (this.confirmAction) this.confirmAction();
+    this.showConfirmModal = false;
+  }
+  loadDashboard(): void {
+    this.projectsService.getAll().subscribe({
+      next: (projects) => { this.stats.totalProjects = projects.length; }
+    });
+    this.projectsService.getAllPortfolios().subscribe({
+      next: (portfolios) => { this.stats.totalPortfolios = portfolios.length; }
+    });
+    this.tasksService.getAll().subscribe({
+      next: (tasks) => {
+        this.stats.tasksPending = tasks.filter(t => t.status === 0).length;
+        this.stats.tasksBlocked = tasks.filter(t => t.status === 1).length;
+        this.stats.tasksDone = tasks.filter(t => t.status === 2).length;
+        this.renderCharts();
+      }
+    });
+  }
+  toggleRole(role: string): void {
+    const idx = this.toolForm.allowedRoles.indexOf(role);
+    if (idx > -1) this.toolForm.allowedRoles.splice(idx, 1);
+    else this.toolForm.allowedRoles.push(role);
+  }
 }
