@@ -15,10 +15,4 @@ public class ProjectStep
     public Guid? DependsOnStepId { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    // Git
-    public string? LastCommitHash { get; set; }
-    public DateTime? LastCommitAt { get; set; }
-    public ICollection<StepConfigFile> ConfigFiles { get; set; } = new List<StepConfigFile>();
-
 }

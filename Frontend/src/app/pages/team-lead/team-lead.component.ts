@@ -1,10 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 import { TasksService, Task } from '../../core/services/tasks.service';
-import { StreamsService } from '../../core/services/streams.service';
-import { ProjectsService } from '../../core/services/projects.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { TabsService } from '../../core/services/tabs.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -12,6 +11,7 @@ import { UtilsService } from '../../core/services/utils.service';
 import { ChartService } from '../../core/services/chart.service';
 import { PluginBridgeService } from '../../core/services/plugin-bridge.service';
 import { LucideAngularModule, ChevronRight, Layers, MessageSquare } from 'lucide-angular';
+import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
@@ -19,23 +19,16 @@ import { TeamFilterPipe } from '../../core/pipes/team-filter.pipe';
 import { ChatPanelComponent } from '../../core/components/chat-panel/chat-panel.component';
 import { ChatService } from '../../core/services/chat.service';
 import { KeycloakService } from 'keycloak-angular';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
-import { DrawerService } from '../../core/services/drawer.service';
-import { BriefingCardComponent } from '../../core/components/briefing-card/briefing-card.component';
-import { GitService } from '../../core/services/git.service';
-
 @Component({
   selector: 'app-team-lead',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, TeamFilterPipe, ChatPanelComponent, TranslateModule,BriefingCardComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule,TeamFilterPipe,ChatPanelComponent],
   templateUrl: './team-lead.component.html',
   styleUrl: './team-lead.component.scss'
 })
 export class TeamLeadComponent implements OnInit, OnDestroy {
 
-  activeTabId = 'tasks';
+  activeTabId: string = 'tasks';
   userRole = '';
   currentUserId = '';
 
@@ -44,6 +37,7 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
   projects: any[] = [];
   availablePlugins: any[] = [];
 
+  // Filtres
   filterProjectId = '';
   filterStreamId = '';
   filterStatus = 'all';
@@ -56,6 +50,7 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
   loading = false;
   private api = environment.apiUrl;
   private subs: Subscription[] = [];
+
   private donutChart: Chart | null = null;
   private barChart: Chart | null = null;
 
@@ -66,36 +61,29 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
     nextDelivery: { name: '', date: '' }
   };
 
+  //chat 
   chatOpen = false;
-  chatStreamId: string | null = null;
-  chatTaskId: string | null = null;
-  chatTitle = '';
-
-  streamConfigs: { [streamId: string]: any } = {};
-  loadingConfigs = false;
-  validatingStream = false;
+chatStreamId: string | null = null;
+chatTaskId: string | null = null;
+chatTitle = '';
 
   readonly ChevronRight = ChevronRight;
   readonly Layers = Layers;
-  readonly MessageSquare = MessageSquare;
+  readonly MessageSquare=MessageSquare;
 
   constructor(
     private http: HttpClient,
     private authService: AuthService,
     private tasksService: TasksService,
-    private streamsService: StreamsService,
-    private projectsService: ProjectsService,
     private notificationService: NotificationService,
     public tabsService: TabsService,
     private toastService: ToastService,
     public utils: UtilsService,
     private chartService: ChartService,
     private pluginBridge: PluginBridgeService,
-    private chatService: ChatService,
-    private keycloak: KeycloakService,
-    private translate: TranslateService,
-    private drawerService:DrawerService,
-    private gitService: GitService
+    private chatService:ChatService,
+    private keycloak:KeycloakService
+
   ) {}
 
   ngOnInit(): void {
@@ -115,22 +103,20 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
   }
 
   loadAll(): void {
-    this.streamsService.getMyStreams().subscribe({
+    this.http.get<any[]>(`${this.api}/streams/my`).subscribe({
       next: (streams) => {
         this.myStreams = streams;
         const token = this.keycloak.getKeycloakInstance().token || '';
-        this.chatService.startConnection(token).then(() => {
-          streams.forEach((s: any) => {
-            this.chatService.joinStreamChat(s.id);
-
-            
-            this.tasksService.getByStream(s.id).subscribe({
-  next: (tasks: Task[]) => tasks.forEach(t => this.chatService.joinTaskChatSilent(t.id))
-});
-          });
-        });
+    this.chatService.startConnection(token).then(() => {
+      streams.forEach((s: any) => {
+        this.chatService.joinStreamChat(s.id);
+      });
+    });
         this.loadProjects();
         this.refreshTasks();
+        this.myTasks.filter(t => t.stepId).forEach(task => {
+  this.chatService.joinTaskChat(task.id);
+});
         this.pluginBridge.getAllPlugins().subscribe({
           next: (plugins) => this.availablePlugins = plugins
         });
@@ -143,8 +129,8 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
     this.myStreams.forEach(s => {
       if (!seen.has(s.projectId)) {
         seen.add(s.projectId);
-        this.projectsService.getDetails(s.projectId).subscribe({
-          next: (p: any) => {
+        this.http.get<any>(`${this.api}/projects/${s.projectId}`).subscribe({
+          next: (p) => {
             if (!this.projects.find(x => x.id === p.id))
               this.projects.push(p);
           }
@@ -185,11 +171,7 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
   renderCharts(): void {
     this.donutChart = this.chartService.createDoughnut(
       'tlDonutChart',
-      [
-        this.translate.instant('TASKS.PENDING'),
-        this.translate.instant('TASKS.BLOCKED'),
-        this.translate.instant('TASKS.DONE')
-      ],
+      ['Pending', 'Blocked', 'Done'],
       [
         this.myTasks.filter(t => t.status === 0).length,
         this.myTasks.filter(t => t.status === 1).length,
@@ -224,18 +206,32 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
     });
   }
 
-  get workflowTasks(): Task[] { return this.filteredTasks.filter(t => !t.stepId); }
-  get stepTasks(): Task[] { return this.filteredTasks.filter(t => !!t.stepId); }
+  get workflowTasks(): Task[] {
+    return this.filteredTasks.filter(t => !t.stepId);
+  }
+
+  get stepTasks(): Task[] {
+    return this.filteredTasks.filter(t => !!t.stepId);
+  }
 
   // ===== NAVIGATION =====
   openStreamsTab(): void {
-    this.tabsService.openTab({ id: 'my-streams', title: 'My Streams', type: 'create-project' });
+    this.tabsService.openTab({
+      id: 'my-streams',
+      title: 'My Streams',
+      type: 'create-project'
+    });
   }
 
   // ===== TASK CLICK =====
   onTaskClick(task: any): void {
     if (task.status === 2) return;
-    if (task.stepId) { this.openTool(task); return; }
+    if (task.stepId) {
+      // Tâche depuis step → ouvrir l'outil
+      this.openTool(task);
+      return;
+    }
+    // Tâche workflow → définir les steps
     const tabId = `define-steps-${task.id}`;
     if (!this.openTabs[tabId]) {
       this.openTabs[tabId] = {
@@ -243,12 +239,19 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
         steps: [{ stepName: '', toolName: '', order: 1, dependsOnStepId: null }]
       };
     }
-    this.tabsService.openTab({ id: tabId, title: task.title, type: 'define-steps', data: task });
+    this.tabsService.openTab({
+      id: tabId,
+      title: task.title,
+      type: 'define-steps',
+      data: task
+    });
   }
 
   openTool(task: any): void {
     const plugin = this.availablePlugins.find(p => p.id === task.toolName);
-    if (plugin?.accessUrl) window.open(plugin.accessUrl, '_blank');
+    if (plugin?.accessUrl) {
+      window.open(plugin.accessUrl, '_blank');
+    }
   }
 
   // ===== STEPS =====
@@ -273,7 +276,10 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
     if (!tab) return;
 
     const stream = this.myStreams.find(s => s.projectId === tab.task.projectId);
-    if (!stream) { this.toastService.show('Stream not found', 'error'); return; }
+    if (!stream) {
+      this.toastService.show('Stream not found', 'error');
+      return;
+    }
 
     this.loading = true;
     const payload = {
@@ -288,7 +294,6 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
       }))
     };
 
-    // ✅ utilise http directement car pas de StepsService existant
     this.http.post(`${this.api}/steps`, payload).subscribe({
       next: () => {
         this.toastService.show('Steps saved!', 'success');
@@ -319,7 +324,6 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
     else this.selectedIds.add(taskId);
   }
   isSelected(taskId: string): boolean { return this.selectedIds.has(taskId); }
-
   markDone(): void {
     Array.from(this.selectedIds).forEach(id => {
       this.tasksService.updateStatus(id, 2).subscribe({
@@ -339,64 +343,29 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
   getStreamName(streamId: string): string {
     return this.myStreams.find(s => s.id === streamId)?.name || '—';
   }
-
   selectStream(stream: any): void {
-    this.selectedStream = stream;
-    this.tabsService.openTab({
-        id: `stream-detail-${stream.id}`,
-        title: stream.name,
-        type: 'create-project'
-    });
-    this.loadStreamConfigs(stream.id);
+  this.selectedStream = stream;
+  this.tabsService.openTab({
+    id: `stream-detail-${stream.id}`,
+    title: stream.name,
+    type: 'create-project'
+  });
+}
+openStreamChat(stream: any): void {
+  this.chatStreamId = stream.id;
+  this.chatTaskId = null;
+  this.chatTitle = `${stream.name} — Team Chat`;
+  this.chatOpen = true;
 }
 
-  openStreamChat(stream: any): void {
-    this.chatStreamId = stream.id;
-    this.chatTaskId = null;
-    this.chatTitle = `${stream.name} — Team Chat`;
-    this.chatOpen = true;
-    this.drawerService.open();
-  }
-
-  openTaskComments(task: any, streamId: string): void {
-    console.log('task:', task);
-    console.log('streamId:', streamId);
-    this.chatTaskId = task.id;
-    this.chatStreamId = streamId;
-    this.chatTitle = task.title || task.stepName;
-    this.chatOpen = true;
-    this.drawerService.open();
+openTaskChat(task: any): void {
+  this.chatTaskId = task.id;
+  this.chatStreamId = null;
+  this.chatTitle = `${task.title}`;
+  this.chatOpen = true;
 }
 
-  closeChat(): void {
-    this.chatOpen = false;
-    this.drawerService.close();
-  }
-   loadStreamConfigs(streamId: string): void {
-    this.loadingConfigs = true;
-    this.gitService.getStreamConfigs(streamId).subscribe({
-        next: (configs) => {
-            this.streamConfigs[streamId] = configs;
-            this.loadingConfigs = false;
-        },
-        error: () => this.loadingConfigs = false
-    });
-}
-
-validateStream(streamId: string): void {
-    this.validatingStream = true;
-    this.gitService.validateStream(streamId).subscribe({
-        next: (result) => {
-            this.toastService.show(`✅ ${result.message}`, 'success');
-            this.validatingStream = false;
-        },
-        error: () => {
-            this.toastService.show('❌ Failed to validate stream', 'error');
-            this.validatingStream = false;
-        }
-    });
-}
-openExternalLink(url: string): void {
-    window.open(url, '_blank');
+closeChat(): void {
+  this.chatOpen = false;
 }
 }

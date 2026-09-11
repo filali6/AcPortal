@@ -8,13 +8,10 @@ export interface Tab {
   data?: any;
 }
 
-const TABS_KEY = 'acportal_tabs';
-const ACTIVE_KEY = 'acportal_active_tab';
-
 @Injectable({ providedIn: 'root' })
 export class TabsService {
-  private tabs$ = new BehaviorSubject<Tab[]>(this.loadTabs());
-  private activeTabId$ = new BehaviorSubject<string>(this.loadActiveId());
+  private tabs$ = new BehaviorSubject<Tab[]>([]);
+  private activeTabId$ = new BehaviorSubject<string>('tasks');
 
   tabs = this.tabs$.asObservable();
   activeTabId = this.activeTabId$.asObservable();
@@ -22,52 +19,25 @@ export class TabsService {
   openTab(tab: Tab): void {
     const existing = this.tabs$.value.find(t => t.id === tab.id);
     if (!existing) {
-      const updated = [...this.tabs$.value, tab];
-      this.tabs$.next(updated);
-      this.saveTabs(updated);        // ← ajouté
+      this.tabs$.next([...this.tabs$.value, tab]);
     }
     this.activeTabId$.next(tab.id);
-    this.saveActiveId(tab.id);       // ← ajouté
   }
 
   closeTab(tabId: string): void {
     const tabs = this.tabs$.value.filter(t => t.id !== tabId);
     this.tabs$.next(tabs);
-    this.saveTabs(tabs);             // ← ajouté
+    // Si on ferme l'onglet actif → revenir à tasks
     if (this.activeTabId$.value === tabId) {
       this.activeTabId$.next('tasks');
-      this.saveActiveId('tasks');    // ← ajouté
     }
   }
 
   setActiveTab(tabId: string): void {
     this.activeTabId$.next(tabId);
-    this.saveActiveId(tabId);        // ← ajouté
   }
 
   getCurrentActiveId(): string {
     return this.activeTabId$.value;
-  }
-
-  // ── ajouté ──
-  private loadTabs(): Tab[] {
-    try {
-      const raw = sessionStorage.getItem(TABS_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch { return []; }
-  }
-
-  private loadActiveId(): string {
-    try {
-      return sessionStorage.getItem(ACTIVE_KEY) || 'tasks';
-    } catch { return 'tasks'; }
-  }
-
-  private saveTabs(tabs: Tab[]): void {
-    try { sessionStorage.setItem(TABS_KEY, JSON.stringify(tabs)); } catch {}
-  }
-
-  private saveActiveId(id: string): void {
-    try { sessionStorage.setItem(ACTIVE_KEY, id); } catch {}
   }
 }

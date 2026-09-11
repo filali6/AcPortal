@@ -9,11 +9,10 @@ import { environment } from '../../../../environments/environment';
 import { TabsService } from '../../../core/services/tabs.service';
 import { UtilsService } from '../../../core/services/utils.service';
 import { ModalComponent } from '../../../core/components/modal/modal.component';
-import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-portfolios-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule,ModalComponent,TranslateModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule,ModalComponent],
   templateUrl: './portfolios-tab.component.html',
   styleUrl: './portfolios-tab.component.scss'
 })

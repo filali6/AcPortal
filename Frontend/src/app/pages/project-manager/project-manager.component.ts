@@ -17,12 +17,10 @@ import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 import { TeamFilterPipe } from '../../core/pipes/team-filter.pipe';
 import { ModalComponent } from '../../core/components/modal/modal.component';
-import { TranslateModule,TranslateService } from '@ngx-translate/core';
-import { BriefingCardComponent } from '../../core/components/briefing-card/briefing-card.component';
 @Component({
   selector: 'app-project-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, ModalComponent, TeamFilterPipe,TranslateModule,BriefingCardComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule, ModalComponent, TeamFilterPipe],
   templateUrl: './project-manager.component.html',
   styleUrl: './project-manager.component.scss'
 })
@@ -47,8 +45,6 @@ export class ProjectManagerComponent implements OnInit, OnDestroy {
     technicalTeamConsultants: string[]
   }} = {};
 
-  openDrop: string | null = null;
-
   loading = false;
   currentUserId = '';
   selectedProjectDetail: any = null;
@@ -66,12 +62,12 @@ showEditLeadsModal = false;
   private barChart: Chart | null = null;
   private subs: Subscription[] = [];
 
- statsBottom = {
-  pendingTasks: 0,
-  completionRate: 0,
-  activeProjects: 0,
-  activeStreams: 0
-};
+  statsBottom = {
+    pendingTasks: 0,
+    completionRate: 0,
+    activeProjects: 0,
+    nextDelivery: { name: '', date: '' }
+  };
 
   readonly ChevronRight = ChevronRight;
   readonly Layers = Layers;
@@ -86,8 +82,7 @@ showEditLeadsModal = false;
     public tabsService: TabsService,
     private toastService: ToastService,
     public utils: UtilsService,
-    private chartService: ChartService,
-    private translate:TranslateService,
+    private chartService: ChartService
   ) {}
 
   ngOnInit(): void {
@@ -134,14 +129,23 @@ showEditLeadsModal = false;
   }
 
   computeStats(): void {
-  this.statsBottom.pendingTasks = this.myTasks.filter(t => t.status === 0).length;
-  this.statsBottom.completionRate = this.myTasks.length
-    ? Math.round((this.myTasks.filter(t => t.status === 2).length / this.myTasks.length) * 100)
-    : 0;
-  this.statsBottom.activeProjects = this.projects.length;
-  this.statsBottom.activeStreams = this.projects.reduce((sum, p) => sum + (p.streamCount || 0), 0);
-  setTimeout(() => this.renderCharts(), 100);
-}
+    this.statsBottom.pendingTasks = this.myTasks.filter(t => t.status === 0).length;
+    this.statsBottom.completionRate = this.myTasks.length
+      ? Math.round((this.myTasks.filter(t => t.status === 2).length / this.myTasks.length) * 100)
+      : 0;
+    this.statsBottom.activeProjects = this.projects.length;
+
+    const upcoming = this.projects
+      .filter((p: any) => p.targetDate)
+      .sort((a: any, b: any) => new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime());
+
+    this.statsBottom.nextDelivery = upcoming[0]
+      ? { name: upcoming[0].name, date: new Date(upcoming[0].targetDate).toLocaleDateString('en-GB') }
+      : { name: '—', date: '—' };
+
+    setTimeout(() => this.renderCharts(), 100);
+  }
+
   renderCharts(): void {
     this.donutChart = this.chartService.createDoughnut(
       'pmDonutChart',
@@ -284,28 +288,16 @@ showEditLeadsModal = false;
     });
   }
   selectProjectDetail(project: any): void {
-  if (this.selectedProjectDetail?.id === project.id) {
-    this.selectedProjectDetail = null;
-    return;
-  }
   this.projectsService.getDetails(project.id).subscribe({
-    next: (d) => this.selectedProjectDetail = d
+    next: (d) => {
+      this.selectedProjectDetail = d;
+      this.tabsService.openTab({
+        id: `pm-project-${project.id}`,
+        title: project.name,
+        type: 'create-project'
+      });
+    }
   });
-}
-getProgressColor(progress: number): string {
-    if (progress >= 70) return '#10b981';
-    if (progress >= 40) return '#f59e0b';
-    return '#ef4444';
-}
-
-getStreamDone(stream: any): number {
-    return stream.streamTasks?.filter((t: any) => t.status === 2).length || 0;
-}
-getStreamPending(stream: any): number {
-    return stream.streamTasks?.filter((t: any) => t.status === 0).length || 0;
-}
-getStreamBlocked(stream: any): number {
-    return stream.streamTasks?.filter((t: any) => t.status === 1).length || 0;
 }
 
 openAddConsultantModal(streamId: string, team: 'business' | 'technical'): void {
@@ -399,46 +391,4 @@ getAvailableConsultants(streamId: string): any[] {
   const assignedIds = stream.members?.map((m: any) => m.consultantId) || [];
   return this.consultants.filter(c => !assignedIds.includes(c.id));
 }
-
-getInitials(fullName: string): string {
-  if (!fullName) return '?';
-  return fullName.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
-}
-openExternalLink(url: string): void {
-    window.open(url, '_blank');
-}
-
-getLeadById(id: string, type: 'biz' | 'tech') {
-  if (!id) return null;
-  const pool = type === 'biz' ? this.bizLeads : this.techLeads;
-  return pool.find((u: any) => u.id === id) ?? null;
-}
-
-getConsultantsForTab(tabId: string, side: 'business' | 'technical') {
-  const tab = this.openTabs[tabId];
-  if (!tab) return [];
-  const ids = side === 'business'
-    ? tab.businessTeamConsultants
-    : tab.technicalTeamConsultants;
-  return this.consultants.filter((c: any) => ids.includes(c.id));
-}
-
-toggleDrop(key: string) {
-  this.openDrop = this.openDrop === key ? null : key;
-}
-
-closeDrop(key: string) {
-  if (this.openDrop === key) this.openDrop = null;
-}
-
-addConsultantFromDrop(tabId: string, c: any, side: 'business' | 'technical') {
-  const alreadyUsed =
-    this.isConsultantSelected(tabId, c.id, 'business') ||
-    this.isConsultantSelected(tabId, c.id, 'technical');
-  if (alreadyUsed) return;
-  this.toggleConsultant(tabId, c.id, side);
-  this.openDrop = null;
-}
-
-
 }

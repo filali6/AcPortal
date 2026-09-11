@@ -6,13 +6,6 @@ public enum ContractStatus
     ProjectCreated = 1,
     InProgress = 2
 }
-public enum SummaryStatus
-{
-    None = 0,
-    Pending = 1,
-    Completed = 2,
-    Failed = 3
-}
 
 public class Contract
 {
@@ -26,9 +19,4 @@ public class Contract
     public Guid? ProjectId { get; set; }
 
     public List<string> FilesPaths { get; set; } = new();
-
-    public string? Summary { get; set; }
-    public string? ExtractedText { get; set; }
-    public DateTime? SummarizedAt { get; set; }
-    public SummaryStatus SummaryStatus { get; set; } = SummaryStatus.None;
 }

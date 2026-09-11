@@ -14,7 +14,4 @@ public class Project
     public Guid? ProjectManagerId { get; set; }
     public User? ProjectManager { get; set; }
     public ICollection<Stream> Streams { get; set; } = new List<Stream>();
-
-    
-   
 }

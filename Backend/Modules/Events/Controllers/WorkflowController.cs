@@ -1,4 +1,3 @@
-using Backend.Modules.Events.Handlers;
 using Backend.Modules.Events.Models;
 using Backend.Modules.Events.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -14,13 +13,11 @@ public class WorkflowController : ControllerBase
 {
     private readonly WorkflowRulesService _workflowRulesService;
     private readonly string _configPath;
-    private readonly IEnumerable<IActionHandler> _handlers;
 
-    public WorkflowController(WorkflowRulesService workflowRulesService, IEnumerable<IActionHandler> handlers)
+    public WorkflowController(WorkflowRulesService workflowRulesService)
     {
         _workflowRulesService = workflowRulesService;
         _configPath = Path.Combine(Directory.GetCurrentDirectory(), "workflow-config.json");
-        _handlers=handlers;
     }
 
     // Lire toutes les règles
@@ -48,8 +45,11 @@ public class WorkflowController : ControllerBase
 
     // Options disponibles pour le frontend
     [HttpGet("action-types")]
-    public IActionResult GetActionTypes()
-     => Ok(_handlers.Select(h => h.ActionType).Distinct().OrderBy(t => t).ToList());
+    public IActionResult GetActionTypes() => Ok(new List<string>
+    {
+        "CREATE_TASK",
+        "CREATE_TASKS_FROM_STEPS"
+    });
 
     [HttpGet("target-types")]
     public IActionResult GetTargetTypes() => Ok(new List<string>

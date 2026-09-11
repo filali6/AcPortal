@@ -7,7 +7,7 @@
   "baseUrlEnvKey": "PLUGIN_GITEA_URL",
   "adapterType": "gitea",
   "ssoEnabled": true,
-  "isActive": false,
+  "isActive": true,
   "allowedRoles": [
     "Consultant",
     "TechnicalTeamLead",

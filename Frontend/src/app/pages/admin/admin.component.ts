@@ -13,33 +13,32 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 import { ToastService } from '../../core/services/toast.service';
-import { LucideAngularModule, FolderOpen, BarChart2, FileText, CheckSquare, Clock, TrendingUp, AlertCircle, Calendar, ChevronRight } from 'lucide-angular';
+import { LucideAngularModule, FolderOpen, BarChart2, FileText, CheckSquare, Clock, TrendingUp, AlertCircle, Calendar,ChevronRight } from 'lucide-angular';
 import { PortfoliosTabComponent } from './portfolios-tab/portfolios-tab.component';
 import { ProjectsTabComponent } from './projects-tab/projects-tab.component';
 import { ContractsTabComponent } from './contracts-tab/contracts-tab.component';
 import { ChartService } from '../../core/services/chart.service';
 import { UtilsService } from '../../core/services/utils.service';
-import { TranslateModule } from '@ngx-translate/core';
-import { BriefingCardComponent } from '../../core/components/briefing-card/briefing-card.component';
-import { MarkdownModule} from 'ngx-markdown';
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, PortfoliosTabComponent, ProjectsTabComponent, ContractsTabComponent, TranslateModule,BriefingCardComponent,MarkdownModule],
+ imports: [CommonModule, FormsModule, LucideAngularModule, PortfoliosTabComponent, ProjectsTabComponent, ContractsTabComponent],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })
 export class AdminComponent implements OnInit {
 
   activeTabId = 'tasks';
+ 
 
   projects: Project[] = [];
   portfolios: Portfolio[] = [];
   directors: User[] = [];
   tasks: Task[] = [];
   myTasks: Task[] = [];
-  allContracts: any[] = [];
   stats = { total: 0, inProgress: 0, contracts: 0 };
+
+  
 
   openTabs: { [tabId: string]: {
     task: any,
@@ -55,6 +54,7 @@ export class AdminComponent implements OnInit {
     contractId: string | null
   }} = {};
 
+  // Onglets édition projet
   editTabs: { [tabId: string]: {
     project: any,
     name: string,
@@ -63,24 +63,26 @@ export class AdminComponent implements OnInit {
   }} = {};
 
   loading = false;
+ 
   currentUserName = '';
   currentUserId = '';
   selectedIds: Set<string> = new Set();
   searchQuery = '';
-  filterStatus = 'all';
-  private donutChart: Chart | null = null;
-  private barChart: Chart | null = null;
-  filterDateFrom = '';
-  filterDateTo = '';
-  showProjectsView = false;
+filterStatus = 'all';
+private donutChart: Chart | null = null;
+private barChart: Chart | null = null;
+filterDateFrom = '';
+filterDateTo = '';
+showProjectsView = false;
 
-  statsBottom = {
-    pendingTasks: 0,
-    completionRate: 0,
-    contractsNotTreated: 0,
-    activeProjects: 0
-  };
-
+statsBottom = {
+  pendingTasks: 0,
+  completionRate: 0,
+  contractsNotTreated: 0,
+  nextDelivery: { name: '', date: '' }
+};
+ 
+ 
   readonly FileText = FileText;
   readonly FolderOpen = FolderOpen;
   readonly BarChart2 = BarChart2;
@@ -102,9 +104,9 @@ export class AdminComponent implements OnInit {
     private router: Router,
     private tabsService: TabsService,
     private contractsService: ContractsService,
-    private toastService: ToastService,
-    private chartService: ChartService,
-    public utils: UtilsService
+    private toastService:ToastService,
+    private chartService:ChartService,
+    public utils:UtilsService
   ) {}
 
   ngOnInit(): void {
@@ -130,77 +132,89 @@ export class AdminComponent implements OnInit {
   }
 
   loadAll(): void {
-    this.projectsService.getPortfolioDirectors().subscribe({ next: (d) => this.directors = d });
-    this.projectsService.getAllPortfolios().subscribe({ next: (p) => this.portfolios = p });
-    this.projectsService.getStats().subscribe({ next: (s) => this.stats = s });
-    this.contractsService.getAll().subscribe({ next: (c) => {
-      this.allContracts = c;
-      this.computeBottomStats();
-    }});
+  this.projectsService.getPortfolioDirectors().subscribe({ next: (d) => this.directors = d });
+  this.projectsService.getAllPortfolios().subscribe({ next: (p) => this.portfolios = p });
+  this.projectsService.getStats().subscribe({ next: (s) => {
+    this.stats = s;
+  }});
 
-    this.projectsService.getAll().subscribe({ next: (p) => {
-      this.projects = p;
-      this.tasksService.getAll().subscribe({
-        next: (tasks) => {
-          this.tasks = tasks;
-          this.myTasks = tasks
-            .filter(t => t.assignedTo === this.currentUserId)
-            .sort((a, b) => a.status - b.status);
-          this.computeBottomStats();
-        }
-      });
-    }});
-  }
-
-  computeBottomStats(): void {
-    this.statsBottom.pendingTasks = this.myTasks.filter(t => t.status === 0).length;
-
-    this.statsBottom.completionRate = this.myTasks.length
-      ? Math.round((this.myTasks.filter(t => t.status === 2).length / this.myTasks.length) * 100)
-      : 0;
-
-    this.statsBottom.contractsNotTreated = this.allContracts.filter(c => !c.projectId).length;
-
-    this.statsBottom.activeProjects = this.projects.length;
-
-    setTimeout(() => this.renderCharts(), 100);
-  }
-
-  renderCharts(): void {
-    this.donutChart = this.chartService.createDoughnut(
-      'adminDonutChart',
-      ['Pending', 'Blocked', 'Done'],
-      [
-        this.myTasks.filter(t => t.status === 0).length,
-        this.myTasks.filter(t => t.status === 1).length,
-        this.myTasks.filter(t => t.status === 2).length
-      ],
-      ['#f59e0b', '#ef4444', '#10b981'],
-      this.donutChart
-    );
-
-  this.barChart = this.chartService.createBar(
-  'adminBarChart',
-  this.chartService.getLast6MonthsLabels(),
-  this.chartService.getLast6MonthsData(this.tasks.filter(t => t.status === 2), 'createdAt'),
-  '#10b981',  // vert pour "done"
-  this.barChart
-);
-  }
-
-  refreshTasks(): void {
+  this.projectsService.getAll().subscribe({ next: (p) => {
+    this.projects = p;
+    // Projets chargés → maintenant on charge les tâches
     this.tasksService.getAll().subscribe({
       next: (tasks) => {
         this.tasks = tasks;
         this.myTasks = tasks
           .filter(t => t.assignedTo === this.currentUserId)
           .sort((a, b) => a.status - b.status);
+        // Tout est chargé → calculer les stats
         this.computeBottomStats();
       }
     });
-  }
+  }});
+}
 
+computeBottomStats(): void {
+  // Tâches pending
+  this.statsBottom.pendingTasks = this.myTasks.filter(t => t.status === 0).length;
+
+  // Taux complétion
+  this.statsBottom.completionRate = this.myTasks.length
+    ? Math.round((this.myTasks.filter(t => t.status === 2).length / this.myTasks.length) * 100)
+    : 0;
+
+  // Contrats non traités +7j — on utilise stats.contracts
+  this.statsBottom.contractsNotTreated = this.stats.contracts;
+
+  // Prochaine livraison
+  const upcoming = this.projects
+    .filter(p => p.targetDate)
+    .sort((a, b) => new Date(a.targetDate!).getTime() - new Date(b.targetDate!).getTime());
+  
+  this.statsBottom.nextDelivery = upcoming[0]
+    ? { name: upcoming[0].name, date: new Date(upcoming[0].targetDate!).toLocaleDateString('fr-FR') }
+    : { name: '—', date: '—' };
+
+  setTimeout(() => this.renderCharts(), 100);
+}
+
+renderCharts(): void {
+  this.donutChart = this.chartService.createDoughnut(
+    'adminDonutChart',
+    ['Pending', 'Blocked', 'Done'],
+    [
+      this.myTasks.filter(t => t.status === 0).length,
+      this.myTasks.filter(t => t.status === 1).length,
+      this.myTasks.filter(t => t.status === 2).length
+    ],
+    ['#f59e0b', '#ef4444', '#10b981'],
+    this.donutChart
+  );
+
+  this.barChart = this.chartService.createBar(
+    'adminBarChart',
+    this.chartService.getLast6MonthsLabels(),
+    this.chartService.getLast6MonthsData(this.projects),
+    '#3b82f6',
+    this.barChart
+  );
+}
+
+ 
+
+  refreshTasks(): void {
+  this.tasksService.getAll().subscribe({
+    next: (tasks) => {
+      this.tasks = tasks;
+      this.myTasks = tasks
+        .filter(t => t.assignedTo === this.currentUserId)
+        .sort((a, b) => a.status - b.status);
+      this.computeBottomStats();
+    }
+  });
+}
   onMyTaskClick(task: any): void {
+    
     if (task.status === 2) return;
     const tabId = `create-project-${task.id}`;
     if (!this.openTabs[tabId]) {
@@ -215,9 +229,10 @@ export class AdminComponent implements OnInit {
         portfolioDescription: '',
         selectedDirectorId: '',
         contractInfo: null,
-        contractId: task.contractId || null
+        contractId:task.contractId||null
       };
 
+      // Charger les infos du contrat si contractId disponible
       if (task.contractId) {
         this.contractsService.getById(task.contractId).subscribe({
           next: (contract) => {
@@ -235,30 +250,48 @@ export class AdminComponent implements OnInit {
   }
 
   resetFilters(): void {
-    this.searchQuery = '';
-    this.filterStatus = 'all';
-    this.filterDateFrom = '';
-    this.filterDateTo = '';
+  this.searchQuery = '';
+  this.filterStatus = 'all';
+  this.filterDateFrom = '';
+  this.filterDateTo = '';
+}
+
+openAccessTab(type: 'portfolios' | 'projects' | 'contracts'): void {
+  const tabId = `${type}-tab`;
+  const titles = {
+    portfolios: 'Portfolios',
+    projects: 'Projects',
+    contracts: 'Contracts'
+  };
+  this.tabsService.openTab({
+    id: tabId,
+    title: titles[type],
+    type: 'create-project'
+  });
+}
+
+  getTabData(tabId: string) {
+    return this.openTabs[tabId] || null;
   }
 
-  openAccessTab(type: 'portfolios' | 'projects' | 'contracts'): void {
-    const tabId = `${type}-tab`;
-    const titles = { portfolios: 'Portfolios', projects: 'Projects', contracts: 'Contracts' };
-    this.tabsService.openTab({ id: tabId, title: titles[type], type: 'create-project' });
+  getOpenTabIds(): string[] {
+    return Object.keys(this.openTabs);
   }
 
-  getTabData(tabId: string) { return this.openTabs[tabId] || null; }
-  getOpenTabIds(): string[] { return Object.keys(this.openTabs); }
-  getEditTabIds(): string[] { return Object.keys(this.editTabs); }
-  getEditTabData(tabId: string) { return this.editTabs[tabId] || null; }
+  getEditTabIds(): string[] {
+    return Object.keys(this.editTabs);
+  }
 
+  getEditTabData(tabId: string) {
+    return this.editTabs[tabId] || null;
+  }
   get filteredTasks(): Task[] {
-    return this.myTasks.filter(t => {
-      const matchSearch = t.title.toLowerCase().includes(this.searchQuery.toLowerCase());
-      const matchStatus = this.filterStatus === 'all' || t.status === +this.filterStatus;
-      return matchSearch && matchStatus;
-    });
-  }
+  return this.myTasks.filter(t => {
+    const matchSearch = t.title.toLowerCase().includes(this.searchQuery.toLowerCase());
+    const matchStatus = this.filterStatus === 'all' || t.status === +this.filterStatus;
+    return matchSearch && matchStatus;
+  });
+}
 
   openEditTab(project: any): void {
     const tabId = `edit-project-${project.id}`;
@@ -282,6 +315,7 @@ export class AdminComponent implements OnInit {
     const tab = this.editTabs[tabId];
     if (!tab || !tab.name) return;
     this.loading = true;
+
     this.projectsService.update(tab.project.id, tab.name, tab.description, tab.targetDate || undefined).subscribe({
       next: () => {
         this.toastService.show('Project updated!', 'success');
@@ -298,6 +332,7 @@ export class AdminComponent implements OnInit {
   endEditTask(tabId: string): void {
     this.tabsService.closeTab(tabId);
     delete this.editTabs[tabId];
+     
   }
 
   createProject(tabId: string): void {
@@ -307,12 +342,14 @@ export class AdminComponent implements OnInit {
       return;
     }
     this.loading = true;
+     
     this.projectsService.create(
       tab.projectName,
       tab.projectDescription,
       tab.selectedPortfolioId,
       tab.targetDate || undefined,
       tab.contractId || undefined
+      
     ).subscribe({
       next: () => {
         this.toastService.show('Project created successfully!', 'success');
@@ -325,6 +362,7 @@ export class AdminComponent implements OnInit {
         this.loading = false;
       }
     });
+     
   }
 
   endTask(tabId: string): void {
@@ -367,6 +405,8 @@ export class AdminComponent implements OnInit {
     this.router.navigate([], { queryParams: {}, replaceUrl: true });
   }
 
+   
+
   getFileUrl(fileName: string): string {
     return this.contractsService.getFileUrl(fileName);
   }
@@ -391,27 +431,6 @@ export class AdminComponent implements OnInit {
       });
     });
   }
-  getFileName(filePath: string): string {
-    
-    const parts = filePath.split('_');
-   
-    if (parts.length > 1 && parts[0].length === 36) {
-        return parts.slice(1).join('_');
-    }
-   
-    return filePath.split('/').pop() || filePath;
-}
-retrySummary(contractId: string): void {
-  this.loading = true;
-  this.contractsService.retrySummary(contractId).subscribe({
-    next: () => {
-      this.toastService.show('Résumé en cours de génération...', 'success');
-      this.loading = false;
-    },
-    error: () => {
-      this.toastService.show('Erreur lors de la relance', 'error');
-      this.loading = false;
-    }
-  });
-}
+
+  
 }

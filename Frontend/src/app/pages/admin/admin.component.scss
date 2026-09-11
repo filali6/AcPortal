@@ -85,7 +85,7 @@
 
 .btn-primary {
     padding: 10px 20px;
-    background: #0080ff;
+    background: var(--accent);
     color: white;
     border: none;
     border-radius: 8px;
@@ -402,9 +402,6 @@
     text-decoration: line-through;
     color: var(--text-secondary);
 }
- tr.task-done td:not(:first-child) {
-     opacity: 0.45;
- }
 
 tr.selected td {
     background: #eff6ff;
@@ -478,7 +475,7 @@ tr.selected td {
 }
 .bottom-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
     margin-top: 1rem;
 
@@ -682,18 +679,6 @@ tr.selected td {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    overflow: hidden;
-    ul,
-        ol {
-            padding-left: 18px;  
-            margin: 0;
-        }
-    
-        li {
-            font-size: 13px;
-            color: #374151;
-            line-height: 1.5;
-        }
 }
 
 .contract-badge {
@@ -736,97 +721,3 @@ tr.selected td {
     flex-direction: column;
     gap: 16px;
 }
-.summary-section {
-    margin-top: 12px;
-    padding: 12px 16px;
-    background: rgba(0, 128, 255, 0.08);
-    border-left: 3px solid var(--accent);
-    border-radius: 4px;
-    overflow: hidden; // ← clé du fix
-
-    // Cible le rendu markdown directement
-    ::ng-deep ul,
-    ::ng-deep ol {
-        padding-left: 20px;
-        margin: 4px 0;
-        box-sizing: border-box;
-        width: 100%;
-    }
-
-    ::ng-deep li {
-        font-size: 13px;
-        color: #374151;
-        line-height: 1.5;
-        word-break: break-word;
-    }
-
-    ::ng-deep p {
-        font-size: 13px;
-        color: #374151;
-        margin: 4px 0;
-        word-break: break-word;
-    }
-
-    ::ng-deep h2 {
-        font-size: 14px;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 10px 0 4px;
-    }
-
-    ::ng-deep strong {
-        color: #1e293b;
-    }
-}
-
-.summary-badge {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.summary-text {
-    margin-top: 8px;
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--text-primary);
-}
-
-.summary-text {
-    markdown {
-        h2 {
-            font-size: 13px;
-            font-weight: 700;
-            color: #1e293b;
-            margin: 12px 0 6px;
-        }
-
-        li {
-            font-size: 13px;
-            color: #374151;
-            margin: 3px 0;
-            line-height: 1.5;
-        }
-
-        strong {
-            color: #1e293b;
-        }
-
-        p {
-            font-size: 13px;
-            color: #374151;
-        }
-    }
-}
-
-.summary-failed {
-    margin-top: 12px;
-    font-size: 13px;
-    color: #ef4444;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-

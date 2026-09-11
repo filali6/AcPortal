@@ -30,7 +30,7 @@ public class ContractsController : ControllerBase
         _env = env;
     }
 
-     
+    // POST /api/contracts
     [HttpPost]
     public async Task<IActionResult> Create([FromForm] CreateContractRequest request)
     {
@@ -100,7 +100,7 @@ public class ContractsController : ControllerBase
         });
     }
 
-    
+    // GET /api/contracts/{id}
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -109,7 +109,7 @@ public class ContractsController : ControllerBase
         return Ok(contract);
     }
 
-    
+    // PATCH /api/contracts/{id}/files
     [HttpPatch("{id:guid}/files")]
     public async Task<IActionResult> AddFiles(Guid id, [FromForm] AddFilesRequest request)
     {
@@ -119,7 +119,7 @@ public class ContractsController : ControllerBase
         return Ok(contract);
     }
 
-   
+    // GET /api/contracts/files/{fileName}
     [HttpGet("files/{fileName}")]
     public IActionResult DownloadFile(string fileName)
     {
@@ -131,7 +131,7 @@ public class ContractsController : ControllerBase
         return File(fileBytes, contentType, fileName);
     }
 
-     
+    // PUT /api/contracts/{id}
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromForm] UpdateContractRequest request)
     {
@@ -146,7 +146,7 @@ public class ContractsController : ControllerBase
         return Ok(contract);
     }
 
-    
+    // DELETE /api/contracts/{id}/files/{fileName}
     [HttpDelete("{id:guid}/files/{fileName}")]
     public async Task<IActionResult> DeleteFile(Guid id, string fileName)
     {
@@ -169,29 +169,10 @@ public class ContractsController : ControllerBase
                 c.Status,
                 c.CreatedAt,
                 c.ProjectId,
-                c.FilesPaths,
-                c.Summary,         
-                c.SummaryStatus
+                c.FilesPaths
             })
             .ToListAsync();
         return Ok(contracts);
-    }
-     
-    [HttpPost("{id:guid}/summarize")]
-    public async Task<IActionResult> Summarize(Guid id)
-    {
-        var contract = await _db.Contracts.FindAsync(id);
-        if (contract == null) return NotFound();
-
-        await _eventPublisher.PublishAsync(new
-        {
-            eventType = "ContratSigné",
-            clientName = contract.ClientName,
-            contractId = contract.Id,
-            description = contract.Description
-        });
-
-        return Ok(new { message = "Résumé en cours de génération" });
     }
 
 }

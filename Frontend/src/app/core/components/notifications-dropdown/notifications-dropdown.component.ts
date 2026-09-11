@@ -4,11 +4,11 @@ import { HttpClient } from '@angular/common/http';
 import { NotificationService } from '../../services/notification.service';
 import { environment } from '../../../../environments/environment';
 import { LucideAngularModule, Bell } from 'lucide-angular';
-import { TranslateModule } from '@ngx-translate/core';
+
 @Component({
   selector: 'app-notifications-dropdown',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule,TranslateModule],
+  imports: [CommonModule, LucideAngularModule],
   templateUrl: './notifications-dropdown.component.html',
   styleUrl: './notifications-dropdown.component.scss'
 })

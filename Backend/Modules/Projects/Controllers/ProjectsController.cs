@@ -190,7 +190,7 @@ public class ProjectsController : ControllerBase
     }
 
     [HttpGet("{id:guid}/details")]
-    [Authorize(Roles = "HeadOfCDS,PortfolioDirector,ProjectManager,BusinessTeamLead,TechnicalTeamLead,Consultant")]
+    [Authorize(Roles = "HeadOfCDS,PortfolioDirector,ProjectManager")]
     public async Task<IActionResult> GetDetails(Guid id)
     {
         var project = await _db.Projects
@@ -250,8 +250,6 @@ public class ProjectsController : ControllerBase
                 s.Id,
                 s.Name,
                 s.CreatedAt,
-                s.MessagingChannelId,
-                s.MessagingChannelUrl,
                 businessTeamLead = s.BusinessTeamLead == null ? null : new
                 {
                     s.BusinessTeamLead.Id,

@@ -8,7 +8,6 @@ using Backend.Modules.Events.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using Backend.Modules.Tasks.Models;
-using Backend.Modules.Git.Services;
 
 namespace Backend.Modules.Projects.Controllers;
 
@@ -18,13 +17,11 @@ public class StreamController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly EventPublisher _eventPublisher;
-    private readonly GitService _gitService;
 
-    public StreamController(AppDbContext db,EventPublisher eventPublisher,GitService gitService)
+    public StreamController(AppDbContext db,EventPublisher eventPublisher)
     {
         _db = db;
         _eventPublisher=eventPublisher;
-        _gitService=gitService;
     }
 
      
@@ -66,7 +63,6 @@ public class StreamController : ControllerBase
         }
 
         await _db.SaveChangesAsync();
-        await _gitService.InitStreamRepoAsync(stream.Id, dto.ProjectId);
         var project = await _db.Projects.FindAsync(dto.ProjectId);
 
         await _eventPublisher.PublishAsync(new
@@ -100,8 +96,6 @@ public class StreamController : ControllerBase
                 s.Id,
                 s.Name,
                 s.ProjectId,
-                s.MessagingChannelId,
-                s.MessagingChannelUrl,
                 businessTeamLead = s.BusinessTeamLead == null ? null : new
                 {
                     s.BusinessTeamLead.Id,
@@ -125,7 +119,7 @@ public class StreamController : ControllerBase
         return Ok(streams);
     }
 
- 
+    // AJOUTER un consultant à un stream
     [HttpPost("{streamId}/members")]
     [Authorize(Roles = "ProjectManager")]
     public async Task<IActionResult> AddMember(
@@ -142,7 +136,7 @@ public class StreamController : ControllerBase
         await _db.SaveChangesAsync();
         return Ok(member);
     }
-   
+    // retourne les streams où le user connecté est lead
     [HttpGet("my")]
     [Authorize]
      
@@ -166,22 +160,9 @@ public class StreamController : ControllerBase
         var streamIds = streams.Select(s => s.Id).ToList();
         var projectIds = streams.Select(s => s.ProjectId).Distinct().ToList();
 
-        
-        var stepIds = await _db.ProjectSteps
-            .Where(s => s.StreamId != null && streamIds.Contains(s.StreamId.Value))
-            .Select(s => s.Id)
-            .ToListAsync();
-
-       
         var tasks = await _db.AcpTasks
-            .Where(t =>
-                (t.StreamId != null && streamIds.Contains(t.StreamId.Value)) ||
-                (t.StepId != null && stepIds.Contains(t.StepId.Value))
-            )
+            .Where(t => t.StreamId != null && streamIds.Contains(t.StreamId.Value))
             .ToListAsync();
-
-        var assignedKeycloakIds = tasks.Where(t => t.AssignedTo != null).Select(t => t.AssignedTo!).Distinct().ToList();
-        var users = await _db.Users.Where(u => assignedKeycloakIds.Contains(u.KeycloakId)).ToListAsync();
 
         var steps = await _db.ProjectSteps
             .Where(s => s.StreamId != null && streamIds.Contains(s.StreamId.Value))
@@ -199,10 +180,7 @@ public class StreamController : ControllerBase
             s.Id,
             s.Name,
             s.ProjectId,
-            
             projectName = projects.FirstOrDefault(p => p.Id == s.ProjectId)?.Name ?? "—",
-            s.MessagingChannelId,
-            s.MessagingChannelUrl,
             businessTeamLead = s.BusinessTeamLead == null ? null : new
             {
                 s.BusinessTeamLead.Id,
@@ -232,9 +210,10 @@ public class StreamController : ControllerBase
                     tasks.FirstOrDefault(t => t.StepId == st.Id)!.Id,
                     tasks.FirstOrDefault(t => t.StepId == st.Id)!.Status,
                     assignedTo = tasks.FirstOrDefault(t => t.StepId == st.Id)!.AssignedTo,
-                    assignedName = users
-    .FirstOrDefault(u => u.KeycloakId == tasks.FirstOrDefault(t => t.StepId == st.Id)!.AssignedTo)
-    ?.FullName ?? "—"
+                    assignedName = _db.Users
+            .Where(u => u.KeycloakId == tasks.FirstOrDefault(t => t.StepId == st.Id)!.AssignedTo)
+            .Select(u => u.FullName)
+            .FirstOrDefault() ?? "—"
                 }
             }).OrderBy(st => st.Order),
             streamProgress = tasks.Where(t => t.StreamId == s.Id).Count() > 0
@@ -268,46 +247,6 @@ public class StreamController : ControllerBase
 
         await _db.SaveChangesAsync();
         return Ok(stream);
-    }
-    [HttpGet("{streamId}/members")]
-    [Authorize]
-    public async Task<IActionResult> GetMembers(Guid streamId)
-    {
-        var stream = await _db.Streams
-            .Include(s => s.Members).ThenInclude(m => m.Consultant)
-            .Include(s => s.BusinessTeamLead)
-            .Include(s => s.TechnicalTeamLead)
-            .FirstOrDefaultAsync(s => s.Id == streamId);
-
-        if (stream == null) return NotFound();
-
-        var members = new List<object>();
-
-        if (stream.BusinessTeamLead != null)
-            members.Add(new
-            {
-                keycloakId = stream.BusinessTeamLead.KeycloakId,
-                fullName = stream.BusinessTeamLead.FullName,
-                role = "Business Team Lead"
-            });
-
-        if (stream.TechnicalTeamLead != null)
-            members.Add(new
-            {
-                keycloakId = stream.TechnicalTeamLead.KeycloakId,
-                fullName = stream.TechnicalTeamLead.FullName,
-                role = "Technical Team Lead"
-            });
-
-        foreach (var m in stream.Members)
-            members.Add(new
-            {
-                keycloakId = m.Consultant.KeycloakId,
-                fullName = m.Consultant.FullName,
-                role = m.TeamType.ToString()
-            });
-
-        return Ok(members);
     }
 
     public class UpdateLeadsDto

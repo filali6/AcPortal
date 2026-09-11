@@ -1,4 +1,4 @@
-using Backend.Data;
+using System.Text.Json;
 using Backend.Modules.Tools.Adapters;
 using Backend.Modules.Tools.Models;
 
@@ -6,54 +6,56 @@ namespace Backend.Modules.Tools.Services;
 
 public class PluginRegistry
 {
-    private readonly AppDbContext _db;
+    private readonly List<PluginDefinition> _definitions = new();
+    private readonly Dictionary<string, IPluginAdapter> _adapters = new();
 
-    // On injecte la BDD au lieu de lire des fichiers JSON
-    public PluginRegistry(AppDbContext db)
+    public PluginRegistry()
     {
-        _db = db;
+        
+        Register(new GiteaAdapter());
+        Register(new BudibaseAdapter());
+
+         
+        LoadDefinitions();
     }
 
-    // Lit depuis la BDD au lieu des fichiers JSON
-    public List<PluginDefinition> GetAll()
+    private void Register(IPluginAdapter adapter)
     {
-        return _db.PluginDefinitions.ToList();
+        _adapters[adapter.PluginId] = adapter;
     }
 
-    public PluginDefinition? GetById(string pluginId)
+    private void LoadDefinitions()
     {
-        return _db.PluginDefinitions
-            .FirstOrDefault(d => d.Id == pluginId);
+        var pluginsPath = Path.Combine(Directory.GetCurrentDirectory(), "plugins");
+        if (!Directory.Exists(pluginsPath)) return;
+
+        foreach (var file in Directory.GetFiles(pluginsPath, "*.json"))
+        {
+            var json = File.ReadAllText(file);
+            var definition = JsonSerializer.Deserialize<PluginDefinition>(json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (definition != null)
+                _definitions.Add(definition);
+        }
     }
 
-    public IPluginAdapter? GetAdapter(string pluginId)
-    {
-        var definition = GetById(pluginId);
-        if (definition == null) return null;
-        return new GenericAdapter(pluginId, definition.Url);
-    }
+    public List<PluginDefinition> GetAll() => _definitions;
 
-    // Sauvegarde en BDD au lieu d'écrire un fichier JSON
+    public PluginDefinition? GetById(string pluginId) =>
+        _definitions.FirstOrDefault(d => d.Id == pluginId);
+
+    public IPluginAdapter? GetAdapter(string pluginId) =>
+        _adapters.TryGetValue(pluginId, out var adapter) ? adapter : null;
+
     public void AddDefinition(PluginDefinition definition)
     {
-        var existing = _db.PluginDefinitions
-            .FirstOrDefault(d => d.Id == definition.Id);
-        if (existing != null)
-            _db.PluginDefinitions.Remove(existing);
-
-        _db.PluginDefinitions.Add(definition);
-        _db.SaveChanges();
+        
+        _definitions.RemoveAll(d => d.Id == definition.Id);
+        _definitions.Add(definition);
     }
 
-    // Supprime de la BDD au lieu de supprimer un fichier
     public void RemoveDefinition(string pluginId)
     {
-        var existing = _db.PluginDefinitions
-            .FirstOrDefault(d => d.Id == pluginId);
-        if (existing != null)
-        {
-            _db.PluginDefinitions.Remove(existing);
-            _db.SaveChanges();
-        }
+        _definitions.RemoveAll(d => d.Id == pluginId);
     }
 }

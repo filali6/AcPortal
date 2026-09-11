@@ -7,13 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Identity" Version="1.21.0" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="Confluent.Kafka" Version="2.13.1" />
     <PackageReference Include="Dapr.AspNetCore" Version="1.17.7" />
     <PackageReference Include="Dapr.Client" Version="1.17.7" />
     <PackageReference Include="Dapr.Messaging" Version="1.17.8" />
-    <PackageReference Include="MailKit" Version="4.17.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
@@ -24,18 +22,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Graph" Version="6.2.0" />
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.76.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Google" Version="1.76.0-alpha" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
-    <PackageReference Include="Octokit" Version="14.0.0" />
-    <PackageReference Include="SlackNet" Version="0.17.10" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.4" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.18.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
      <None Update="workflow-config.json">
     <CopyToOutputDirectory>Always</CopyToOutputDirectory>
      </None>
-     <PackageReference Include="UglyToad.PdfPig" Version="1.7.0-custom-5" />
     
   </ItemGroup>
 

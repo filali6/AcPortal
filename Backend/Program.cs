@@ -15,11 +15,7 @@ using Dapr.Messaging.PublishSubscribe.Extensions;
 using Backend.Modules.Contracts.Services;
 using Backend.Modules.Notifications.Services;
 using Backend.Modules.Chat.Services;
-using Backend.Modules.AI.Configurators;
-using Backend.Modules.Dashboard.Services;
-using Backend.Modules.Git.Services;
 
-using Backend.Modules.Messaging.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -47,7 +43,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProjectsService>();
  
 builder.Services.AddScoped<ToolsService>();
-builder.Services.AddScoped<PluginRegistry>();
+builder.Services.AddSingleton<PluginRegistry>();
 
 builder.Services.AddScoped<EventPublisher>();
 
@@ -56,34 +52,6 @@ builder.Services.AddScoped<ContractsService>();
 
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ChatService>();
-builder.Services.AddScoped<IPdfTextExtractor, PdfPigTextExtractor>();
-builder.Services.AddScoped<IContractSummaryService, ContractSummaryService>();
-builder.Services.AddScoped<IActionHandler, SummarizeContractHandler>();
-builder.Services.AddScoped<IContractSummaryService, ContractSummaryService>();
-builder.Services.AddScoped<BriefingService>();
-
-builder.Services.AddScoped<TaskCommentsService>();
-builder.Services.AddHttpClient<TeamsNotificationService>();
-builder.Services.AddScoped<TeamsNotificationService>();
-
-builder.Services.AddScoped<IGitProvider, GitHubProvider>();
-builder.Services.AddScoped<GitService>();
-
-//builder.Services.AddScoped<GraphService>();
-builder.Services.AddScoped<IMessagingProvider, SlackMessagingProvider>();
-builder.Services.AddScoped<IActionHandler, CreateMessagingChannelHandler>();
-builder.Services.AddScoped<MessagingCommentSyncService>();
-builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<IMessagingProvider, SlackMessagingProvider>();
-builder.Services.AddScoped<IActionHandler, SendCommentEmailHandler>();
-builder.Services.AddMemoryCache();
-
-var kernelBuilder = builder.Services.AddKernel();
-var provider = builder.Configuration["AI:Provider"]!;
-
-var configurators = new List<IKernelConfigurator> { new GeminiKernelConfigurator() };
-var factory = new KernelConfiguratorFactory(configurators);
-factory.Get(provider).Configure(kernelBuilder, builder.Configuration);
 
 builder.Services.AddSignalR();
 builder.Services.AddHttpClient();
@@ -91,7 +59,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddControllers().AddDapr().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles; 
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles; // ✅
 });
 
 var keycloakUrl = builder.Configuration["Keycloak:BaseUrl"];

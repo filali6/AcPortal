@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { ProjectsService } from '../../../core/services/projects.service';
 import { LucideAngularModule, ChevronRight } from 'lucide-angular';
 import { TabsService } from '../../../core/services/tabs.service';
-import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-projects-tab',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule,TranslateModule],
+  imports: [CommonModule, LucideAngularModule],
   templateUrl: './projects-tab.component.html',
   styleUrl: './projects-tab.component.scss'
 })
@@ -37,23 +36,10 @@ export class ProjectsTabComponent implements OnInit {
   }
 
   load(): void {
-    this.loading = true;
     this.projectsService.getAll().subscribe({
-        next: (projects) => {
-            this.projects = projects;
-            this.loading = false;
-            // charger le progress pour chaque projet
-            projects.forEach(p => {
-                this.projectsService.getDetails(p.id).subscribe({
-                    next: (details: any) => {
-                        const proj = this.projects.find(x => x.id === p.id);
-                        if (proj) (proj as any).progress = details.progress;
-                    }
-                });
-            });
-        }
+      next: (p) => this.projects = p
     });
-}
+  }
 
   selectProject(project: any): void {
     this.loading = true;

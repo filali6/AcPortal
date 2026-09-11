@@ -1,19 +1,18 @@
 .tabs-bar {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     gap: 2px;
-    padding: 8px 8px 0;
-    background: #f8fafc;
+    padding: 8px 24px 0;
+    border-bottom: none;
+    background: #0080FF;
     overflow-x: auto;
-    height: 100%;
-    box-sizing: border-box;
 
     &::-webkit-scrollbar {
         height: 3px;
     }
 
     &::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.3);
         border-radius: 3px;
     }
 }
@@ -22,28 +21,30 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 7px 14px;
-    border-radius: 6px 6px 0 0;
+    padding: 8px 16px;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid transparent;
+    border-bottom: none;
     cursor: pointer;
     font-size: 13px;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
     white-space: nowrap;
     transition: all 0.15s ease;
-    height: 34px;
-    box-sizing: border-box;
-    background: transparent;
-    border: none;
+    position: relative;
+    bottom: -1px;
 
-&:hover {
-        background: rgba(0, 128, 255, 0.08);
-        color: #0080FF;
+    &:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
     }
 
-        &.active {
-            background: #0080ff1f;
-            color: #0080FF;
-            font-weight: 600;
-        }
+    &.active {
+        background: white;
+        color: #0080FF;
+        font-weight: 600;
+        border-color: transparent;
+        border-bottom-color: white;
+    }
 
     .tab-title {
         max-width: 160px;
@@ -51,28 +52,29 @@
         text-overflow: ellipsis;
     }
 
-    .tab-close {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 11px;
-        color: #9b0101a6;
-        padding: 0 2px;
-        border-radius: 3px;
-        line-height: 1;
-
-        &:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
+        .tab-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5); // visible même inactif
+            padding: 0 2px;
+            border-radius: 3px;
+            line-height: 1;
+    
+            &:hover {
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+            }
         }
-    }
-
-                &.active .tab-close {
-                    color: #9ca3af;
-        
-                    &:hover {
-                        background: #9b0101a6;
-                        opacity: 20%;
-                    }
-                }
+    
+        // Dans tab active
+        &.active .tab-close {
+            color: #0080FF;
+    
+            &:hover {
+                background: #e0f0ff;
+                color: #0060cc;
+            }
+        }
 }

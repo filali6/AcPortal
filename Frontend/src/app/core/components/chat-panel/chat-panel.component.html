@@ -1,120 +1,36 @@
-<div class="chat-drawer" [class.open]="isOpen">
-
-    <!-- Header -->
-    <div class="drawer-head">
-        <button class="drawer-close" (click)="close()">✕</button>
-        <div class="drawer-task-name">{{ title }}</div>
-        <button class="btn-slack-mini" *ngIf="messagingChannelUrl" (click)="openExternalLink(messagingChannelUrl!)">
-            <svg width="12" height="12" viewBox="0 0 122.8 122.8" fill="none">
-                <path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9z" fill="#E01E5A" />
-                <path
-                    d="M32.3 77.6c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z"
-                    fill="#E01E5A" />
-                <path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2z" fill="#36C5F0" />
-                <path
-                    d="M45.2 32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z"
-                    fill="#36C5F0" />
-                <path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2z" fill="#2EB67D" />
-                <path
-                    d="M90.5 45.2c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z"
-                    fill="#2EB67D" />
-                <path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9z" fill="#ECB22E" />
-                <path
-                    d="M77.6 90.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z"
-                    fill="#ECB22E" />
-            </svg>
-            Slack
-        </button>
-        <div class="drawer-badges" *ngIf="taskStatus !== null">
-            <span class="status-badge" [style.background]="getStatusColor(taskStatus!) + '20'"
-                [style.color]="getStatusColor(taskStatus!)">
-                {{ getStatusLabel(taskStatus!) }}
-            </span>
-            <span class="tool-badge" *ngIf="toolName">{{ toolName }}</span>
-        </div>
-    </div>
-
-    <!-- Stream Members -->
-    <div class="members-bar" *ngIf="streamMembers.length > 0">
-        <span class="members-label">Team</span>
-        <div class="members-avatars">
-            <div class="member-avatar" *ngFor="let m of streamMembers" [title]="m.fullName + ' — ' + m.role">
-                {{ getInitialsFrom(m.fullName) }}
-            </div>
-        </div>
-    </div>
-
-    <!-- Comments List -->
-    <div class="comments-area">
-        <div class="empty-comments" *ngIf="comments.length === 0">
-            No comments yet. Be the first to comment.
-        </div>
-
-        <ng-container *ngFor="let comment of comments">
-            <div class="comment-item">
-                <div class="comment-avatar">{{ getInitialsFrom(comment.authorName) }}</div>
-                <div class="comment-body">
-                    <div class="comment-header">
-                        <span class="comment-author">{{ comment.authorName }}</span>
-                        <span class="comment-time">{{ getTime(comment.createdAt) }}</span>
-                        <button class="reply-btn" (click)="setReply(comment)">Reply</button>
-                        <button class="delete-btn" *ngIf="comment.authorKeycloakId === currentUserId"
-                            (click)="deleteComment(comment.id)">✕</button>
-                    </div>
-                    <div class="comment-meta">
-                        <p class="comment-content" [innerHTML]="highlightMentions(comment.content)"></p>
-                        <span class="teams-badge" *ngIf="comment.fromMessaging">via Slack</span>
-                    </div>
-
-                    <!-- Replies -->
-                    <div class="reply-item" *ngFor="let reply of comment.replies">
-                        <div class="comment-avatar small">{{ getInitialsFrom(reply.authorName) }}</div>
-                        <div class="comment-body">
-                            <div class="comment-header">
-                                <span class="comment-author">{{ reply.authorName }}</span>
-                                <span class="comment-time">{{ getTime(reply.createdAt) }}</span>
-                                <button class="delete-btn" *ngIf="reply.authorKeycloakId === currentUserId"
-                                    (click)="deleteComment(reply.id)">✕</button>
-                            </div>
-                            <div class="comment-meta">
-                                <p class="comment-content" [innerHTML]="highlightMentions(reply.content)"></p>
-                                <span class="teams-badge" *ngIf="reply.fromMessaging">via Slack</span>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </ng-container>
-    </div>
-
-    <!-- Reply indicator -->
-    <div class="reply-indicator" *ngIf="replyingTo">
-        <span>Replying to <strong>{{ replyingTo.authorName }}</strong></span>
-        <button (click)="cancelReply()">✕</button>
-    </div>
-
-    <!-- Compose -->
-    <div class="drawer-compose">
-
-        <!-- Mention dropdown — inside compose for correct positioning -->
-        <div class="mention-dropdown" *ngIf="showMentions">
-            <div class="mention-item" *ngFor="let m of filteredMembers" (mousedown)="selectMention(m)">
-                <div class="mention-avatar">{{ getInitialsFrom(m.fullName) }}</div>
-                <div class="mention-info">
-                    <span class="mention-name">{{ m.fullName }}</span>
-                    <span class="mention-role">{{ m.role }}</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="compose-row">
-            <input type="text" [(ngModel)]="newComment" (input)="onCommentInput($event)" (keyup.enter)="postComment()"
-                placeholder="Write a comment... use @ to mention" class="compose-input">
-            <button class="compose-send" (click)="postComment()" [disabled]="!newComment.trim()">
-                →
+<div class="chat-panel" [class.open]="isOpen" [class.minimized]="minimized">
+    <div class="chat-header" (click)="minimized = !minimized">
+        <span class="chat-title">{{ title }}</span>
+        <div class="chat-header-actions">
+            <button class="chat-action-btn" (click)="minimized = !minimized; $event.stopPropagation()">
+                {{ minimized ? '▲' : '▼' }}
             </button>
+            <button class="chat-action-btn" (click)="close(); $event.stopPropagation()">✕</button>
         </div>
     </div>
 
+    <div class="chat-messages" *ngIf="!minimized">
+        <div class="message-item" *ngFor="let msg of messages" [class.mine]="isMyMessage(msg)">
+            <div class="msg-avatar" *ngIf="!isMyMessage(msg)">
+                {{ getInitials(msg.senderName) }}
+            </div>
+            <div class="msg-bubble">
+                <span class="msg-sender" *ngIf="!isMyMessage(msg)">{{ msg.senderName }}</span>
+                <p class="msg-content">{{ msg.content }}</p>
+                <span class="msg-time">{{ getTime(msg.createdAt) }}</span>
+            </div>
+        </div>
+        <div class="empty-chat" *ngIf="messages.length === 0">
+            No messages yet. Start the conversation!
+        </div>
+        <div #messagesEnd></div>
+    </div>
+
+    <div class="chat-input" *ngIf="!minimized">
+        <input type="text" [(ngModel)]="newMessage" placeholder="Type a message..." (keyup.enter)="sendMessage()"
+            class="msg-input">
+        <button class="send-btn" (click)="sendMessage()" [disabled]="!newMessage.trim()">
+            →
+        </button>
+    </div>
 </div>

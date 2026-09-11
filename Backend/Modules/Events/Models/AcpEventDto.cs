@@ -21,9 +21,4 @@ public class AcpEventDto
     public string? ProjectName { get; set; }
 
     public string? LeadRole { get; set; }
-
-    public string? AuthorKeycloakId { get; set; }
-    public string? AuthorName { get; set; }
-    public string? Content { get; set; }
-    public string? TaskTitle { get; set; }
 }

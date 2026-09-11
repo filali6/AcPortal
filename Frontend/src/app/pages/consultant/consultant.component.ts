@@ -20,14 +20,10 @@ Chart.register(...registerables);
 import { ChatPanelComponent } from '../../core/components/chat-panel/chat-panel.component';
 import { KeycloakService } from 'keycloak-angular';
 import { ChatService } from '../../core/services/chat.service';
-import { TranslateModule } from '@ngx-translate/core';
-import { DrawerService } from '../../core/services/drawer.service';
-import { BriefingCardComponent } from '../../core/components/briefing-card/briefing-card.component';
-import { GitService } from '../../core/services/git.service';
 @Component({
   selector: 'app-consultant',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, ChatPanelComponent,TranslateModule,BriefingCardComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule, TeamFilterPipe,ChatPanelComponent],
   templateUrl: './consultant.component.html',
   styleUrl: './consultant.component.scss'
 })
@@ -50,26 +46,15 @@ export class ConsultantComponent implements OnInit, OnDestroy {
   selectedProjectId = '';
   filterStreamId = '';
 
-chatTaskStatus: number | null = null;
-chatToolName: string | null = null;
-
-  collapsedGroups: Set<string> = new Set();
-
 //chat 
   chatOpen = false;
   chatTaskId: string | null = null;
   chatTitle = '';
 
-  chatStreamId: string | null = null;
-
   private donutChart: Chart | null = null;
   private barChart: Chart | null = null;
   private subs: Subscription[] = [];
   private apiUrl = environment.apiUrl;
-  unreadTaskIds: Set<string> = new Set();
-  
-  loadingMock: Set<string> = new Set();
-  taskConfigs: Map<string, any> = new Map();
 
   statsBottom = {
     pendingTasks: 0,
@@ -77,7 +62,6 @@ chatToolName: string | null = null;
     activeStreams: 0,
     toolsUsed: 0
   };
-  chatMessagingChannelUrl: string | null = null;
 
   readonly ChevronRight = ChevronRight;
   readonly Layers = Layers;
@@ -96,8 +80,6 @@ chatToolName: string | null = null;
     private authService: AuthService,
     private keycloak:KeycloakService,
     private chatService:ChatService,
-    private drawerService:DrawerService,
-    private gitService: GitService
 
   ) {}
 
@@ -108,10 +90,7 @@ chatToolName: string | null = null;
 
     this.subs.push(
       this.notificationService.notifications$.subscribe(() => this.loadTasks()),
-      this.tabsService.activeTabId.subscribe(id => this.activeTabId = id),
-      this.chatService.getUnreadTaskIds().subscribe(ids => {
-        this.unreadTaskIds = ids;
-      })
+      this.tabsService.activeTabId.subscribe(id => this.activeTabId = id)
     );
   }
 
@@ -133,7 +112,6 @@ chatToolName: string | null = null;
       streams.forEach((s: any) => {
         this.chatService.joinStreamChat(s.id);
       });
-       
     });
 
        
@@ -143,22 +121,17 @@ chatToolName: string | null = null;
   }
 
   loadTasks(): void {
-  this.loading = true;
-  this.tasksService.getMyTasks().subscribe({
-    next: (tasks) => {
-      this.tasks = tasks;
-      this.loading = false;
-      this.loadProjects();
-      this.computeStats();
-
-      
-      tasks.filter(t => t.stepId).forEach(task => {
-        this.chatService.joinTaskChatSilent(task.id);
-      });
-    },
-    error: () => this.loading = false
-  });
-}
+    this.loading = true;
+    this.tasksService.getMyTasks().subscribe({
+      next: (tasks) => {
+        this.tasks = tasks;
+        this.loading = false;
+        this.loadProjects();
+        this.computeStats();
+      },
+      error: () => this.loading = false
+    });
+  }
 
   loadProjects(): void {
     this.projects = [];
@@ -235,8 +208,8 @@ chatToolName: string | null = null;
   getTasksForProject(projectId: string): Task[] {
     let tasks = this.tasks.filter(t => t.projectId === projectId);
 
-    // if (this.filterStreamId)
-    //   tasks = tasks.filter(t => t.streamId === this.filterStreamId);
+    if (this.filterStreamId)
+      tasks = tasks.filter(t => t.streamId === this.filterStreamId);
 
     if (this.searchQuery)
       tasks = tasks.filter(t => t.title.toLowerCase().includes(this.searchQuery.toLowerCase()));
@@ -252,21 +225,21 @@ chatToolName: string | null = null;
   }
 
   // ===== TOOLS =====
- openTool(task: Task): void {
+  openTool(task: Task): void {
     if (task.status === 1) return;
-    if (!task.toolName) return;
-
     const plugin = this.availablePlugins.find(p => p.id === task.toolName);
-    
-    console.log('plugin complet:', JSON.stringify(plugin));
-    console.log('accessUrl:', plugin?.url);
-
-    if (plugin?.url) {
-        window.open(plugin.url, '_blank');
+    if (plugin?.accessUrl) {
+      window.open(plugin.accessUrl, '_blank');
     } else {
-        this.toastService.show(`No URL configured for ${task.toolName}`, 'error');
+      const routes: { [key: string]: string } = {
+        'axeIAM': '/plugins/axe-iam',
+        'axeBPM': '/plugins/axe-bpm',
+        'axeGUI': '/plugins/axe-gui'
+      };
+      const route = routes[task.toolName];
+      if (route) this.router.navigate([route], { queryParams: { projectId: task.projectId } });
     }
-}
+  }
 
   // ===== STREAMS TAB =====
   openStreamsTab(): void {
@@ -310,65 +283,13 @@ chatToolName: string | null = null;
       });
     });
   }
- openTaskChat(task: any): void {
-    this.chatTaskId = task.id;
-    this.chatTitle = task.title;
-    this.chatTaskStatus = task.status;
-    this.chatToolName = task.toolName || null;
-    this.chatStreamId = task.streamId || null;
-
-    const stream = this.myStreams.find(s => s.id === task.streamId);
-    this.chatMessagingChannelUrl = stream?.messagingChannelUrl || null;
-
-    this.chatOpen = true;
-    this.drawerService.open();
-    this.chatService.markTaskAsRead(task.id);
+  openTaskChat(task: any): void {
+  this.chatTaskId = task.id;
+  this.chatTitle = task.title;
+  this.chatOpen = true;
 }
 
 closeChat(): void {
-    this.chatOpen = false;
-    this.drawerService.close(); // ← add this
+  this.chatOpen = false;
 }
-hasUnread(taskId: string): boolean {
-  return this.unreadTaskIds.has(taskId);
-}
-toggleGroup(projectId: string): void {
-    if (this.collapsedGroups.has(projectId)) {
-        this.collapsedGroups.delete(projectId);
-    } else {
-        this.collapsedGroups.add(projectId);
-    }
-}
-
-isGroupCollapsed(projectId: string): boolean {
-    return this.collapsedGroups.has(projectId);
-}
-
-simulateToolOutput(task: Task): void {
-    if (!task.stepId) return;
-    this.loadingMock.add(task.id);
-
-    this.gitService.generateMock(task.stepId).subscribe({
-        next: (result) => {
-            this.taskConfigs.set(task.id, result);
-            this.loadingMock.delete(task.id);
-            this.toastService.show(
-                `✅ ${result.fileName} generated by ${task.toolName}`
-            );
-        },
-        error: () => {
-            this.loadingMock.delete(task.id);
-            this.toastService.show('❌ Failed to generate mock');
-        }
-    });
-}
-
-getTaskConfig(taskId: string): any {
-    return this.taskConfigs.get(taskId);
-}
-
-isLoadingMock(taskId: string): boolean {
-    return this.loadingMock.has(taskId);
-}
-
 }

@@ -1,5 +1,4 @@
 namespace Backend.Modules.Events.Models;
-using System.Text.Json;
 
 // représente UNE règle dans le JSON
 public class WorkflowRule
@@ -21,9 +20,6 @@ public class WorkflowRule
 
     // "HeadOfCDS" | "DirectorId" | "ChefEquipeId" | "ProjectId" | "StepId"
     public List<string>TargetValues { get; set; } = new();
-
-    public JsonElement? Config { get; set; }
-
 }
 
 // représente la racine du JSON { "workflowRules": [...] }

@@ -71,9 +71,6 @@ export class TasksService {
   getMyTasks(): Observable<Task[]> {
   return this.http.get<Task[]>(`${this.apiUrl}/tasks/my`);
 }
-getByStream(streamId: string): Observable<Task[]> {
-  return this.http.get<Task[]>(`${this.apiUrl}/tasks/stream/${streamId}`);
-}
 
    
 }

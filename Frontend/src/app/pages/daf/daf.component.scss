@@ -375,7 +375,7 @@ select.form-input {
 // ===== BUTTONS =====
 .btn-primary {
     padding: 8px 20px;
-    background: #0080ff;
+    background: var(--accent);
     color: white;
     border: none;
     border-radius: 8px;
@@ -430,8 +430,7 @@ select.form-input {
 .bottom-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
-    margin-top: 24px;
+    margin-top: 8px;
 }
 
 // ===== ALERTS =====

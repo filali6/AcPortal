@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
@@ -9,26 +9,19 @@ import { NotificationService } from './core/services/notification.service';
 import { TabsBarComponent } from './core/components/tabs-bar/tabs-bar.component';
 import { ToastComponent } from './core/components/toast/toast.component';
 import { NotificationsDropdownComponent } from './core/components/notifications-dropdown/notifications-dropdown.component';
-import { BriefingCardComponent } from './core/components/briefing-card/briefing-card.component';
 import { LucideAngularModule, LayoutDashboard, FolderOpen, FileText, Wrench, Bell, MessageSquare, LogOut, User, ChevronRight, Briefcase,Users,GitBranch,Settings } from 'lucide-angular';
 import { ChatService } from './core/services/chat.service';
 import { KeycloakService } from 'keycloak-angular';
 import { DiscussionsPanelComponent } from './core/components/discussions-panel/discussions-panel.component';
 import { ChatPanelComponent } from './core/components/chat-panel/chat-panel.component';
-import { LanguageService } from './core/services/language.service';
-import { TranslateModule } from '@ngx-translate/core';
-import { DrawerService } from './core/services/drawer.service';
-import { TabsService } from './core/services/tabs.service';
-import { TooltipService } from './core/services/tooltip.service';
-
 @Component({
   selector: 'app-root',
   standalone: true,
-imports: [CommonModule, RouterOutlet, TabsBarComponent, ToastComponent, NotificationsDropdownComponent, BriefingCardComponent, LucideAngularModule,DiscussionsPanelComponent, ChatPanelComponent,TranslateModule],
+imports: [CommonModule, RouterOutlet, TabsBarComponent, ToastComponent, NotificationsDropdownComponent, LucideAngularModule,DiscussionsPanelComponent, ChatPanelComponent],
 templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent implements OnInit {
 
   showLayout = false;
   currentRoute = '';
@@ -43,11 +36,6 @@ chatOpen = false;
 chatStreamId: string | null = null;
 chatTaskId: string | null = null;
 chatTitle = '';
-
-isDrawerOpen = false;
-userMenuOpen = false;
-unreadDiscussionsCount = 0;
-
 
 
   // Outils accessibles au consultant
@@ -76,18 +64,13 @@ readonly Settings=Settings;
     private http: HttpClient,
     private notificationService:NotificationService,
     private keycloak:KeycloakService,
-    private chatService:ChatService,
-    public languageService:LanguageService,
-    private drawerService: DrawerService,
-    public tabsService:TabsService,
-    private tooltipService: TooltipService
-    
+    private chatService:ChatService
     
   ) {}
 
   ngOnInit(): void {
-    this.tooltipService.init();
-  this.languageService.init();
+   
+   
   if (this.keycloak.isLoggedIn()) {
     this.userInfo = this.authService.getUserInfo();
     console.log('userInfo:', this.userInfo);
@@ -98,11 +81,6 @@ readonly Settings=Settings;
     if (this.userInfo?.id) {
       this.notificationService.startConnection(this.userInfo.id);
       this.initChatConnection();
-       this.chatService.setCurrentUser(this.userInfo?.sub || this.userInfo?.id || '');  
-      this.chatService.getUnreadDiscussionsCount().subscribe(count => {
-  this.unreadDiscussionsCount = count;
-});
-   
     }
   } else {
     this.showLayout = false;
@@ -116,10 +94,8 @@ readonly Settings=Settings;
   clearTimeout(this.toastTimeout);
   this.toastTimeout = setTimeout(() => this.toastVisible = false, 4000);
 });
-
- this.drawerService.isOpen$.subscribe(open => {
-    this.isDrawerOpen = open;
-});
+   
+ 
 
     this.router.events.pipe(
       filter(e => e instanceof NavigationEnd)
@@ -156,14 +132,6 @@ readonly Settings=Settings;
     this.currentRoute = currentUrl;
   }
 
-  ngOnDestroy(): void {
-    this.tooltipService.destroy();
-  }
-
-onSwitchLang(lang: string): void {
-  this.languageService.switchLanguage(lang);
-  window.location.reload();
-}
   loadMyTools(): void {
     this.http.get<any[]>(`${this.apiUrl}/tools/my-roles`).subscribe({
       next: (tools) => {
@@ -258,11 +226,5 @@ onOpenChat(data: {streamId?: string, taskId?: string, title: string}): void {
   this.chatTaskId = data.taskId || null;
   this.chatTitle = data.title;
   this.chatOpen = true;
-}
-toggleUserMenu(): void {
-    this.userMenuOpen = !this.userMenuOpen;
-}
-openDiscussions(): void {
-    this.router.navigate(['/discussions']);
 }
 }

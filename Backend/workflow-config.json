@@ -1,90 +1,44 @@
 {
-  "WorkflowRules": [
+  "workflowRules": [
     {
-      "EventCode": "ContratSign\u00E9",
-      "ActionType": "CREATE_TASK",
-      "TaskTitle": "Cr\u00E9er le projet pour le client : {clientName}",
-      "TaskDescription": "Un contrat a \u00E9t\u00E9 sign\u00E9 \u2014 cr\u00E9er le projet correspondant",
-      "TargetType": "ROLE",
-      "TargetValues": [
-        "HeadOfCDS"
-      ],
-      "Config": null
+      "eventCode": "ContratSigné",
+      "actionType": "CREATE_TASK",
+      "taskTitle": "Créer le projet pour le client : {clientName}",
+      "taskDescription": "Un contrat a été signé — créer le projet correspondant",
+      "targetType": "ROLE",
+      "targetValues": ["HeadOfCDS"]
     },
     {
-      "EventCode": "ContratSign\u00E9",
-      "ActionType": "SUMMARIZE_CONTRACT",
-      "TaskTitle": null,
-      "TaskDescription": null,
-      "TargetType": "",
-      "TargetValues": [],
-      "Config": {
-        "prompt": "You are a senior legal and financial analyst. Extract and structure the key elements of this contract in a clear, scannable format for a Head of CDS.\n\nRespond ONLY in this exact markdown structure:\n\n## Parties\n- **Client:** [name]\n- **Provider:** [name]\n\n## Purpose\n[1 sentence max]\n\n## Financial Terms\n- **Total amount:** [value]\n- **Payment terms:** [details]\n- **Key dates:** [start / end / deadlines]\n\n## Key Risks \u0026 Sensitive Clauses\n- [risk or clause 1]\n- [risk or clause 2]\n\n## Main Obligations\n- **Client:** [obligation]\n- **Provider:** [obligation]\n\nBe precise, use exact values from the contract. No long paragraphs. No invented data."
-      }
+      "eventCode": "ProjetCréé",
+      "actionType": "CREATE_TASK",
+      "taskTitle": "Nouveau projet \"{projectName}\" : Assigner un chef de projet",
+      "taskDescription": "Le projet a été créé — assigner un Project Manager",
+      "targetType": "CONTEXT_USER",
+      "targetValues": ["DirectorId"]
     },
     {
-      "EventCode": "ProjetCr\u00E9\u00E9",
-      "ActionType": "CREATE_TASK",
-      "TaskTitle": "Nouveau projet \u0022{projectName}\u0022 : Assigner un chef de projet",
-      "TaskDescription": "Le projet a \u00E9t\u00E9 cr\u00E9\u00E9 \u2014 assigner un Project Manager",
-      "TargetType": "CONTEXT_USER",
-      "TargetValues": [
-        "DirectorId"
-      ],
-      "Config": null
+      "eventCode": "ProjectManagerAssigné",
+      "actionType": "CREATE_TASK",
+      "taskTitle": "Créer les streams et assigner les Team Leads",
+      "taskDescription": "Project Manager assigné — créer les streams du projet",
+      "targetType": "CONTEXT_USER",
+      "targetValues": ["ProjectManagerId"]
     },
     {
-      "EventCode": "ProjectManagerAssign\u00E9",
-      "ActionType": "CREATE_TASK",
-      "TaskTitle": "Cr\u00E9er les streams et assigner les Team Leads",
-      "TaskDescription": "Project Manager assign\u00E9 \u2014 cr\u00E9er les streams du projet",
-      "TargetType": "CONTEXT_USER",
-      "TargetValues": [
-        "ProjectManagerId"
-      ],
-      "Config": null
+      "eventCode": "StreamCréé",
+      "actionType": "CREATE_TASK",
+      "taskTitle": "Définir les steps du stream",
+      "taskDescription": "Stream créé — définir les étapes",
+      "targetType": "CONTEXT_USER",
+      "targetValues": ["BusinessTeamLeadId", "TechnicalTeamLeadId"]
     },
     {
-      "EventCode": "StreamCr\u00E9\u00E9",
-      "ActionType": "CREATE_TASK",
-      "TaskTitle": "D\u00E9finir les steps du stream",
-      "TaskDescription": "Stream cr\u00E9\u00E9 \u2014 d\u00E9finir les \u00E9tapes",
-      "TargetType": "CONTEXT_USER",
-      "TargetValues": [
-        "BusinessTeamLeadId",
-        "TechnicalTeamLeadId"
-      ],
-      "Config": null
-    },
-    {
-      "EventCode": "StepsD\u00E9finis",
-      "ActionType": "CREATE_TASKS_FROM_STEPS",
-      "TaskTitle": null,
-      "TaskDescription": null,
-      "TargetType": "BEST_CONSULTANT",
-      "TargetValues": [
-        "StreamId"
-      ],
-      "Config": null
-    },
-     
-    {
-      "EventCode": "StreamCr\u00E9\u00E9",
-      "ActionType": "CREATE_MESSAGING_CHANNEL",
-      "TaskTitle": "",
-      "TaskDescription": "",
-      "TargetType": "",
-      "TargetValues": [],
-      "Config": null
-    },
-    {
-  "EventCode": "CommentaireAjouté",
-  "ActionType": "SEND_COMMENT_EMAIL",
-  "TaskTitle": "",
-  "TaskDescription": "",
-  "TargetType": "",
-  "TargetValues": [],
-  "Config": null
-}
+      "eventCode": "StepsDéfinis",
+      "actionType": "CREATE_TASKS_FROM_STEPS",
+      "taskTitle": null,
+      "taskDescription": null,
+      "targetType": "BEST_CONSULTANT",
+      "targetValues": ["StreamId"]
+    }
   ]
 }

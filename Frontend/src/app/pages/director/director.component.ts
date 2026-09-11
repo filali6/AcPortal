@@ -15,13 +15,11 @@ import { LucideAngularModule, ChevronRight, Briefcase } from 'lucide-angular';
 import { Subscription } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
-import { TranslateModule } from '@ngx-translate/core';
-import { BriefingCardComponent } from '../../core/components/briefing-card/briefing-card.component';
 
 @Component({
   selector: 'app-director',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, ModalComponent,TranslateModule,BriefingCardComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule, ModalComponent],
   templateUrl: './director.component.html',
   styleUrl: './director.component.scss'
 })
@@ -228,14 +226,17 @@ export class DirectorComponent implements OnInit, OnDestroy {
   }
 
   selectProject(project: any): void {
-  if (this.selectedProject?.id === project.id) {
-    this.selectedProject = null;
-    return;
+    this.projectsService.getDetails(project.id).subscribe({
+      next: (d) => {
+        this.selectedProject = d;
+        this.tabsService.openTab({
+          id: `project-detail-${project.id}`,
+          title: project.name,
+          type: 'create-project'
+        });
+      }
+    });
   }
-  this.projectsService.getDetails(project.id).subscribe({
-    next: (d) => this.selectedProject = d
-  });
-}
 
   // ===== REASSIGN PM =====
 
@@ -295,5 +296,4 @@ export class DirectorComponent implements OnInit, OnDestroy {
   getProjectName(projectId: string): string {
     return this.projects.find((p: any) => p.id === projectId)?.name || '—';
   }
-  
 }

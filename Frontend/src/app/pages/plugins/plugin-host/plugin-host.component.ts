@@ -2,11 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PluginBridgeService, Plugin } from '../../../core/services/plugin-bridge.service';
-import { TranslateModule } from '@ngx-translate/core';
+
 @Component({
   selector: 'app-plugin-host',
   standalone: true,
-  imports: [CommonModule,TranslateModule],
+  imports: [CommonModule],
   templateUrl: './plugin-host.component.html',
   styleUrl: './plugin-host.component.scss'
 })

@@ -54,7 +54,8 @@ public class EventProcessorService
         if (streamId.HasValue && !eventDto.StreamId.HasValue)
             eventDto.StreamId = streamId;
 
-        
+        // ── AVANT : switch(eventDto.EventType) hard-codé
+        // ── APRÈS : on lit la règle depuis le JSON
         var rules = _workflowRules.GetRules(eventDto.EventType);
 
         if (!rules.Any())

@@ -3,16 +3,15 @@
 <div class="discussions-panel" [class.open]="isOpen">
 
     <div class="panel-header">
-        <div class="panel-title">
-            <span>{{ 'DISCUSSIONS.TITLE' | translate }}</span>
-        </div>
-        <button class="close-btn" (click)="close()">{{ 'COMMON.CLOSE' | translate }}</button>
+        <span class="panel-title">Discussions</span>
+        <button class="close-btn" (click)="close()">✕</button>
     </div>
 
     <div class="panel-body">
 
-        <div class="section-label">{{ 'DISCUSSIONS.STREAM_DISCUSSIONS' | translate }}</div>
-        <div class="discussion-item" *ngFor="let d of streamDiscussions" (click)="openDiscussion('stream', d.id)">
+        <!-- Stream Discussions -->
+        <div class="section-label">Stream Discussions</div>
+        <div class="discussion-item" *ngFor="let d of streamDiscussions" (click)="openStreamChat(d)">
             <div class="disc-avatar stream-avatar">
                 {{ d.name.slice(0,2).toUpperCase() }}
             </div>
@@ -29,11 +28,12 @@
             </div>
         </div>
         <div class="empty-section" *ngIf="streamDiscussions.length === 0">
-            {{ 'DISCUSSIONS.NO_STREAM' | translate }}
+            No stream discussions
         </div>
 
-        <div class="section-label" style="margin-top: 8px">{{ 'DISCUSSIONS.TASK_DISCUSSIONS' | translate }}</div>
-    <div class="discussion-item" *ngFor="let d of taskDiscussions" (click)="openDiscussion('task', d.id)">
+        <!-- Task Discussions -->
+        <div class="section-label" style="margin-top: 16px">Task Discussions</div>
+        <div class="discussion-item" *ngFor="let d of taskDiscussions" (click)="openTaskChat(d)">
             <div class="disc-avatar task-avatar">
                 {{ d.title.slice(0,2).toUpperCase() }}
             </div>
@@ -49,9 +49,12 @@
             </div>
         </div>
         <div class="empty-section" *ngIf="taskDiscussions.length === 0">
-            {{ 'DISCUSSIONS.NO_TASK' | translate }}
+            No task discussions
         </div>
 
     </div>
+
+    
+  
 
 </div>

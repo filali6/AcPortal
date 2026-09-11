@@ -18,11 +18,4 @@ public class Stream
     public User? TechnicalTeamLead { get; set; }
 
     public ICollection<StreamMember> Members { get; set; } = new List<StreamMember>();
-
-    public string? GitRepoUrl{get;set;}
-
-  
-
-    public string? MessagingChannelId { get; set; }
-    public string? MessagingChannelUrl { get; set; }
 }

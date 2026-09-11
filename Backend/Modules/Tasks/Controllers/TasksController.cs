@@ -89,7 +89,7 @@ public class TasksController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetMyTasks()
     {
-        
+        // ✅ Récupérer l'ID Keycloak depuis le token
         var keycloakId = User.FindFirst(
             System.Security.Claims.ClaimTypes.NameIdentifier)!.Value;
 
@@ -100,13 +100,6 @@ public class TasksController : ControllerBase
         if (user == null) return Ok(new List<object>());
 
         var tasks = await _tasksService.GetMyTasksAsync(user.KeycloakId);
-        return Ok(tasks);
-    }
-    [HttpGet("stream/{streamId:guid}")]
-    [Authorize]
-    public async Task<IActionResult> GetByStream(Guid streamId)
-    {
-        var tasks = await _tasksService.GetByStreamAsync(streamId);
         return Ok(tasks);
     }
 }

@@ -29,12 +29,9 @@ public class AppDbContext : DbContext
     public DbSet<ToolRole> ToolRoles => Set<ToolRole>();
     public DbSet<ConsultantToolRole> ConsultantToolRoles => Set<ConsultantToolRole>();
     public DbSet<UserPlugin> UserPlugins => Set<UserPlugin>();
-    public DbSet<PluginDefinition> PluginDefinitions => Set<PluginDefinition>();
     public DbSet<Contract> Contracts => Set<Contract>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
-    public DbSet<TaskComment> TaskComments { get; set; }
-    public DbSet<StepConfigFile> StepConfigFiles { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -167,29 +164,6 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<ChatMessage>()
             .HasIndex(m => m.TaskId);
-        modelBuilder.Entity<PluginDefinition>()
-    .HasKey(p => p.DbId);
-
-        modelBuilder.Entity<PluginDefinition>()
-            .HasIndex(p => p.Id)
-            .IsUnique();
-
-        modelBuilder.Entity<TaskComment>(entity =>
-            {
-                entity.HasOne(c => c.Task)
-                    .WithMany(t=>t.Comments)
-                    .HasForeignKey(c => c.TaskId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(c => c.ParentComment)
-                    .WithMany(c => c.Replies)
-                    .HasForeignKey(c => c.ParentCommentId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.Property(c => c.Mentions)
-                    .HasColumnType("jsonb");
-            });
 
     }
-    
 }

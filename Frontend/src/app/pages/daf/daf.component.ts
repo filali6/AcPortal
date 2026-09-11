@@ -11,12 +11,11 @@ import { UtilsService } from '../../core/services/utils.service';
 import { ModalComponent } from '../../core/components/modal/modal.component';
 Chart.register(...registerables);
 import { ChartService } from '../../core/services/chart.service';
-import { TranslateModule,TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-daf',
   standalone: true,
-  imports: [CommonModule, FormsModule,ModalComponent,TranslateModule],
+  imports: [CommonModule, FormsModule,ModalComponent],
   templateUrl: './daf.component.html',
   styleUrl: './daf.component.scss'
 })
@@ -35,13 +34,12 @@ export class DafComponent implements OnInit, OnDestroy {
   // Données par onglet
   openTabs: { [tabId: string]: any } = {};
 
- statsBottom = {
-  total: 0,
-  converted: 0,
-  conversionRate: 0,
-  avgDays: 0,
-  waitingOver7Days: 0
-};
+  statsBottom = {
+    thisMonth: 0,
+    conversionRate: 0,
+    waitingOver7Days: 0,
+    lastClient: { name: '', date: '' }
+  };
   
 
   private donutChart: Chart | null = null;
@@ -54,8 +52,7 @@ export class DafComponent implements OnInit, OnDestroy {
     private tabsService: TabsService,
     private toastService: ToastService,
     public utils : UtilsService,
-    private chartService:ChartService,
-    private translate:TranslateService
+    private chartService:ChartService
   ) {}
 
   ngOnInit(): void {
@@ -252,46 +249,50 @@ export class DafComponent implements OnInit, OnDestroy {
    
 
   computeBottomStats(): void {
-  const converted = this.contracts.filter(c => c.projectId);
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const thisYear = now.getFullYear();
 
-  this.statsBottom.total = this.contracts.length;
-  this.statsBottom.converted = converted.length;
-  this.statsBottom.conversionRate = this.contracts.length
-    ? Math.round((converted.length / this.contracts.length) * 100)
-    : 0;
+    this.statsBottom.thisMonth = this.contracts.filter(c => {
+      const d = new Date(c.createdAt);
+      return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+    }).length;
 
-  this.statsBottom.avgDays = converted.length
-    ? Math.round(
-        converted.reduce((sum, c) => sum + this.getDays(c.createdAt), 0) / converted.length
-      )
-    : 0;
+    this.statsBottom.conversionRate = this.contracts.length
+      ? Math.round((this.contracts.filter(c => c.projectId).length / this.contracts.length) * 100)
+      : 0;
 
-  this.statsBottom.waitingOver7Days = this.contracts.filter(c => this.isDelayed(c)).length;
+    this.statsBottom.waitingOver7Days = this.contracts.filter(c => {
+      if (c.projectId) return false;
+      const days = (now.getTime() - new Date(c.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+      return days > 7;
+    }).length;
 
-  setTimeout(() => this.renderCharts(), 100);
-}
+    const last = this.contracts[0];
+    this.statsBottom.lastClient = last
+      ? { name: last.clientName, date: new Date(last.createdAt).toLocaleDateString('fr-FR') }
+      : { name: '—', date: '—' };
+
+    setTimeout(() => this.renderCharts(), 100);
+  }
 
   renderCharts(): void {
   this.donutChart = this.chartService.createDoughnut(
     'donutChart',
+    ['Signed', 'Project Created', 'In Progress'],
     [
-      this.translate.instant('CONTRACTS.CONVERTED'),
-      this.translate.instant('CONTRACTS.WAITING'),
-      this.translate.instant('CONTRACTS.DELAYED')
+      this.contracts.filter(c => c.status === 0).length,
+      this.contracts.filter(c => c.status === 1).length,
+      this.contracts.filter(c => c.status === 2).length
     ],
-    [
-      this.contracts.filter(c => c.projectId).length,
-      this.contracts.filter(c => !c.projectId && !this.isDelayed(c)).length,
-      this.contracts.filter(c => this.isDelayed(c)).length
-    ],
-    ['#10b981', '#f59e0b', '#ef4444'],
+    ['#f59e0b', '#10b981', '#6366f1'],
     this.donutChart
   );
 
   this.barChart = this.chartService.createBar(
     'barChart',
     this.chartService.getLast6MonthsLabels(),
-    this.chartService.getLast6MonthsData(this.contracts, 'createdAt'),
+    this.chartService.getLast6MonthsData(this.contracts),
     '#3b82f6',
     this.barChart
   );
@@ -300,18 +301,6 @@ export class DafComponent implements OnInit, OnDestroy {
   openNewContractModal(): void {
   this.newContract = { clientName: '', description: '', files: [] };
   this.showNewContractModal = true;
-}
-getDays(createdAt: string): number {
-  const diff = new Date().getTime() - new Date(createdAt).getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
-}
-
-isDelayed(contract: any): boolean {
-  return !contract.projectId && this.getDays(contract.createdAt) > 7;
-}
-closeContractTab(tabId: string): void {
-  delete this.openTabs[tabId];
-  this.tabsService.closeTab(tabId);
 }
   
 

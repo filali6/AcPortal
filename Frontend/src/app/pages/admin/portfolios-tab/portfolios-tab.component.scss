@@ -34,59 +34,35 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 20px;
+    padding: 12px 20px;
     border-bottom: 1px solid #f3f4f6;
-    transition: background 0.15s;
 
     &:last-child {
         border-bottom: none;
     }
 
     &:hover {
-        background: #f8fafc;
+        background: #fafafa;
     }
 }
 
 .item-info {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
     flex: 1;
     cursor: pointer;
 }
 
 .item-name {
     font-size: 13.5px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--text-primary);
 }
 
 .item-sub {
     font-size: 12px;
     color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.project-count-badge {
-    background: rgba(0, 128, 255, 0.08);
-    color: #0080FF;
-    padding: 1px 8px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 600;
-}
-
-.director-name {
-    color: var(--text-secondary);
-    font-size: 12px;
-}
-
-.no-director {
-    color: #ef4444;
-    font-size: 12px;
-    font-style: italic;
 }
 
 .item-actions {
@@ -95,14 +71,20 @@
     gap: 8px;
 }
 
-.chevron-icon {
-    color: #cbd5e1;
-    cursor: pointer;
-    transition: color 0.15s;
+.select-sm {
+    width: 180px;
+    padding: 6px 10px;
+    font-size: 13px;
+}
 
-    &:hover {
-        color: #0080FF;
-    }
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12.5px;
+}
+
+.chevron-icon {
+    color: var(--text-secondary);
+    cursor: pointer;
 }
 
 .btn-back {
@@ -122,38 +104,28 @@
 
 .btn-primary {
     padding: 7px 14px;
-    background: #0080ff;
+    background: var(--accent);
     color: white;
     border: none;
     border-radius: 6px;
     font-size: 13px;
     cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
 
     &:disabled {
         opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    &:hover:not(:disabled) {
-        background: #0066cc;
     }
 }
 
 .btn-small {
-    padding: 5px 12px;
+    padding: 5px 10px;
     border: 1px solid var(--border);
     border-radius: 6px;
     background: white;
     font-size: 12px;
     cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    color: var(--text-secondary);
-    transition: all 0.15s;
 
     &:hover {
         background: #f3f4f6;
-        border-color: #cbd5e1;
     }
 }
 
@@ -163,13 +135,10 @@
     border-radius: 6px;
     font-size: 13px;
     font-family: 'DM Sans', sans-serif;
-    width: 100%;
-    box-sizing: border-box;
 
     &:focus {
         outline: none;
         border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.08);
     }
 }
 
@@ -179,28 +148,106 @@
 }
 
 .empty {
-    padding: 32px;
+    padding: 24px;
     text-align: center;
     color: var(--text-secondary);
     font-size: 13px;
 }
+// Modal flottant
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.2);
+  z-index: 100;
+}
 
-/* ── MODAL ── */
-.modal-footer {
+.floating-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 360px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    z-index: 101;
+    overflow: hidden;
+    transition: bottom 0.2s, right 0.2s;
+
+    &.minimized {
+        top: auto;
+        left: auto;
+        bottom: 24px;
+        right: 24px;
+        transform: none !important;
+        width: 220px;
+    }
+}
+
+.modal-header {
     display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 8px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #1e293b;
+    color: white;
+    cursor: grab;
+    user-select: none;
+
+    &:active {
+        cursor: grabbing;
+    }
+}
+.modal-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.modal-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  &:hover { background: rgba(255,255,255,0.15); }
+}
+
+.modal-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+}
 
-    label {
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--text-secondary);
-    }
+.form-input {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  &:focus { outline: none; border-color: var(--accent); }
 }

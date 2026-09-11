@@ -1,21 +1,17 @@
 <div class="tools-page">
 
     <div class="page-header">
-        <h1>{{ 'TOOLS_PAGE.MY_TOOLS' | translate }}</h1>
-        <button class="btn-marketplace" (click)="openMarketplace()">
-            <span class="btn-marketplace-icon">＋</span>
-            {{ 'TOOLS_PAGE.MARKETPLACE' | translate }}
-        </button>
+        <h1>Mes outils</h1>
     </div>
 
-    <div *ngIf="loading" class="empty">{{ 'COMMON.LOADING' | translate }}</div>
+    <div *ngIf="loading" class="empty">Chargement...</div>
 
     <div *ngIf="!loading">
 
         <!-- Mes outils -->
         <section class="section">
             <div *ngIf="myPlugins.length === 0" class="empty">
-                {{ 'TOOLS_PAGE.NO_TOOLS' | translate }}
+                Aucun outil ajouté pour l'instant.
             </div>
             <div class="plugins-grid">
                 <div *ngFor="let plugin of myPlugins" class="plugin-card">
@@ -25,76 +21,37 @@
                         <p class="plugin-desc">{{ plugin.description }}</p>
                     </div>
                     <div class="plugin-actions">
-                        <button class="btn-open" (click)="openPlugin(plugin)">
-                            {{ 'TOOLS_PAGE.OPEN' | translate }}
+                        <button class="btn-open" (click)="openPlugin(plugin)">Ouvrir</button>
+                        <button class="btn-remove" (click)="removePlugin(plugin.id)">Retirer</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Catalogue -->
+        <div class="page-header">
+            <h1>Catalogue</h1>
+        </div>
+        <section class="section">
+            <div class="plugins-grid">
+                <div *ngFor="let plugin of allPlugins" class="plugin-card" [class.added]="isAdded(plugin.id)">
+                    <div class="plugin-info">
+                        <span class="plugin-name">{{ plugin.name }}</span>
+                        <span class="category-badge">{{ plugin.category }}</span>
+                        <p class="plugin-desc">{{ plugin.description }}</p>
+                    </div>
+                    <div class="plugin-actions">
+                        <button *ngIf="!isAdded(plugin.id)" class="btn-add" (click)="addPlugin(plugin.id)">
+                            + Ajouter
                         </button>
-                        <button class="btn-remove" (click)="removePlugin(plugin.id)">
-                            {{ 'TOOLS_PAGE.REMOVE' | translate }}
+                        <button *ngIf="isAdded(plugin.id)" class="btn-added" disabled>
+                            Ajouté
                         </button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Bouton Marketplace -->
-       
-    </div>
-
-    <!-- Drawer Marketplace -->
-    <div class="marketplace-overlay" [class.open]="marketplaceOpen" (click)="closeMarketplace()"></div>
-    <div class="marketplace-drawer" [class.open]="marketplaceOpen">
-        <div class="drawer-header">
-            <div class="drawer-title-block">
-                <span class="drawer-title">{{ 'TOOLS_PAGE.MARKETPLACE' | translate }}</span>
-                <span class="drawer-subtitle">{{ allPlugins.length - myPlugins.length }} {{ 'TOOLS_PAGE.AVAILABLE' |
-                    translate }}</span>
-            </div>
-            <button class="drawer-close" (click)="closeMarketplace()">✕</button>
-        </div>
-        <div class="drawer-body">
-            <div class="drawer-plugins-list">
-            
-                <!-- Non ajoutés -->
-                <ng-container *ngFor="let plugin of allPlugins">
-                    <div *ngIf="!isAdded(plugin.id)" class="drawer-plugin-item">
-                        <div class="drawer-plugin-info">
-                            <div class="drawer-plugin-top">
-                                <span class="plugin-name">{{ plugin.name }}</span>
-                                <span class="category-badge">{{ plugin.category }}</span>
-                            </div>
-                            <p class="plugin-desc">{{ plugin.description }}</p>
-                        </div>
-                        <div class="drawer-plugin-action">
-                            <button class="btn-add" (click)="addPlugin(plugin.id)">
-                                + {{ 'COMMON.ADD' | translate }}
-                            </button>
-                        </div>
-                    </div>
-                </ng-container>
-            
-                <!-- Séparateur -->
-                <div class="drawer-separator" *ngIf="myPlugins.length > 0 && myPlugins.length < allPlugins.length">
-                    <span>{{ 'TOOLS_PAGE.ADDED' | translate }}</span>
-                </div>
-            
-                <!-- Ajoutés -->
-                <ng-container *ngFor="let plugin of allPlugins">
-                    <div *ngIf="isAdded(plugin.id)" class="drawer-plugin-item added">
-                        <div class="drawer-plugin-info">
-                            <div class="drawer-plugin-top">
-                                <span class="plugin-name">{{ plugin.name }}</span>
-                                <span class="category-badge">{{ plugin.category }}</span>
-                            </div>
-                            <p class="plugin-desc">{{ plugin.description }}</p>
-                        </div>
-                        <div class="drawer-plugin-action">
-                            <span class="badge-added">✓ {{ 'TOOLS_PAGE.ADDED' | translate }}</span>
-                        </div>
-                    </div>
-                </ng-container>
-            
-            </div>
-        </div>
     </div>
 
 </div>
