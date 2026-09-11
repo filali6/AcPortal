@@ -9,10 +9,13 @@ public class SlackMessagingProvider : IMessagingProvider
     private readonly ILogger<SlackMessagingProvider> _logger;
     private string? _teamId;
 
-    public SlackMessagingProvider(IConfiguration config, ILogger<SlackMessagingProvider> logger)
+    public SlackMessagingProvider(
+        IConfiguration config,
+        ILogger<SlackMessagingProvider> logger,
+        ISlackApiClient? slack = null)
     {
         var botToken = config["Messaging:Slack:BotToken"]!;
-        _slack = new SlackServiceBuilder().UseApiToken(botToken).GetApiClient();
+        _slack = slack ?? new SlackServiceBuilder().UseApiToken(botToken).GetApiClient();
         _logger = logger;
     }
 

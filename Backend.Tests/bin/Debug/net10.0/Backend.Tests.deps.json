@@ -1285,6 +1285,18 @@
           }
         }
       },
+      "SlackNet/0.17.10": {
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.4",
+          "System.Reactive": "6.0.1"
+        },
+        "runtime": {
+          "lib/net8.0/SlackNet.dll": {
+            "assemblyVersion": "0.17.10.0",
+            "fileVersion": "0.17.10.0"
+          }
+        }
+      },
       "Std.UriTemplate/2.0.8": {
         "runtime": {
           "lib/net5.0/Std.UriTemplate.dll": {
@@ -1405,6 +1417,14 @@
           "lib/net10.0/System.Numerics.Tensors.dll": {
             "assemblyVersion": "10.0.0.6",
             "fileVersion": "10.0.626.17701"
+          }
+        }
+      },
+      "System.Reactive/6.0.1": {
+        "runtime": {
+          "lib/net6.0/System.Reactive.dll": {
+            "assemblyVersion": "6.0.0.0",
+            "fileVersion": "6.0.1.7420"
           }
         }
       },
@@ -1548,6 +1568,7 @@
           "Microsoft.SemanticKernel.Connectors.Google": "1.76.0-alpha",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.0",
           "Octokit": "14.0.0",
+          "SlackNet": "0.17.10",
           "Swashbuckle.AspNetCore": "10.1.4",
           "System.IdentityModel.Tokens.Jwt": "8.18.0",
           "UglyToad.PdfPig": "1.7.0-custom-5"
@@ -2134,6 +2155,13 @@
       "path": "openai/2.10.0",
       "hashPath": "openai.2.10.0.nupkg.sha512"
     },
+    "SlackNet/0.17.10": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-dNh84eMrn7QGrAz4j9si4GhrzcH8+fiesYvlEbqxs0tk6ukMzA86I+4HHJaxWndVV3DtGy/Dr72x49Op/3Ru0w==",
+      "path": "slacknet/0.17.10",
+      "hashPath": "slacknet.0.17.10.nupkg.sha512"
+    },
     "Std.UriTemplate/2.0.8": {
       "type": "package",
       "serviceable": true,
@@ -2217,6 +2245,13 @@
       "sha512": "sha512-DOZ8Z8CxHVWU8gSo4ZQ8sCAPIQb+agp56ISuMiu39WWZiV+reZwn9NM1tj4lRDfqLaOAinF6zTi0csmFBQes9Q==",
       "path": "system.numerics.tensors/10.0.6",
       "hashPath": "system.numerics.tensors.10.0.6.nupkg.sha512"
+    },
+    "System.Reactive/6.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-rHaWtKDwCi9qJ3ObKo8LHPMuuwv33YbmQi7TcUK1C264V3MFnOr5Im7QgCTdLniztP3GJyeiSg5x8NqYJFqRmg==",
+      "path": "system.reactive/6.0.1",
+      "hashPath": "system.reactive.6.0.1.nupkg.sha512"
     },
     "System.Security.Cryptography.ProtectedData/4.5.0": {
       "type": "package",

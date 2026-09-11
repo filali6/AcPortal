@@ -3,9 +3,10 @@ using Backend.Data;
 using Backend.Hubs;
 using Backend.Modules.Auth.Models;
 using Backend.Modules.Notifications.Services;
+using Backend.Modules.Events.Services;
+using Backend.Modules.Messaging.Services;
 using Backend.Modules.Tasks.Models;
 using Backend.Modules.Tasks.Services;
-using Backend.Modules.Teams.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -41,20 +42,23 @@ public class TaskCommentsServiceTests : IDisposable
         var notificationService = new NotificationService(_db, hubContext.Object);
         var teamsNotificationService = new TeamsNotificationService(new HttpClient(), new ConfigurationBuilder().Build());
 
-        var graphConfig = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["MicrosoftGraph:ClientId"] = "11111111-1111-1111-1111-111111111111",
-                ["MicrosoftGraph:TenantId"] = "11111111-1111-1111-1111-111111111111",
-                ["MicrosoftGraph:ClientSecret"] = "dummy-secret"
-            })
-            .Build();
-        var graphService = new GraphService(graphConfig, NullLogger<GraphService>.Instance);
-        var teamsCommentSync = new TeamsCommentSyncService(_db, graphService, NullLogger<TeamsCommentSyncService>.Instance);
+        var messagingProvider = new Mock<IMessagingProvider>();
+        var messagingCommentSync = new MessagingCommentSyncService(
+            _db, messagingProvider.Object, NullLogger<MessagingCommentSyncService>.Instance);
 
         var emailService = new EmailService(new ConfigurationBuilder().Build(), NullLogger<EmailService>.Instance);
+        var eventPublisher = new EventPublisher(
+            new Dapr.Client.DaprClientBuilder().Build(),
+            NullLogger<EventPublisher>.Instance,
+            new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["EventPublisher:MaxRetries"] = "0"
+                })
+                .Build());
 
-        _service = new TaskCommentsService(_db, notificationService, teamsNotificationService, teamsCommentSync, emailService);
+        _service = new TaskCommentsService(
+            _db, notificationService, teamsNotificationService, messagingCommentSync, emailService, eventPublisher);
     }
 
     public void Dispose() => _db.Dispose();

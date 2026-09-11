@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "MLntdUVuMpI=",
+  "dgSpecHash": "4T3X6ganoXs=",
   "success": true,
   "projectFilePath": "C:\\Users\\mbokri\\Desktop\\chaima\\AcPortal\\Backend.Tests\\Backend.Tests.csproj",
   "expectedPackageFiles": [
@@ -98,6 +98,7 @@
     "C:\\Users\\mbokri\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\10.0.0\\npgsql.entityframeworkcore.postgresql.10.0.0.nupkg.sha512",
     "C:\\Users\\mbokri\\.nuget\\packages\\octokit\\14.0.0\\octokit.14.0.0.nupkg.sha512",
     "C:\\Users\\mbokri\\.nuget\\packages\\openai\\2.10.0\\openai.2.10.0.nupkg.sha512",
+    "C:\\Users\\mbokri\\.nuget\\packages\\slacknet\\0.17.10\\slacknet.0.17.10.nupkg.sha512",
     "C:\\Users\\mbokri\\.nuget\\packages\\std.uritemplate\\2.0.8\\std.uritemplate.2.0.8.nupkg.sha512",
     "C:\\Users\\mbokri\\.nuget\\packages\\swashbuckle.aspnetcore\\10.1.4\\swashbuckle.aspnetcore.10.1.4.nupkg.sha512",
     "C:\\Users\\mbokri\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\10.1.4\\swashbuckle.aspnetcore.swagger.10.1.4.nupkg.sha512",
@@ -111,6 +112,7 @@
     "C:\\Users\\mbokri\\.nuget\\packages\\system.management\\7.0.2\\system.management.7.0.2.nupkg.sha512",
     "C:\\Users\\mbokri\\.nuget\\packages\\system.memory.data\\10.0.3\\system.memory.data.10.0.3.nupkg.sha512",
     "C:\\Users\\mbokri\\.nuget\\packages\\system.numerics.tensors\\10.0.6\\system.numerics.tensors.10.0.6.nupkg.sha512",
+    "C:\\Users\\mbokri\\.nuget\\packages\\system.reactive\\6.0.1\\system.reactive.6.0.1.nupkg.sha512",
     "C:\\Users\\mbokri\\.nuget\\packages\\system.security.cryptography.pkcs\\10.0.0\\system.security.cryptography.pkcs.10.0.0.nupkg.sha512",
     "C:\\Users\\mbokri\\.nuget\\packages\\system.security.cryptography.protecteddata\\4.5.0\\system.security.cryptography.protecteddata.4.5.0.nupkg.sha512",
     "C:\\Users\\mbokri\\.nuget\\packages\\uglytoad.pdfpig\\1.7.0-custom-5\\uglytoad.pdfpig.1.7.0-custom-5.nupkg.sha512",
