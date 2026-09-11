@@ -22,6 +22,7 @@ import { UtilsService } from '../../core/services/utils.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { BriefingCardComponent } from '../../core/components/briefing-card/briefing-card.component';
 import { MarkdownModule} from 'ngx-markdown';
+import { SlaService, SlaDashboard } from '../../core/services/sla.service';
 @Component({
   selector: 'app-admin',
   standalone: true,
@@ -86,6 +87,15 @@ export class AdminComponent implements OnInit {
   totalProjects: 0
 };
 
+  // US64 — Dashboard SLA (Responsable CDS) : tâches / streams en retard ou à risque
+  slaDashboard: SlaDashboard | null = null;
+  loadingSlaDashboard = false;
+
+  // US77 — Rapport hebdomadaire SLA généré par l'agent IA
+  weeklyReport: any = null;
+  loadingWeeklyReport = false;
+  generatingWeeklyReport = false;
+
   readonly FileText = FileText;
   readonly FolderOpen = FolderOpen;
   readonly BarChart2 = BarChart2;
@@ -109,7 +119,8 @@ export class AdminComponent implements OnInit {
     private contractsService: ContractsService,
     private toastService: ToastService,
     private chartService: ChartService,
-    public utils: UtilsService
+    public utils: UtilsService,
+    private slaService: SlaService
   ) {}
 
   ngOnInit(): void {
@@ -160,6 +171,8 @@ this.projectsService.getAllPortfolios().subscribe({
         }
       });
     }});
+
+    this.loadSlaDashboard();
   }
 
   computeBottomStats(): void {
@@ -251,10 +264,16 @@ this.projectsService.getAllPortfolios().subscribe({
     this.filterDateTo = '';
   }
 
-  openAccessTab(type: 'portfolios' | 'projects' | 'contracts'): void {
+  openAccessTab(type: 'portfolios' | 'projects' | 'contracts' | 'sla'): void {
     const tabId = `${type}-tab`;
-    const titles = { portfolios: 'Portfolios', projects: 'Projects', contracts: 'Contracts' };
+    const titles = { portfolios: 'Portfolios', projects: 'Projects', contracts: 'Contracts', sla: 'SLA Dashboard' };
     this.tabsService.openTab({ id: tabId, title: titles[type], type: 'create-project' });
+
+    // On rafraîchit les données SLA à chaque ouverture de l'onglet pour éviter d'afficher du stale data
+    if (type === 'sla') {
+      this.loadSlaDashboard();
+      this.loadLatestWeeklyReport();
+    }
   }
 
   getTabData(tabId: string) { return this.openTabs[tabId] || null; }
@@ -431,4 +450,69 @@ computePortfolioGlobalStats(): void {
     ? Math.round(this.portfolios.reduce((sum, p) => sum + (p.progress || 0), 0) / this.portfolios.length)
     : 0;
 }
+
+  // ===== SLA — US64 : Dashboard des tâches / streams en retard ou à risque =====
+
+  loadSlaDashboard(): void {
+    this.loadingSlaDashboard = true;
+    this.slaService.getDashboard().subscribe({
+      next: (dashboard) => {
+        this.slaDashboard = dashboard;
+        this.loadingSlaDashboard = false;
+      },
+      error: () => {
+        this.loadingSlaDashboard = false;
+      }
+    });
+  }
+
+  // Le backend sérialise l'enum SlaStatus (OnTrack=0, AtRisk=1, Overdue=2) en nombre.
+  private readonly SLA_STATUS_LABELS = ['OnTrack', 'AtRisk', 'Overdue'];
+
+  getSlaStatusLabel(status: number | string): string {
+    return typeof status === 'number' ? (this.SLA_STATUS_LABELS[status] || 'OnTrack') : status;
+  }
+
+  getSlaBadgeClass(status: number | string): string {
+    const s = this.getSlaStatusLabel(status);
+    if (s === 'Overdue') return 'sla-overdue';
+    if (s === 'AtRisk') return 'sla-atrisk';
+    return 'sla-ontrack';
+  }
+
+  get slaOverdueTotal(): number {
+    return (this.slaDashboard?.summary?.totalOverdueTasks || 0) + (this.slaDashboard?.summary?.totalOverdueStreams || 0);
+  }
+
+  // ===== SLA — US77 : Rapport hebdomadaire généré par l'agent IA =====
+
+  loadLatestWeeklyReport(): void {
+    this.loadingWeeklyReport = true;
+    this.slaService.getLatestWeeklyReport().subscribe({
+      next: (r: any) => {
+        this.weeklyReport = r;
+        this.loadingWeeklyReport = false;
+      },
+      error: () => {
+        // 404 attendu si aucun rapport n'a encore été généré — pas une vraie erreur
+        this.weeklyReport = null;
+        this.loadingWeeklyReport = false;
+      }
+    });
+  }
+
+  generateWeeklyReport(): void {
+    this.generatingWeeklyReport = true;
+    this.slaService.generateWeeklyReport().subscribe({
+      next: (r: any) => {
+        this.weeklyReport = r;
+        this.generatingWeeklyReport = false;
+        this.toastService.show('Weekly SLA report generated!', 'success');
+      },
+      error: () => {
+        this.toastService.show('Error generating weekly report', 'error');
+        this.generatingWeeklyReport = false;
+      }
+    });
+  }
 }

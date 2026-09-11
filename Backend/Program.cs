@@ -20,9 +20,12 @@ using Backend.Modules.Dashboard.Services;
 using Backend.Modules.Git.Services;
 using Backend.Modules.Planning.Services;
 using Backend.Modules.Planning.Tools;
+using Backend.Modules.Sla.Jobs;
+using Backend.Modules.AI.Services;
+using Backend.Modules.Sla.Tools;
 
 using Backend.Modules.Messaging.Services;
-//using Backend.Modules.Sla.Services;
+using Backend.Modules.Sla.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -82,8 +85,12 @@ builder.Services.AddScoped<IActionHandler, SendCommentEmailHandler>();
 
 builder.Services.AddScoped<PlanningTools>();
 builder.Services.AddScoped<FsdPlanningService>();
-// Ajouter dans Program.cs
-//builder.Services.AddHostedService<SlaMonitoringService>();
+
+builder.Services.AddScoped<SlaCheckerService>();
+builder.Services.AddScoped<SlaAgentService>();
+builder.Services.AddHostedService<SlaWeeklyReportJob>();
+builder.Services.AddScoped<KernelInvocationHelper>();
+builder.Services.AddScoped<SlaAgentTools>();
 
 
 builder.Services.AddMemoryCache();

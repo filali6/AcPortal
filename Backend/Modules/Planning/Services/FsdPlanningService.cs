@@ -1,4 +1,5 @@
 using Backend.Data;
+using Backend.Modules.AI.Services;
 using Backend.Modules.Planning.Models;
 using Backend.Modules.Planning.Tools;
 using Microsoft.SemanticKernel;
@@ -13,7 +14,7 @@ public class FsdPlanningService
 {
     private readonly Kernel _kernel;
     private readonly IConfiguration _config;
-    
+    private readonly KernelInvocationHelper _invocationHelper;
     private readonly ILogger<FsdPlanningService> _logger;
     private readonly AppDbContext _db;
 
@@ -22,13 +23,14 @@ public class FsdPlanningService
         AppDbContext db,
         PlanningTools tools,
         IConfiguration config,
-         
+        KernelInvocationHelper invocationHelper,
         ILogger<FsdPlanningService> logger)
     {
         _kernel = kernel;
         _config = config;
+        _invocationHelper = invocationHelper;
         _logger = logger;
-        _db=db;
+        _db = db;
 
         // Enregistre les tools dans le kernel
         _kernel.Plugins.AddFromObject(tools, "PlanningTools");
@@ -84,7 +86,7 @@ Required JSON structure:
             FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
         };
 
-        return await InvokeAsync(prompt, settings);
+        return await _invocationHelper.InvokeAsync(_kernel, prompt, settings, configPrefix: "Planning");
     }
 
     public async Task<string?> RefineAsync(
@@ -115,50 +117,6 @@ Instructions:
 - Keep everything else in the plan unchanged
 - Respond ONLY with the complete updated JSON. No explanation. No markdown.";
 
-        return await InvokeAsync(prompt);
-    }
-
-    private async Task<string?> InvokeAsync(string prompt, PromptExecutionSettings? settings = null)
-    {
-        var maxRetries = _config.GetValue("Planning:MaxRetries", 3);
-        var delayMs = _config.GetValue("Planning:RetryDelayMs", 2000);
-
-        for (int i = 0; i < maxRetries; i++)
-        {
-            try
-            {
-                var result = settings != null
-                    ? await _kernel.InvokePromptAsync(prompt, new KernelArguments(settings))
-                    : await _kernel.InvokePromptAsync(prompt);
-
-                var json = CleanJson(result.ToString());
-
-                if (string.IsNullOrWhiteSpace(json))
-                {
-                    if (i < maxRetries - 1)
-                        await Task.Delay(delayMs * (int)Math.Pow(2, i));
-                    continue;
-                }
-
-                return json;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning("Attempt {i}/{max}: {msg}", i + 1, maxRetries, ex.Message);
-                if (i < maxRetries - 1)
-                    await Task.Delay(delayMs * (int)Math.Pow(2, i));
-                else
-                    _logger.LogError(ex, "All attempts failed");
-            }
-        }
-        return null;
-    }
-    private static string CleanJson(string raw)
-    {
-        var trimmed = raw.Trim();
-        if (!trimmed.StartsWith("```")) return trimmed;
-        var lines = trimmed.Split('\n');
-        return string.Join('\n',
-            lines.Skip(1).TakeWhile(l => !l.TrimStart().StartsWith("```")));
+        return await _invocationHelper.InvokeAsync(_kernel, prompt, configPrefix: "Planning");
     }
 }
