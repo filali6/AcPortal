@@ -8,6 +8,7 @@ import { KeycloakService } from 'keycloak-angular';
 import { TranslateModule } from '@ngx-translate/core';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { UtilsService } from '../../services/utils.service';
 @Component({
   selector: 'app-chat-panel',
   standalone: true,
@@ -54,7 +55,8 @@ filteredMembers: any[] = [];
     private authService: AuthService,
     private keycloak:KeycloakService,
     private taskCommentsService:TaskCommentsService,
-    private http: HttpClient
+    private http: HttpClient,
+    public utils: UtilsService
   ) {}
 
  ngOnInit(): void {
@@ -139,24 +141,8 @@ filteredMembers: any[] = [];
   await this.chatService.startConnection(token);
 }
 close():void{this.closed.emit();}
-getStatusColor(status: number): string {
-    const colors: { [key: number]: string } = {
-        0: '#f59e0b',
-        1: '#ef4444',
-        2: '#10b981'
-    };
-    return colors[status] || '#9ca3af';
-}
 openExternalLink(url: string): void {
     window.open(url, '_blank');
-}
-getStatusLabel(status: number): string {
-    const labels: { [key: number]: string } = {
-        0: 'Pending',
-        1: 'Blocked',
-        2: 'Done'
-    };
-    return labels[status] || '—';
 }
 summarizeChat(): void {
   this.summarizing = true;

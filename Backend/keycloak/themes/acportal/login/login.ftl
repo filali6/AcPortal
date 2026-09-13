@@ -5,7 +5,7 @@
 
   <div class="acp-logo">
     
-    <span class="logo-text">ACPortal</span>
+    <span class="logo-text">Axe Configuration Studio</span>
   </div>
 
   <h2 class="acp-title">Get started now</h2>

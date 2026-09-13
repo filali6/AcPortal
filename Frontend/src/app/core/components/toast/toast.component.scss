@@ -23,17 +23,17 @@
     animation: slideIn 0.2s ease;
 
     &.toast-success {
-        background: #065f46;
+        background: var(--toast-success-bg);
         color: white;
     }
 
     &.toast-error {
-        background: #991b1b;
+        background: var(--toast-error-bg);
         color: white;
     }
 
     &.toast-info {
-        background: #1e40af;
+        background: var(--toast-info-bg);
         color: white;
     }
 }

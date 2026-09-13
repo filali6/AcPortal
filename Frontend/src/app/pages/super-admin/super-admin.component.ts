@@ -32,7 +32,7 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
   users: any[] = [];
   showUserModal = false;
   editingUser: any = null;
-  userForm = { fullName: '', email: '', password: '', role: 'Consultant' };
+  userForm = { fullName: '', email: '', password: '', role: '',consultantType:'' };
   availableRoles = [
     'HeadOfCDS', 'PortfolioDirector', 'ProjectManager',
     'BusinessTeamLead', 'TechnicalTeamLead', 'Consultant', 'DAF', 'SuperAdmin'
@@ -44,7 +44,7 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
   editingTool: PluginDto | null = null;
   toolForm: PluginDto = {
     id: '', name: '', description: '',
-    category: '', url: '', icon: '', ssoEnabled: false, isActive: true, allowedRoles: []
+    category: '', url: '', icon: '', ssoEnabled: false, isActive: true, allowedRoles: [],functionalDomain: ''
   };
 
   // Workflow
@@ -87,9 +87,6 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
   private tasksChart: Chart | null = null;
   private systemChart: Chart | null = null;
   private rolesChart: Chart | null = null;
-  // Anti-rafale : computeStats() est appelé 4 fois au chargement (users, tools,
-  // workflow, dashboard) — sans ce verrou, renderCharts() se déclencherait 4 fois
-  // quasi simultanément et ferait planter Chart.js.
   private chartsRenderScheduled = false;
 
   readonly Users = Users;
@@ -119,8 +116,6 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     this.subs.push(
       this.tabsService.activeTabId.subscribe(id => {
         this.activeTabId = id;
-        // Le canvas est détruit/recréé par *ngIf à chaque changement d'onglet
-        // → il faut redessiner les charts à chaque fois qu'on revient sur "tasks"
         if (id === 'tasks') {
           this.renderCharts();
         }
@@ -142,7 +137,6 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     this.loadWorkflow();
   }
 
-  // ===== NAVIGATION =====
   openTab(type: 'users' | 'tools' | 'workflow'): void {
     const titles = { users: 'Users', tools: 'Tools', workflow: 'Workflow' };
     this.tabsService.openTab({
@@ -152,7 +146,6 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ===== STATS =====
   computeStats(): void {
     this.stats.totalUsers = this.users.length;
     this.stats.totalTools = this.tools.length;
@@ -167,23 +160,14 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     this.renderCharts();
   }
 
-  // ===== CHARTS =====
   private renderCharts(): void {
     if (this.activeTabId !== 'tasks') return;
-
-    // Anti-rafale : si un rendu est déjà programmé pour ce tick, on ne
-    // reprogramme pas un deuxième passage par-dessus.
     if (this.chartsRenderScheduled) return;
     this.chartsRenderScheduled = true;
 
-    // setTimeout(0) : on attend que Angular ait fini de (re)créer le <canvas> dans le DOM
-    // suite au *ngIf, sinon getElementById ne trouve rien.
     setTimeout(() => {
       this.chartsRenderScheduled = false;
 
-      // Chaque chart est créé indépendamment : si l'un échoue, les deux
-      // autres doivent quand même s'afficher (avant, une erreur sur le
-      // premier bloquait silencieusement la création des deux suivants).
       try {
         this.tasksChart = this.chartService.createDoughnut(
           'chartTasksOverview',
@@ -230,7 +214,6 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ===== USERS =====
   loadUsers(): void {
     this.usersService.getAllForAdmin().subscribe({
       next: (users) => { this.users = users; this.computeStats(); }
@@ -239,13 +222,13 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
 
   openCreateUserModal(): void {
     this.editingUser = null;
-    this.userForm = { fullName: '', email: '', password: '', role: 'Consultant' };
+    this.userForm = { fullName: '', email: '', password: '', role: '',consultantType:'' };
     this.showUserModal = true;
   }
 
   openEditUserModal(user: any): void {
     this.editingUser = user;
-    this.userForm = { fullName: user.fullName, email: user.email, password: '', role: user.role };
+    this.userForm = { fullName: user.fullName, email: user.email, password: '', role: user.role,consultantType:user.consultantType };
     this.showUserModal = true;
   }
 
@@ -259,7 +242,8 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     if (this.editingUser) {
       this.usersService.updateUser(this.editingUser.id, {
         fullName: this.userForm.fullName,
-        role: this.userForm.role
+        role: this.userForm.role,
+        consultantType: this.userForm.consultantType || undefined
       }).subscribe({
         next: () => {
           this.toastService.show('User updated!', 'success');
@@ -279,7 +263,8 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
         fullName: this.userForm.fullName,
         email: this.userForm.email,
         password: this.userForm.password,
-        role: this.userForm.role
+        role: this.userForm.role,
+        consultantType: this.userForm.consultantType || undefined   
       }).subscribe({
         next: () => {
           this.toastService.show('User created!', 'success');
@@ -320,7 +305,7 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     this.toolForm = {
       id: '', name: '', description: '',
       category: '', url: '', icon: '',
-      ssoEnabled: false, isActive: true, allowedRoles: []
+      ssoEnabled: false, isActive: true, allowedRoles: [],functionalDomain: ''
     };
     this.showToolModal = true;
   }
@@ -368,9 +353,13 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Aperçu de l'icône dans le modal / la table : si l'URL/chemin est invalide, on masque
+  // l'image plutôt que de laisser le carré "image cassée" du navigateur.
+  onIconPreviewError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.style.visibility = 'hidden';
+  }
 
-
-  // ===== WORKFLOW =====
   loadWorkflow(): void {
     this.workflowService.getRules().subscribe({
       next: (rules) => { this.workflowRules = rules; this.computeStats(); }

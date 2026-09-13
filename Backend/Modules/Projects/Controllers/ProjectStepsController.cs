@@ -137,6 +137,80 @@ public class ProjectStepsController : ControllerBase
 
         return Ok(steps);
     }
+    [HttpGet("stream/{streamId:guid}/ai-steps")]
+    [Authorize(Roles = "BusinessTeamLead,TechnicalTeamLead,HeadOfCDS")]
+    public async Task<IActionResult> GetAiSteps(Guid streamId)
+    {
+        var keycloakId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var leadUser = await _db.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+        var stream = await _db.Streams.FindAsync(streamId);
+        if (stream == null) return NotFound();
+
+        // Détermine le TeamType selon quel lead est connecté
+        var teamType = stream.BusinessTeamLeadId == leadUser?.Id
+            ? TeamType.Business
+            : TeamType.Technical;
+
+        var steps = await _db.ProjectSteps
+            .Where(s => s.StreamId == streamId && s.TeamType == teamType)
+            .OrderBy(s => s.Order)
+            .Select(s => new { s.Id, s.StepName, s.ToolName, s.Order })
+            .ToListAsync();
+
+        return Ok(steps);
+    }
+
+    [HttpPost("stream/{streamId:guid}/approve")]
+    [Authorize(Roles = "BusinessTeamLead,TechnicalTeamLead,HeadOfCDS")]
+    public async Task<IActionResult> ApproveAiSteps(Guid streamId, [FromBody] ApproveAiStepsRequest request)
+    {
+        var stream = await _db.Streams.FindAsync(streamId);
+        if (stream == null) return NotFound();
+
+        var keycloakId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var leadUser = await _db.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+        var project = await _db.Projects.FindAsync(stream.ProjectId);
+        var teamType = stream.BusinessTeamLeadId == leadUser?.Id
+            ? TeamType.Business
+            : TeamType.Technical;
+
+        if (request.Steps != null && request.Steps.Any())
+        {
+            var existing = _db.ProjectSteps.Where(s => s.StreamId == streamId && s.TeamType == teamType);
+            _db.ProjectSteps.RemoveRange(existing);
+            await _db.SaveChangesAsync();
+
+            foreach (var stepDto in request.Steps.OrderBy(s => s.Order))
+            {
+                _db.ProjectSteps.Add(new ProjectStep
+                {
+                    ProjectId = stream.ProjectId,
+                    StreamId = streamId,
+                    StepName = stepDto.StepName,
+                    ToolName = stepDto.ToolName,
+                    Order = stepDto.Order,
+                    CanBeParallel = false,
+                    TeamType = teamType
+                });
+            }
+            await _db.SaveChangesAsync();
+        }
+
+        await _eventPublisher.PublishAsync(new
+        {
+            eventType = "StepsDéfinis",
+            projectId = stream.ProjectId,
+            projectName = project!.Name,
+            streamId = streamId,
+            leadRole = teamType == TeamType.Business ? "BusinessTeamLead" : "TechnicalTeamLead"
+        }, stream.ProjectId, project.Name);
+
+        return Ok(new { message = "Steps approved" });
+    }
+    public class ApproveAiStepsRequest
+    {
+        public List<StepDto>? Steps { get; set; }
+    }
 }
 
 public class CreateStepsRequest

@@ -1,7 +1,7 @@
 .drawer-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.1);
+    background: var(--overlay-bg);
     z-index: 399;
 }
 
@@ -11,8 +11,8 @@
     right: 0;
     bottom: 0;
     width: 360px;
-    background: white;
-    border-left: 1px solid #e5e7eb;
+    background: var(--bg-card);
+    border-left: 1px solid var(--border);
     box-shadow: -4px 0 20px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
@@ -28,9 +28,9 @@
 /* ── HEADER ── */
 .drawer-head {
     padding: 12px 16px 8px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border);
     flex-shrink: 0;
-    background: white;
+    background: var(--bg-card);
     display: flex;
     align-items: flex-start;
     gap: 8px;
@@ -42,21 +42,21 @@
     background: none;
     border: none;
     cursor: pointer;
-    color: #9ca3af;
+    color: var(--text-secondary);
     font-size: 14px;
     padding: 2px 6px;
     border-radius: 4px;
 
     &:hover {
-        background: #f5f5f5;
-        color: #333;
+        background: var(--bg-subtle);
+        color: var(--text-primary);
     }
 }
 
 .drawer-task-name {
     font-size: 13px;
     font-weight: 600;
-    color: #1a1f2e;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -70,6 +70,7 @@
     margin-bottom: 4px;
     order: 3;
 }
+
 .status-badge {
     padding: 2px 8px;
     border-radius: 4px;
@@ -78,8 +79,8 @@
 }
 
 .tool-badge {
-    background: rgba(0, 128, 255, 0.1);
-    color: #0080FF;
+    background: var(--accent-tint);
+    color: var(--accent);
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 11px;
@@ -92,15 +93,15 @@
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
-    border-bottom: 1px solid #f3f4f6;
-    background: #fafafa;
+    border-bottom: 1px solid var(--neutral-bg);
+    background: var(--bg-subtle);
     flex-shrink: 0;
 }
 
 .members-label {
     font-size: 11px;
     font-weight: 600;
-    color: #9ca3af;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -114,7 +115,7 @@
     width: 26px;
     height: 26px;
     border-radius: 50%;
-    background: #0080FF;
+    background: var(--accent);
     color: white;
     display: flex;
     align-items: center;
@@ -122,7 +123,7 @@
     font-size: 9px;
     font-weight: 700;
     cursor: default;
-    border: 2px solid white;
+    border: 2px solid var(--bg-card);
     margin-left: -4px;
 
     &:first-child {
@@ -138,21 +139,21 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    background: #f8fafc;
+    background: var(--header-bg);
 
     &::-webkit-scrollbar {
         width: 4px;
     }
 
     &::-webkit-scrollbar-thumb {
-        background: #e2e8f0;
+        background: var(--header-border);
         border-radius: 4px;
     }
 }
 
 .empty-comments {
     text-align: center;
-    color: #9ca3af;
+    color: var(--text-secondary);
     font-size: 12px;
     padding: 24px;
 }
@@ -167,7 +168,7 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: #1a1f2e;
+    background: var(--text-primary);
     color: white;
     display: flex;
     align-items: center;
@@ -185,8 +186,8 @@
 
 .comment-body {
     flex: 1;
-    background: white;
-    border: 1px solid #e5e7eb;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: 0 12px 12px 12px;
     padding: 8px 12px;
 }
@@ -201,44 +202,44 @@
 .comment-author {
     font-size: 11px;
     font-weight: 600;
-    color: #0080FF;
+    color: var(--accent);
 }
 
 .comment-time {
     font-size: 10px;
-    color: #9ca3af;
+    color: var(--text-secondary);
     flex: 1;
 }
 
 .reply-btn {
     font-size: 10px;
-    color: #6b7280;
+    color: var(--text-secondary);
     background: none;
     border: none;
     cursor: pointer;
     padding: 0;
 
     &:hover {
-        color: #0080FF;
+        color: var(--accent);
     }
 }
 
 .delete-btn {
     font-size: 10px;
-    color: #9ca3af;
+    color: var(--text-secondary);
     background: none;
     border: none;
     cursor: pointer;
     padding: 0 2px;
 
     &:hover {
-        color: #ef4444;
+        color: var(--danger-text);
     }
 }
 
 .comment-content {
     font-size: 12px;
-    color: #1e293b;
+    color: var(--text-primary);
     margin: 0;
     line-height: 1.5;
     word-break: break-word;
@@ -250,7 +251,7 @@
     gap: 6px;
     margin-top: 8px;
     padding-top: 8px;
-    border-top: 1px solid #f3f4f6;
+    border-top: 1px solid var(--neutral-bg);
     align-items: flex-start;
 }
 
@@ -260,21 +261,21 @@
     align-items: center;
     justify-content: space-between;
     padding: 6px 16px;
-    background: #f0f4ff;
-    border-top: 1px solid #d0dbff;
+    background: var(--info-bg);
+    border-top: 1px solid var(--info-border);
     font-size: 12px;
-    color: #3b5bdb;
+    color: var(--info-text);
     flex-shrink: 0;
 
     button {
         background: none;
         border: none;
         cursor: pointer;
-        color: #9ca3af;
+        color: var(--text-secondary);
         font-size: 12px;
 
         &:hover {
-            color: #ef4444;
+            color: var(--danger-text);
         }
     }
 }
@@ -285,8 +286,8 @@
     bottom: 100%;
     left: 0;
     right: 0;
-    background: white;
-    border: 1px solid #e5e7eb;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     z-index: 10;
@@ -302,7 +303,7 @@
     cursor: pointer;
 
     &:hover {
-        background: #f0f4ff;
+        background: var(--info-bg);
     }
 }
 
@@ -310,7 +311,7 @@
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: #0080FF;
+    background: var(--accent);
     color: white;
     display: flex;
     align-items: center;
@@ -323,20 +324,20 @@
 .mention-name {
     font-size: 12px;
     font-weight: 500;
-    color: #1e293b;
+    color: var(--text-primary);
 }
 
 .mention-role {
     font-size: 10px;
-    color: #9ca3af;
+    color: var(--text-secondary);
     display: block;
 }
 
 /* ── COMPOSE ── */
 .drawer-compose {
     padding: 10px 12px;
-    border-top: 1px solid #e5e7eb;
-    background: white;
+    border-top: 1px solid var(--border);
+    background: var(--bg-card);
     flex-shrink: 0;
     position: relative;
 }
@@ -350,23 +351,23 @@
 .compose-input {
     flex: 1;
     padding: 8px 12px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border);
     border-radius: 20px;
     font-size: 12px;
     outline: none;
     font-family: 'DM Sans', sans-serif;
-    background: #f8fafc;
+    background: var(--header-bg);
 
     &:focus {
-        border-color: #0080FF;
-        background: white;
+        border-color: var(--accent);
+        background: var(--bg-card);
     }
 }
 
 .compose-send {
     width: 32px;
     height: 32px;
-    background: #0080FF;
+    background: var(--accent);
     color: white;
     border: none;
     border-radius: 50%;
@@ -379,21 +380,23 @@
     transition: all 0.15s;
 
     &:hover:not(:disabled) {
-        background: #0066cc;
+        background: var(--accent-hover);
     }
 
     &:disabled {
         opacity: 0.4;
         cursor: not-allowed;
     }
-:host ::ng-deep .mention-highlight {
-    color: #0080FF;
-    font-weight: 600;
-    background: rgba(0, 128, 255, 0.08);
-    padding: 0 3px;
-    border-radius: 3px;
+
+    :host ::ng-deep .mention-highlight {
+        color: var(--accent);
+        font-weight: 600;
+        background: var(--accent-tint);
+        padding: 0 3px;
+        border-radius: 3px;
+    }
 }
-}
+
 .comment-meta {
     display: flex;
     align-items: flex-start;
@@ -404,20 +407,21 @@
 .teams-badge {
     font-size: 10px;
     font-weight: 600;
-    color: #5b5fc7;
-    background: #ebebf5;
+    color: var(--teams-badge-text);
+    background: var(--teams-badge-bg);
     padding: 2px 8px;
     border-radius: 99px;
     white-space: nowrap;
     flex-shrink: 0;
 }
+
 .btn-slack-mini {
     display: flex;
     align-items: center;
     gap: 4px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    color: #1a1a1a;
+    background: var(--bg-card);
+    border: 1px solid var(--header-border);
+    color: var(--text-primary);
     padding: 4px 8px;
     border-radius: 6px;
     font-size: 11px;
@@ -428,7 +432,7 @@
     margin-left: auto;
 
     &:hover {
-        background: #f8fafc;
-        border-color: #cbd5e1;
+        background: var(--header-bg);
+        border-color: var(--border);
     }
 }

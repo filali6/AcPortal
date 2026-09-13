@@ -24,35 +24,37 @@ export class TabsService {
     if (!existing) {
       const updated = [...this.tabs$.value, tab];
       this.tabs$.next(updated);
-      this.saveTabs(updated);        // ← ajouté
+      this.saveTabs(updated);        
     }
     this.activeTabId$.next(tab.id);
-    this.saveActiveId(tab.id);       // ← ajouté
+    this.saveActiveId(tab.id); 
+    console.log(tab.id)      
   }
 
   closeTab(tabId: string): void {
     const tabs = this.tabs$.value.filter(t => t.id !== tabId);
     this.tabs$.next(tabs);
-    this.saveTabs(tabs);             // ← ajouté
+    this.saveTabs(tabs);             
     if (this.activeTabId$.value === tabId) {
       this.activeTabId$.next('tasks');
-      this.saveActiveId('tasks');    // ← ajouté
+      this.saveActiveId('tasks');    
     }
   }
 
   setActiveTab(tabId: string): void {
     this.activeTabId$.next(tabId);
-    this.saveActiveId(tabId);        // ← ajouté
+    this.saveActiveId(tabId);        
   }
 
   getCurrentActiveId(): string {
     return this.activeTabId$.value;
   }
 
-  // ── ajouté ──
+ 
   private loadTabs(): Tab[] {
     try {
       const raw = sessionStorage.getItem(TABS_KEY);
+      
       return raw ? JSON.parse(raw) : [];
     } catch { return []; }
   }

@@ -63,9 +63,7 @@ public class CreateMessagingChannelHandler : IActionHandler
                 .Where(m => m.Consultant?.Email != null)
                 .Select(m => (m.Consultant.Email!, m.Consultant.FullName)));
 
-        if (project.ProjectManager?.Email != null)
-            recipients.Add((project.ProjectManager.Email, project.ProjectManager.FullName));
-
+        
         recipients = recipients
             .GroupBy(r => r.Email)
             .Select(g => g.First())
@@ -84,9 +82,7 @@ public class CreateMessagingChannelHandler : IActionHandler
         recipientKeycloakIds.AddRange(
             stream.Members.Where(m => m.Consultant != null).Select(m => m.Consultant.KeycloakId));
 
-        if (project.ProjectManager != null)
-            recipientKeycloakIds.Add(project.ProjectManager.KeycloakId);
-
+        
         recipientKeycloakIds = recipientKeycloakIds.Distinct().ToList();
 
         var (channelId, channelUrl) = await _messaging.CreateStreamChannelAsync(

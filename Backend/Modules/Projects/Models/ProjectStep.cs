@@ -21,4 +21,6 @@ public class ProjectStep
     public DateTime? LastCommitAt { get; set; }
     public ICollection<StepConfigFile> ConfigFiles { get; set; } = new List<StepConfigFile>();
 
+    public TeamType? TeamType { get; set; }
+
 }

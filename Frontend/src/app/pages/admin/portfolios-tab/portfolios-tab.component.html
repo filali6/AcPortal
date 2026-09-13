@@ -5,6 +5,10 @@
         <div class="card">
             <div class="card-header">
                 <h2>{{ 'PORTFOLIOS.TITLE' | translate }} ({{ portfolios.length }})</h2>
+                <button class="btn-primary" (click)="openCreateModal()">
+                    <lucide-icon [img]="Plus" size="14"></lucide-icon>
+                    {{ 'PORTFOLIOS.CREATE' | translate }}
+                </button>
             </div>
             <div class="items-list">
                 <div class="list-item" *ngFor="let p of portfolios">
@@ -14,10 +18,24 @@
                             {{ p.projectCount }} {{ 'PROJECTS.TITLE' | translate }} · {{ 'PORTFOLIOS.DIRECTOR' |
                             translate }}: {{ p.director?.fullName || ('PORTFOLIOS.NONE' | translate) }}
                         </span>
+                        <div class="progress-row">
+                            <div class="progress-wrap" style="width: 140px;">
+                                <div class="progress-bar" [style.width.%]="p.progress"></div>
+                            </div>
+                            <span class="progress-label">{{ p.progress }}%</span>
+                        </div>
                     </div>
                     <div class="item-actions">
+                        <button class="btn-small" (click)="openEditModal(p); $event.stopPropagation()">
+                            <lucide-icon [img]="Edit2" size="13"></lucide-icon>
+                            {{ 'COMMON.EDIT' | translate }}
+                        </button>
                         <button class="btn-small" (click)="openModal(p); $event.stopPropagation()">
                             {{ 'PORTFOLIOS.CHANGE_DIRECTOR' | translate }}
+                        </button>
+                        <button class="btn-small btn-danger" (click)="openDeleteConfirm(p); $event.stopPropagation()">
+                            <lucide-icon [img]="Trash2" size="13"></lucide-icon>
+                            {{ 'COMMON.DELETE' | translate }}
                         </button>
                         <lucide-icon [img]="ChevronRight" size="16" class="chevron-icon"
                             (click)="selectPortfolio(p)"></lucide-icon>
@@ -59,9 +77,37 @@
         </div>
     </ng-container>
 
+    <!-- Modal : Créer portfolio -->
+    <app-modal *ngIf="showCreateModal" [title]="'PORTFOLIOS.CREATE' | translate" width="400px"
+        (closed)="closeCreateModal()">
+        <div class="form-group">
+            <label>{{ 'PORTFOLIOS.PORTFOLIO_NAME' | translate }}</label>
+            <input type="text" [(ngModel)]="newName" class="form-input"
+                [placeholder]="'PORTFOLIOS.PORTFOLIO_NAME' | translate">
+        </div>
+        <div class="form-group">
+            <label>{{ 'COMMON.DESCRIPTION' | translate }}</label>
+            <input type="text" [(ngModel)]="newDescription" class="form-input"
+                [placeholder]="'COMMON.DESCRIPTION' | translate">
+        </div>
+        <div class="form-group">
+            <label>{{ 'PORTFOLIOS.DIRECTOR' | translate }}</label>
+            <select [(ngModel)]="newDirectorId" class="form-input">
+                <option value="">{{ 'PORTFOLIOS.SELECT_PLACEHOLDER' | translate }}</option>
+                <option *ngFor="let d of directors" [value]="d.id">{{ d.fullName }}</option>
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-small" (click)="closeCreateModal()">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button class="btn-primary" (click)="createPortfolio()" [disabled]="loading || !newName || !newDirectorId">
+                {{ loading ? ('COMMON.LOADING' | translate) : ('PORTFOLIOS.CREATE' | translate) }}
+            </button>
+        </div>
+    </app-modal>
+
+    <!-- Modal : Changer directeur -->
     <app-modal *ngIf="showModal" [title]="('PORTFOLIOS.CHANGE_DIRECTOR' | translate) + ' — ' + modalPortfolio?.name"
         width="360px" (closed)="closeModal()">
-
         <div class="form-group">
             <label>{{ 'PORTFOLIOS.SELECT_DIRECTOR' | translate }}</label>
             <select [(ngModel)]="selectedDirectorId" class="form-input">
@@ -75,7 +121,45 @@
                 {{ loading ? ('COMMON.LOADING' | translate) : ('COMMON.SAVE' | translate) }}
             </button>
         </div>
+    </app-modal>
 
+    <!-- Modal : Modifier portfolio -->
+    <app-modal *ngIf="showEditModal" [title]="('PORTFOLIOS.EDIT' | translate) + ' — ' + editPortfolio?.name"
+        width="400px" (closed)="closeEditModal()">
+        <div class="form-group">
+            <label>{{ 'PORTFOLIOS.PORTFOLIO_NAME' | translate }}</label>
+            <input type="text" [(ngModel)]="editName" class="form-input"
+                [placeholder]="'PORTFOLIOS.PORTFOLIO_NAME' | translate">
+        </div>
+        <div class="form-group">
+            <label>{{ 'COMMON.DESCRIPTION' | translate }}</label>
+            <input type="text" [(ngModel)]="editDescription" class="form-input"
+                [placeholder]="'COMMON.DESCRIPTION' | translate">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-small" (click)="closeEditModal()">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button class="btn-primary" (click)="saveEdit()" [disabled]="loading || !editName">
+                {{ loading ? ('COMMON.LOADING' | translate) : ('COMMON.SAVE' | translate) }}
+            </button>
+        </div>
+    </app-modal>
+
+    <!-- Modal : Confirmer suppression -->
+    <app-modal *ngIf="showDeleteConfirm" [title]="'PORTFOLIOS.DELETE_CONFIRM_TITLE' | translate" width="360px"
+        (closed)="closeDeleteConfirm()">
+        <p style="font-size:13px; color: var(--text-secondary); margin-bottom: 4px;">
+            {{ 'PORTFOLIOS.DELETE_CONFIRM_MSG' | translate }}
+            <strong>{{ portfolioToDelete?.name }}</strong> ?
+        </p>
+        <p style="font-size:12px; color: var(--danger-text);">
+            {{ 'PORTFOLIOS.DELETE_WARNING' | translate }}
+        </p>
+        <div class="modal-footer">
+            <button class="btn-small" (click)="closeDeleteConfirm()">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button class="btn-primary btn-danger" (click)="confirmDelete()" [disabled]="loading">
+                {{ loading ? ('COMMON.LOADING' | translate) : ('COMMON.DELETE' | translate) }}
+            </button>
+        </div>
     </app-modal>
 
 </div>

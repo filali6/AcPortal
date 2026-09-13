@@ -96,7 +96,7 @@ $gap: 24px;
   justify-content: space-between;
   align-items: center;
   padding-bottom: 8px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-subtle);
 
   &:last-child {
     border-bottom: none;
@@ -106,13 +106,13 @@ $gap: 24px;
 .qs-label {
   font-size: 12px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .qs-value {
   font-size: 20px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 /* Conteneur des charts Chart.js — hauteur fixe requise car maintainAspectRatio:false */
@@ -138,12 +138,12 @@ $gap: 24px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-bottom: 1px solid var(--border);
-    background: #fafafa;
+    background: var(--bg-subtle);
   }
 
   td {
     padding: 12px 20px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--neutral-bg);
     font-size: 13px;
   }
 
@@ -152,7 +152,7 @@ $gap: 24px;
   }
 
   tr:hover td {
-    background: #fafafa;
+    background: var(--bg-subtle);
   }
 }
 
@@ -182,7 +182,7 @@ $gap: 24px;
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: #0080ff;
+  background: var(--accent);
   color: white;
   border: none;
   border-radius: 6px;
@@ -204,28 +204,28 @@ $gap: 24px;
   padding: 5px 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: white;
+  background: var(--bg-card);
   font-size: 12px;
   cursor: pointer;
   font-family: 'DM Sans', sans-serif;
 
   &:hover {
-    background: #f3f4f6;
+    background: var(--neutral-bg);
   }
 }
 
 .btn-delete {
   padding: 5px 12px;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--danger-border);
   border-radius: 6px;
-  background: white;
-  color: #dc2626;
+  background: var(--bg-card);
+  color: var(--danger-text);
   font-size: 12px;
   cursor: pointer;
   font-family: 'DM Sans', sans-serif;
 
   &:hover {
-    background: #fee2e2;
+    background: var(--danger-bg);
   }
 }
 

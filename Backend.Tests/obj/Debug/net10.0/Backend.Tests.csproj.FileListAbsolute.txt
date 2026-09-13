@@ -180,7 +180,6 @@ C:\Users\mbokri\Desktop\chaima\AcPortal\Backend.Tests\obj\Debug\net10.0\refint\B
 C:\Users\mbokri\Desktop\chaima\AcPortal\Backend.Tests\obj\Debug\net10.0\Backend.Tests.pdb
 C:\Users\mbokri\Desktop\chaima\AcPortal\Backend.Tests\bin\Debug\net10.0\.msCoverageSourceRootsMapping_Backend.Tests
 C:\Users\mbokri\Desktop\chaima\AcPortal\Backend.Tests\bin\Debug\net10.0\CoverletSourceRootsMapping_Backend.Tests
-C:\Users\mbokri\Desktop\chaima\AcPortal\Backend.Tests\bin\Debug\net10.0\appsettings.Development.json
 C:\Users\mbokri\Desktop\chaima\AcPortal\Backend.Tests\bin\Debug\net10.0\testhost.exe
 C:\Users\mbokri\Desktop\chaima\AcPortal\Backend.Tests\bin\Debug\net10.0\testhost.dll
 C:\Users\mbokri\Desktop\chaima\AcPortal\Backend.Tests\bin\Debug\net10.0\xunit.abstractions.dll
@@ -407,3 +406,4 @@ C:\Users\mbokri\Desktop\chaima\AcPortal\Backend.Tests\obj\Debug\net10.0\Backend.
 C:\Users\mbokri\Desktop\chaima\AcPortal\Backend.Tests\obj\Debug\net10.0\ref\Backend.Tests.dll
 C:\Users\mbokri\Desktop\chaima\AcPortal\Backend.Tests\bin\Debug\net10.0\SlackNet.dll
 C:\Users\mbokri\Desktop\chaima\AcPortal\Backend.Tests\bin\Debug\net10.0\System.Reactive.dll
+C:\Users\mbokri\Desktop\chaima\AcPortal\Backend.Tests\bin\Debug\net10.0\appsettings.Development.json

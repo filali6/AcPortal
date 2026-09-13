@@ -1,4 +1,4 @@
-<div class="tl-page"  >
+<div class="tl-page">
     <!-- <app-briefing-card /> -->
 
     <!-- TASK INBOX -->
@@ -34,11 +34,8 @@
                 <button class="action-btn success" (click)="markDone()">✓ {{ 'TASKS.MARK_DONE' | translate }}</button>
             </div>
 
-            <div class="task-section-label" *ngIf="workflowTasks.length > 0">
-                {{ 'TASKS.WORKFLOW_TASKS' | translate }}
-            </div>
             <div class="table-wrapper">
-                <table class="tasks-table" *ngIf="workflowTasks.length > 0">
+                <table class="tasks-table" *ngIf="filteredTasks.length > 0">
                     <thead>
                         <tr>
                             <th style="width:40px"></th>
@@ -49,7 +46,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let task of workflowTasks" [class.task-done]="task.status === 2"
+                        <tr *ngFor="let task of filteredTasks" [class.task-done]="task.status === 2"
                             [class.selected]="isSelected(task.id)" (click)="onTaskClick(task)">
                             <td (click)="toggleSelect(task.id); $event.stopPropagation()">
                                 <div class="checkbox" [class.checked]="isSelected(task.id)">
@@ -59,48 +56,7 @@
                             <td class="task-title">{{ task.title }}</td>
                             <td class="text-secondary">{{ getStreamName(task.streamId ?? '') }}</td>
                             <td>
-                                <span class="status-badge"
-                                    [style.background]="utils.getTaskStatusColor(task.status) + '20'"
-                                    [style.color]="utils.getTaskStatusColor(task.status)">
-                                    {{ utils.getTaskStatusLabel(task.status) }}
-                                </span>
-                            </td>
-                            <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="task-section-label" *ngIf="stepTasks.length > 0">
-                {{ 'TASKS.ASSIGNED_TASKS' | translate }}
-            </div>
-            <div class="table-wrapper">
-                <table class="tasks-table" *ngIf="stepTasks.length > 0">
-                    <thead>
-                        <tr>
-                            <th style="width:40px"></th>
-                            <th>{{ 'COMMON.NAME' | translate }}</th>
-                            <th>{{ 'TASKS.TOOL' | translate }}</th>
-                            <th>{{ 'TASKS.STREAM' | translate }}</th>
-                            <th>{{ 'COMMON.STATUS' | translate }}</th>
-                            <th>{{ 'COMMON.DATE' | translate }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let task of stepTasks" [class.task-done]="task.status === 2"
-                            [class.selected]="isSelected(task.id)" (click)="onTaskClick(task)">
-                            <td (click)="toggleSelect(task.id); $event.stopPropagation()">
-                                <div class="checkbox" [class.checked]="isSelected(task.id)">
-                                    <span *ngIf="isSelected(task.id)">✓</span>
-                                </div>
-                            </td>
-                            <td class="task-title">{{ task.title }}</td>
-                            <td><span class="tool-badge">{{ task.toolName }}</span></td>
-                            <td class="text-secondary">{{ getStreamName(task.streamId ?? '') }}</td>
-                            <td>
-                                <span class="status-badge"
-                                    [style.background]="utils.getTaskStatusColor(task.status) + '20'"
-                                    [style.color]="utils.getTaskStatusColor(task.status)">
+                                <span class="status-badge" [ngClass]="utils.getTaskStatusClass(task.status)">
                                     {{ utils.getTaskStatusLabel(task.status) }}
                                 </span>
                             </td>
@@ -196,48 +152,48 @@
     <!-- STREAM DETAIL TAB -->
     <ng-container *ngIf="selectedStream && activeTabId === 'stream-detail-' + selectedStream.id">
 
-    <div class="card">
-        <div class="card-header">
-            <div class="project-header-info">
-                <h2>{{ selectedStream.name }}</h2>
-                <span class="project-tag">{{ selectedStream.projectName }}</span>
-            </div>
-            <div class="progress-header">
-                <div class="progress-wrap" style="width:160px">
-                    <div class="progress-bar" [style.width.%]="selectedStream.streamProgress"></div>
+        <div class="card">
+            <div class="card-header">
+                <div class="project-header-info">
+                    <h2>{{ selectedStream.name }}</h2>
+                    <span class="project-tag">{{ selectedStream.projectName }}</span>
                 </div>
-                <span class="progress-pct">{{ selectedStream.streamProgress }}%</span>
-    
-                <button class="btn-slack-link" *ngIf="selectedStream.messagingChannelUrl"
-                    (click)="openExternalLink(selectedStream.messagingChannelUrl)">
-                    <svg width="14" height="14" viewBox="0 0 122.8 122.8" fill="none">
-                        <path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9z"
-                            fill="#E01E5A" />
-                        <path
-                            d="M32.3 77.6c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z"
-                            fill="#E01E5A" />
-                        <path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2z"
-                            fill="#36C5F0" />
-                        <path
-                            d="M45.2 32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z"
-                            fill="#36C5F0" />
-                        <path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2z"
-                            fill="#2EB67D" />
-                        <path
-                            d="M90.5 45.2c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z"
-                            fill="#2EB67D" />
-                        <path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9z"
-                            fill="#ECB22E" />
-                        <path
-                            d="M77.6 90.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z"
-                            fill="#ECB22E" />
-                    </svg>
-                    Slack
-                </button>
-                <span class="messaging-status" *ngIf="!selectedStream.messagingChannelUrl">⏳ Slack...</span>
+                <div class="progress-header">
+                    <div class="progress-wrap" style="width:160px">
+                        <div class="progress-bar" [style.width.%]="selectedStream.streamProgress"></div>
+                    </div>
+                    <span class="progress-pct">{{ selectedStream.streamProgress }}%</span>
+
+                    <button class="btn-slack-link" *ngIf="selectedStream.messagingChannelUrl"
+                        (click)="openExternalLink(selectedStream.messagingChannelUrl)">
+                        <svg width="14" height="14" viewBox="0 0 122.8 122.8" fill="none">
+                            <path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9z"
+                                fill="#E01E5A" />
+                            <path
+                                d="M32.3 77.6c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z"
+                                fill="#E01E5A" />
+                            <path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2z"
+                                fill="#36C5F0" />
+                            <path
+                                d="M45.2 32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z"
+                                fill="#36C5F0" />
+                            <path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2z"
+                                fill="#2EB67D" />
+                            <path
+                                d="M90.5 45.2c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z"
+                                fill="#2EB67D" />
+                            <path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9z"
+                                fill="#ECB22E" />
+                            <path
+                                d="M77.6 90.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z"
+                                fill="#ECB22E" />
+                        </svg>
+                        Slack
+                    </button>
+                    <span class="messaging-status" *ngIf="!selectedStream.messagingChannelUrl">⏳ Slack...</span>
+                </div>
             </div>
         </div>
-    </div>
 
         <div class="detail-grid">
             <div class="detail-col">
@@ -286,13 +242,12 @@
                             </div>
                             <div class="step-assignee" *ngIf="step.task">
                                 <span class="assignee-name">{{ step.task.assignedName }}</span>
-                                <span class="status-badge"
-                                    [style.background]="utils.getTaskStatusColor(step.task.status) + '20'"
-                                    [style.color]="utils.getTaskStatusColor(step.task.status)">
+                                <span class="status-badge" [ngClass]="utils.getTaskStatusClass(step.task.status)">
                                     {{ utils.getTaskStatusLabel(step.task.status) }}
                                 </span>
                             </div>
-                            <button class="btn-comments" (click)="openTaskComments(step.task, selectedStream.id); $event.stopPropagation()">
+                            <button class="btn-comments"
+                                (click)="openTaskComments(step.task, selectedStream.id); $event.stopPropagation()">
                                 💬
                             </button>
                             <span class="no-task" *ngIf="!step.task">{{ 'STREAMS.NOT_ASSIGNED' | translate }}</span>
@@ -307,8 +262,8 @@
                 <div class="card">
                     <div class="card-header">
                         <h2> Stream Configurations</h2>
-                        <a *ngIf="streamConfigs[selectedStream.id]?.repoUrl" [href]="streamConfigs[selectedStream.id]?.repoUrl"
-                            target="_blank" class="btn-github">
+                        <a *ngIf="streamConfigs[selectedStream.id]?.repoUrl"
+                            [href]="streamConfigs[selectedStream.id]?.repoUrl" target="_blank" class="btn-github">
                             🔗 View on GitHub
                         </a>
                         <button class="btn-primary" *ngIf="streamConfigs[selectedStream.id]?.repoUrl"
@@ -317,17 +272,19 @@
                         </button>
                     </div>
                     <div class="card-body">
-            
+
                         <!-- Loading -->
                         <div class="empty" *ngIf="loadingConfigs">Loading configs...</div>
-            
+
                         <!-- No configs yet -->
-                        <div class="empty" *ngIf="!loadingConfigs && !streamConfigs[selectedStream.id]?.dbFiles?.length">
+                        <div class="empty"
+                            *ngIf="!loadingConfigs && !streamConfigs[selectedStream.id]?.dbFiles?.length">
                             No configurations uploaded yet.
                         </div>
-            
+
                         <!-- Configs list -->
-                        <div class="config-list" *ngIf="!loadingConfigs && streamConfigs[selectedStream.id]?.dbFiles?.length">
+                        <div class="config-list"
+                            *ngIf="!loadingConfigs && streamConfigs[selectedStream.id]?.dbFiles?.length">
                             <div class="config-item" *ngFor="let file of streamConfigs[selectedStream.id]?.dbFiles">
                                 <div class="config-step">
                                     <span class="step-badge">{{ file.stepName }}</span>
@@ -342,12 +299,13 @@
                                         by {{ file.uploadedBy }}
                                     </span>
                                 </div>
-                                <a [href]="streamConfigs[selectedStream.id]?.repoUrl" target="_blank" class="config-link">
+                                <a [href]="streamConfigs[selectedStream.id]?.repoUrl" target="_blank"
+                                    class="config-link">
                                     🔗
                                 </a>
                             </div>
                         </div>
-            
+
                     </div>
                 </div>
             </div>
@@ -359,15 +317,37 @@
     <ng-container *ngFor="let tabId of getOpenTabIds()">
         <ng-container *ngIf="activeTabId === tabId">
             <div class="card" *ngIf="getTabData(tabId) as tab">
+
                 <div class="card-header">
-                    <h2>{{ 'STREAMS.DEFINE_STEPS' | translate }}</h2>
+                    <h2>
+                        <!-- Badge IA si c'est une tâche de vérification -->
+                        <span class="ai-review-badge" *ngIf="tab.isAiReview">
+                            <lucide-icon [img]="Sparkles" size="13"></lucide-icon>
+                            AI
+                        </span>
+                        {{ tab.isAiReview ? ('TL.VERIFY_AI_STEPS' | translate) : ('STREAMS.DEFINE_STEPS' | translate) }}
+                    </h2>
                 </div>
+
                 <div class="card-body">
                     <div class="project-info-block">
                         <span class="label">Stream</span>
                         <span class="project-name">{{ getStreamName(tab.task?.streamId ?? '') }}</span>
                     </div>
-                    <div class="steps-container">
+
+                    <!-- Message contextuel pour la tâche IA -->
+                    <div class="ai-context-banner" *ngIf="tab.isAiReview">
+                        <lucide-icon [img]="Sparkles" size="14"></lucide-icon>
+                        <span>{{ 'TL.AI_STEPS_CONTEXT' | translate }}</span>
+                    </div>
+
+                    <!-- Loading spinner -->
+                    <div class="empty" *ngIf="tab.loadingAiSteps">
+                        <div class="ai-spinner" style="margin: 0 auto;"></div>
+                    </div>
+
+                    <!-- Steps list (même composant pour manuel et IA) -->
+                    <div class="steps-container" *ngIf="!tab.loadingAiSteps">
                         <div class="step-row" *ngFor="let step of tab.steps; let i = index">
                             <span class="step-number">{{ i + 1 }}</span>
                             <input type="text" [(ngModel)]="step.stepName"
@@ -382,21 +362,30 @@
                                 *ngIf="tab.steps.length > 1">✕</button>
                         </div>
                     </div>
-                    <button class="btn-add" (click)="addStep(tabId)">{{ 'STREAMS.ADD_STEP' | translate }}</button>
-                    <div class="bottom-actions">
-                        <button class="btn-primary" (click)="saveSteps(tabId)"
+
+                    <button class="btn-add" (click)="addStep(tabId)" *ngIf="!tab.loadingAiSteps">
+                        {{ 'STREAMS.ADD_STEP' | translate }}
+                    </button>
+
+                    <div class="bottom-actions" *ngIf="!tab.loadingAiSteps">
+                        <!-- Bouton IA : Approuver les steps -->
+                        <button class="btn-primary" *ngIf="tab.isAiReview" (click)="approveAiSteps(tabId)"
+                            [disabled]="loading || !tab.steps.length">
+                            {{ loading ? ('COMMON.LOADING' | translate) : ('TL.APPROVE_AI_STEPS' | translate) }}
+                        </button>
+
+                        <!-- Bouton Manuel : Sauvegarder les steps -->
+                        <button class="btn-primary" *ngIf="!tab.isAiReview" (click)="saveSteps(tabId)"
                             [disabled]="loading || !tab.steps.length">
                             {{ loading ? ('STREAMS.SAVING' | translate) : ('STREAMS.SAVE_STEPS' | translate) }}
                         </button>
                     </div>
                 </div>
             </div>
-           
         </ng-container>
     </ng-container>
-
-<app-chat-panel [isOpen]="chatOpen" [streamId]="chatStreamId" [taskId]="chatTaskId" [title]="chatTitle"
-    (closed)="closeChat()">
-</app-chat-panel>
+    <app-chat-panel [isOpen]="chatOpen" [streamId]="chatStreamId" [taskId]="chatTaskId" [title]="chatTitle"
+        (closed)="closeChat()">
+    </app-chat-panel>
 
 </div>

@@ -26,9 +26,8 @@
             Slack
         </button>
         <div class="drawer-badges" *ngIf="taskStatus !== null">
-            <span class="status-badge" [style.background]="getStatusColor(taskStatus!) + '20'"
-                [style.color]="getStatusColor(taskStatus!)">
-                {{ getStatusLabel(taskStatus!) }}
+            <span class="status-badge" [ngClass]="utils.getTaskStatusClass(taskStatus!)">
+                {{ utils.getTaskStatusLabel(taskStatus!) }}
             </span>
             <span class="tool-badge" *ngIf="toolName">{{ toolName }}</span>
         </div>

@@ -28,6 +28,9 @@ namespace Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int?>("ConsultantType")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -228,6 +231,44 @@ namespace Backend.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("Backend.Modules.Planning.Models.PlanningProposal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConversationJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FsdFileName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Guidelines")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProposalJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PlanningProposals");
+                });
+
             modelBuilder.Entity("Backend.Modules.Projects.Models.Portfolio", b =>
                 {
                     b.Property<Guid>("Id")
@@ -324,6 +365,9 @@ namespace Backend.Migrations
                     b.Property<Guid?>("StreamId")
                         .HasColumnType("uuid");
 
+                    b.Property<int?>("TeamType")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ToolName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -383,6 +427,9 @@ namespace Backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("GitRepoUrl")
                         .HasColumnType("text");
 
@@ -398,6 +445,10 @@ namespace Backend.Migrations
 
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("SlaStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("TechnicalTeamLeadId")
                         .HasColumnType("uuid");
@@ -441,6 +492,33 @@ namespace Backend.Migrations
                     b.ToTable("StreamMembers");
                 });
 
+            modelBuilder.Entity("Backend.Modules.Sla.Models.SlaRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MaxDurationDays")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TaskType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("WarningThresholdPercent")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskType")
+                        .IsUnique();
+
+                    b.ToTable("SlaRules");
+                });
+
             modelBuilder.Entity("Backend.Modules.Tasks.Models.AcpTask", b =>
                 {
                     b.Property<Guid>("Id")
@@ -460,6 +538,9 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("MessagingThreadId")
                         .HasColumnType("text");
 
@@ -468,6 +549,13 @@ namespace Backend.Migrations
 
                     b.Property<Guid?>("ProjectId")
                         .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SlaRuleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SlaStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("SourceEventId")
                         .HasColumnType("uuid");
@@ -617,6 +705,9 @@ namespace Backend.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FunctionalDomain")
                         .HasColumnType("text");
 
                     b.Property<string>("Icon")

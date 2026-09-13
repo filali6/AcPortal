@@ -46,6 +46,8 @@ public class CreateTaskHandler : IActionHandler
             resolvedTitle = resolvedTitle.Replace("{clientName}", eventDto.ClientName);
         if (!string.IsNullOrEmpty(eventDto.ProjectName))
             resolvedTitle = resolvedTitle.Replace("{projectName}", eventDto.ProjectName);
+        if (!string.IsNullOrEmpty(eventDto.StreamName))
+            resolvedTitle = resolvedTitle.Replace("{streamName}", eventDto.StreamName);
 
         // create one task per target
         foreach (var userId in targetUserIds)

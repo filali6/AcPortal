@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProjectsService } from '../../../core/services/projects.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { LucideAngularModule, ChevronRight, Edit2, X } from 'lucide-angular';
+import { LucideAngularModule, ChevronRight, Edit2, X ,Trash2,Plus} from 'lucide-angular';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { TabsService } from '../../../core/services/tabs.service';
@@ -30,12 +30,27 @@ export class PortfoliosTabComponent implements OnInit {
   modalPortfolio: any = null;
   selectedDirectorId = '';
 
+  showEditModal = false;
+editPortfolio: any = null;
+editName = '';
+editDescription = '';
+showDeleteConfirm = false;
+portfolioToDelete: any = null;
+
+
+showCreateModal = false;
+newName = '';
+newDescription = '';
+newDirectorId = '';
+
 
   
 
   readonly ChevronRight = ChevronRight;
   readonly Edit2 = Edit2;
   readonly X = X;
+  readonly Trash2=Trash2;
+  readonly Plus = Plus;
 
   constructor(
     private projectsService: ProjectsService,
@@ -94,4 +109,94 @@ export class PortfoliosTabComponent implements OnInit {
       }
     });
   }
+  openEditModal(portfolio: any): void {
+  this.editPortfolio = portfolio;
+  this.editName = portfolio.name;
+  this.editDescription = portfolio.description || '';
+  this.showEditModal = true;
+}
+
+closeEditModal(): void {
+  this.showEditModal = false;
+  this.editPortfolio = null;
+  this.editName = '';
+  this.editDescription = '';
+}
+
+saveEdit(): void {
+  if (!this.editName || !this.editPortfolio) return;
+  this.loading = true;
+  this.projectsService.updatePortfolio(
+    this.editPortfolio.id,
+    this.editName,
+    this.editDescription
+  ).subscribe({
+    next: () => {
+      this.toastService.show('Portfolio updated!', 'success');
+      this.closeEditModal();
+      this.loading = false;
+      this.load();
+    },
+    error: () => {
+      this.toastService.show('Error updating portfolio', 'error');
+      this.loading = false;
+    }
+  });
+}
+
+openDeleteConfirm(portfolio: any): void {
+  this.portfolioToDelete = portfolio;
+  this.showDeleteConfirm = true;
+}
+
+closeDeleteConfirm(): void {
+  this.showDeleteConfirm = false;
+  this.portfolioToDelete = null;
+}
+
+confirmDelete(): void {
+  if (!this.portfolioToDelete) return;
+  this.loading = true;
+  this.projectsService.deletePortfolio(this.portfolioToDelete.id).subscribe({
+    next: () => {
+      this.toastService.show('Portfolio deleted!', 'success');
+      this.closeDeleteConfirm();
+      this.loading = false;
+      this.load();
+    },
+    error: () => {
+      this.toastService.show('Error deleting portfolio', 'error');
+      this.loading = false;
+    }
+  });
+}
+openCreateModal(): void {
+  this.showCreateModal = true;
+}
+
+closeCreateModal(): void {
+  this.showCreateModal = false;
+  this.newName = '';
+  this.newDescription = '';
+  this.newDirectorId = '';
+}
+
+createPortfolio(): void {
+  if (!this.newName || !this.newDirectorId) return;
+  this.loading = true;
+  this.projectsService.createPortfolio(
+    this.newName, this.newDescription, this.newDirectorId
+  ).subscribe({
+    next: () => {
+      this.toastService.show('Portfolio created!', 'success');
+      this.closeCreateModal();
+      this.loading = false;
+      this.load();
+    },
+    error: () => {
+      this.toastService.show('Error creating portfolio', 'error');
+      this.loading = false;
+    }
+  });
+}
 }

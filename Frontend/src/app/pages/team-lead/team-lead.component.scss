@@ -7,10 +7,10 @@
     flex-direction: column;
     gap: 16px;
     transition: padding-right 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    
-        &.drawer-open {
-            padding-right: 388px;
-        }
+
+    &.drawer-open {
+        padding-right: 388px;
+    }
 }
 
 .card {
@@ -46,7 +46,7 @@
     gap: 8px;
     padding: 12px 20px;
     border-bottom: 1px solid var(--border);
-    background: #fafafa;
+    background: var(--bg-subtle);
     flex-wrap: wrap;
 
     .search-input {
@@ -71,7 +71,7 @@
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    background: #f8fafc;
+    background: var(--header-bg);
     border-bottom: 1px solid var(--border);
 }
 
@@ -88,12 +88,12 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
         border-bottom: 1px solid var(--border);
-        background: #fafafa;
+        background: var(--bg-subtle);
     }
 
     td {
         padding: 11px 20px;
-        border-bottom: 1px solid #f3f4f6;
+        border-bottom: 1px solid var(--neutral-bg);
         font-size: 13px;
     }
 
@@ -105,7 +105,7 @@
         cursor: pointer;
 
         &:hover td {
-            background: #fafafa;
+            background: var(--bg-subtle);
         }
     }
 
@@ -114,7 +114,7 @@
     }
 
     tr.selected td {
-        background: #eff6ff;
+        background: var(--selected-bg);
     }
 }
 
@@ -165,7 +165,7 @@
     align-items: center;
     gap: 12px;
     padding: 10px 20px;
-    background: #f9fafb;
+    background: var(--header-bg);
     border-bottom: 1px solid var(--border);
 }
 
@@ -182,13 +182,13 @@
     cursor: pointer;
 
     &.success {
-        background: #d1fae5;
-        color: #065f46;
+        background: var(--success-bg);
+        color: var(--success-text);
     }
 }
 
 .access-card {
-    background: white;
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 14px 20px;
@@ -262,21 +262,21 @@
     flex-direction: column;
     gap: 2px;
     padding-bottom: 8px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border-subtle);
 
     &:last-child {
         border-bottom: none;
     }
 
     &.qs-alert .qs-value {
-        color: #ef4444;
+        color: var(--danger-text);
     }
 }
 
 .qs-label {
     font-size: 11px;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.4px;
 }
@@ -284,7 +284,7 @@
 .qs-value {
     font-size: 20px;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--text-primary);
 }
 
 .qs-name {
@@ -293,7 +293,7 @@
 
 .qs-sub {
     font-size: 11px;
-    color: #9ca3af;
+    color: var(--text-secondary);
 }
 
 .streams-list {
@@ -303,14 +303,14 @@
 
 .stream-item {
     padding: 12px 20px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--neutral-bg);
 
     &:last-child {
         border-bottom: none;
     }
 
     &:hover {
-        background: #fafafa;
+        background: var(--bg-subtle);
     }
 }
 
@@ -401,8 +401,8 @@
 .btn-remove {
     width: 28px;
     height: 28px;
-    background: #fee2e2;
-    color: #991b1b;
+    background: var(--danger-bg);
+    color: var(--danger-text);
     border: none;
     border-radius: 6px;
     cursor: pointer;
@@ -410,13 +410,13 @@
     flex-shrink: 0;
 
     &:hover {
-        background: #fecaca;
+        background: var(--danger-border);
     }
 }
 
 .btn-add {
     padding: 8px 16px;
-    background: #f8fafc;
+    background: var(--header-bg);
     border: 1px dashed var(--border);
     border-radius: 6px;
     font-size: 13px;
@@ -438,7 +438,7 @@
 
 .btn-primary {
     padding: 8px 18px;
-    background: #0080ff;
+    background: var(--accent);
     color: white;
     border: none;
     border-radius: 6px;
@@ -462,6 +462,7 @@
     color: var(--text-secondary);
     font-size: 13px;
 }
+
 .detail-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -512,14 +513,14 @@
 
 .progress-wrap {
     height: 6px;
-    background: #f1f5f9;
+    background: var(--border-subtle);
     border-radius: 99px;
     overflow: hidden;
 }
 
 .progress-bar {
     height: 100%;
-    background: #3b82f6;
+    background: var(--status-inprogress);
     border-radius: 99px;
     transition: width 0.5s ease;
 }
@@ -527,7 +528,7 @@
 .team-block {
     margin-bottom: 14px;
     padding-bottom: 14px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border-subtle);
 
     &:last-child {
         border-bottom: none;
@@ -544,13 +545,13 @@
     margin-bottom: 8px;
 
     &.business {
-        background: #dbeafe;
-        color: #1d4ed8;
+        background: var(--badge-blue-bg);
+        color: var(--badge-blue-text);
     }
 
     &.technical {
-        background: #ede9fe;
-        color: #7c3aed;
+        background: var(--badge-purple-bg);
+        color: var(--badge-purple-text);
     }
 }
 
@@ -569,18 +570,18 @@
     text-transform: uppercase;
 
     &.btl {
-        background: #dbeafe;
-        color: #1d4ed8;
+        background: var(--badge-blue-bg);
+        color: var(--badge-blue-text);
     }
 
     &.ttl {
-        background: #ede9fe;
-        color: #7c3aed;
+        background: var(--badge-purple-bg);
+        color: var(--badge-purple-text);
     }
 
     &.consultant {
-        background: #f0fdf4;
-        color: #16a34a;
+        background: var(--success-bg-subtle);
+        color: var(--success-text);
     }
 }
 
@@ -594,7 +595,7 @@
     align-items: center;
     gap: 12px;
     padding: 10px 0;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border-subtle);
 
     &:last-child {
         border-bottom: none;
@@ -629,9 +630,10 @@
 
 .no-task {
     font-size: 11px;
-    color: #9ca3af;
+    color: var(--text-secondary);
     font-style: italic;
 }
+
 .step-assignee {
     display: flex;
     align-items: center;
@@ -642,6 +644,7 @@
     font-size: 12px;
     color: var(--text-secondary);
 }
+
 .btn-open-chat {
     display: flex;
     align-items: center;
@@ -662,9 +665,10 @@
 .chat-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--overlay-bg);
     z-index: 199;
 }
+
 .btn-comments {
     background: none;
     border: none;
@@ -674,20 +678,21 @@
     border-radius: 4px;
 
     &:hover {
-        background: #f0f4ff;
+        background: var(--accent-light);
     }
 }
+
 .btn-github {
     padding: 6px 12px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border);
     border-radius: 6px;
     font-size: 12px;
     text-decoration: none;
     color: var(--text-primary);
-    background: white;
+    background: var(--bg-card);
 
     &:hover {
-        background: #f0f5ff;
+        background: var(--accent-light);
     }
 }
 
@@ -702,9 +707,9 @@
     align-items: center;
     gap: 12px;
     padding: 10px 12px;
-    background: #f8fafc;
+    background: var(--header-bg);
     border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border);
 }
 
 .config-step {
@@ -723,12 +728,12 @@
 .config-filename {
     font-size: 13px;
     font-weight: 500;
-    color: #1e293b;
+    color: var(--text-primary);
 }
 
 .config-meta {
     font-size: 11px;
-    color: #64748b;
+    color: var(--icon-color);
 }
 
 .config-link {
@@ -743,19 +748,20 @@
 
 .step-badge {
     padding: 2px 8px;
-    background: #e8f0fe;
-    color: #0080FF;
+    background: var(--accent-light);
+    color: var(--accent);
     border-radius: 4px;
     font-size: 11px;
     font-weight: 600;
 }
+
 .btn-slack-link {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    color: #1a1a1a;
+    background: var(--bg-card);
+    border: 1px solid var(--header-border);
+    color: var(--text-primary);
     padding: 6px 12px;
     border-radius: 8px;
     font-size: 13px;
@@ -764,8 +770,8 @@
     transition: all 0.15s ease;
 
     &:hover {
-        background: #f8fafc;
-        border-color: #cbd5e1;
+        background: var(--header-bg);
+        border-color: var(--border);
     }
 
     svg {
@@ -775,6 +781,32 @@
 
 .messaging-status {
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--toast-close);
     font-style: italic;
+}
+
+.ai-review-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.ai-context-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--accent-light);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    color: var(--accent);
+    font-size: 13px;
 }
