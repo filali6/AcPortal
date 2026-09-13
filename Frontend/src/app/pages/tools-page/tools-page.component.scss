@@ -1,14 +1,110 @@
 .tools-page {
-    max-width: 860px;
+    max-width: 100%;
+}
+
+// ── Card wrapper (cohérent avec le reste de l'app) ──
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.card-body {
+    padding: 20px 24px;
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-.page-header h1 {
-    font-size: 24px;
+.header-titles {
+    h1 {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: -0.4px;
+        margin: 0 0 4px;
+    }
+
+    p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+}
+
+// ── Bouton Marketplace : solide, cohérent avec btn-primary du reste de l'app ──
+.btn-primary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    font-size: 13.5px;
     font-weight: 600;
-    letter-spacing: -0.5px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+// ── Toolbar (filtres + compteur) ──
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.status-filters {
+    display: flex;
+    gap: 6px;
+}
+
+.filter-pill {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 12.5px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    &.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+}
+
+.count-label {
+    font-size: 12.5px;
+    color: var(--text-secondary);
 }
 
 .section {
@@ -22,111 +118,528 @@
     font-size: 13.5px;
 }
 
+// ── Empty state enrichi ──
+.empty-state {
+    background: var(--bg-card);
+    border: 1px dashed var(--border);
+    border-radius: 14px;
+    padding: 48px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    .emoji {
+        font-size: 28px;
+    }
+
+    h3 {
+        margin: 0;
+        font-size: 15px;
+        color: var(--text-primary);
+    }
+
+    p {
+        margin: 0 0 6px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        max-width: 320px;
+    }
+
+    .btn-primary {
+        flex: none;
+        padding: 9px 22px;
+    }
+}
+
+// ── Grid ──
 .plugins-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
     gap: 12px;
 }
 
+// ── Logo (image uniquement, fond transparent — pas de fallback lettre) ──
+.plugin-logo,
+.drawer-plugin-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: transparent;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+}
+
+.plugin-logo {
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+}
+
+.drawer-plugin-logo {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+}
+
+// ── Badge de statut (avec point animé si actif) ──
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+
+    .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+
+    &.active {
+        background: var(--success-bg);
+        color: var(--success-text);
+
+        .dot {
+            background: var(--success-dot);
+
+        }
+    }
+
+    &.inactive {
+        background: var(--neutral-bg);
+        color: var(--neutral-text);
+
+        .dot {
+            background: var(--text-secondary);
+        }
+    }
+
+    &.small {
+        padding: 2px 8px 2px 6px;
+        font-size: 10px;
+    }
+}
+
+@keyframes statusPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+}
+
+// ── Cards "Mes outils" ──
 .plugin-card {
-    background: white;
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 16px 20px;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    transition: border-color 0.15s ease;
     box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 
     &:hover {
-        border-color: var(--accent);
+        border-color: transparent;
+        box-shadow: 0 10px 28px rgba(16, 24, 40, 0.1);
+        transform: translateY(-2px);
     }
 
-    &.added {
-        border-color: #a7f3d0;
-        background: #f0fdf4;
+    &.suspended {
+        background: var(--bg-subtle);
+
+        .plugin-logo {
+            filter: grayscale(1);
+            opacity: 0.7;
+        }
+    }
+
+    .card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
     }
 
     .plugin-info {
         display: flex;
         flex-direction: column;
         gap: 6px;
+    }
 
-        .plugin-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-            font-family: 'DM Mono', monospace;
-        }
+    .name-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
 
-        .plugin-desc {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin: 0;
-        }
+    .plugin-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-family: 'DM Mono', monospace;
+    }
 
-        .category-badge {
-            display: inline-block;
-            background: var(--accent-light);
-            color: var(--accent);
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 11.5px;
-            font-weight: 500;
-            width: fit-content;
-        }
+    .plugin-desc {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin: 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .suspended-note {
+        font-size: 11.5px;
+        color: var(--warning-text);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .category-badge {
+        display: inline-block;
+        background: var(--accent-light);
+        color: var(--accent);
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 11.5px;
+        font-weight: 500;
+        width: fit-content;
     }
 
     .plugin-actions {
         display: flex;
         gap: 8px;
+        align-items: center;
+    }
 
-        button {
-            flex: 1;
-            padding: 6px 14px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-family: 'DM Sans', sans-serif;
-            cursor: pointer;
-            transition: all 0.15s ease;
+    .btn-open {
+        flex: 1;
+        padding: 7px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-family: 'DM Sans', sans-serif;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        background: var(--accent);
+        color: white;
+        border: none;
+
+        &:hover:not(:disabled) {
+            opacity: 0.9;
         }
 
-        .btn-open {
-            background: var(--accent);
-            color: white;
-            border: none;
-
-            &:hover {
-                opacity: 0.9;
-            }
+        &:disabled {
+            background: var(--border);
+            color: var(--text-secondary);
+            cursor: not-allowed;
         }
+    }
 
-        .btn-remove {
-            background: white;
-            color: #ef4444;
-            border: 1px solid #fecaca;
+    .btn-icon-remove {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-secondary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+        flex-shrink: 0;
 
-            &:hover {
-                background: #fee2e2;
-            }
+        &:hover {
+            background: var(--danger-bg);
+            border-color: var(--danger-border);
+            color: var(--danger-text);
         }
+    }
+}
 
-        .btn-add {
-            background: white;
-            color: var(--accent);
-            border: 1px solid var(--accent);
+// ── Overlay ──
+.marketplace-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay-bg);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
 
-            &:hover {
-                background: var(--accent-light);
-            }
-        }
+    &.open {
+        opacity: 1;
+        pointer-events: all;
+    }
+}
 
-        .btn-added {
-            background: #d1fae5;
-            color: #065f46;
-            border: none;
-            cursor: default;
+// ── Drawer ──
+.marketplace-drawer {
+    position: fixed;
+    top: 48px;
+    right: 0;
+    bottom: 0;
+    width: 380px;
+    background: var(--bg-card);
+    border-left: 1px solid var(--border);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+    z-index: 201;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &.open {
+        transform: translateX(0);
+    }
+}
+
+.drawer-header {
+    position: relative;
+    padding: 18px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.drawer-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+}
+
+.drawer-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.drawer-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+
+    &:hover {
+        background: var(--danger-bg);
+        color: var(--danger-text);
+        border-color: var(--danger-border);
+    }
+}
+
+.search-row {
+    display: flex;
+    gap: 8px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 12.5px;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-subtle);
+
+    &:focus {
+        outline: none;
+        border-color: var(--accent);
+        background: var(--bg-card);
+    }
+}
+
+.cat-select {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-subtle);
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-family: 'DM Sans', sans-serif;
+    max-width: 120px;
+}
+
+.drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin: 2px 0 -2px;
+}
+
+.drawer-plugin-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    transition: border-color 0.15s ease;
+
+    &:hover {
+        border-color: var(--accent);
+    }
+
+    &.added {
+        border-color: var(--success-border);
+        background: var(--success-bg-subtle);
+    }
+}
+
+.drawer-plugin-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.drawer-plugin-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.plugin-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'DM Mono', monospace;
+}
+
+.plugin-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.category-badge {
+    display: inline-block;
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.drawer-plugin-action {
+    flex-shrink: 0;
+}
+
+.btn-add {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    background: var(--bg-card);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    transition: all 0.15s ease;
+    white-space: nowrap;
+
+    &:hover {
+        background: var(--accent-light);
+    }
+}
+
+.badge-added {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--success-text);
+    background: var(--success-bg);
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+// ── Séparateur / accordéon "Déjà ajoutés" ──
+.drawer-separator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 4px;
+    color: var(--text-secondary);
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    user-select: none;
+
+    span:first-child {
+        white-space: nowrap;
+    }
+
+    &::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    .chevron {
+        transition: transform 0.2s ease;
+
+        &.rotated {
+            transform: rotate(180deg);
         }
     }
 }

@@ -8,7 +8,7 @@ export interface Task {
   title: string;
   description: string;
   toolName: string;
-  status: number;       // 0=Pending, 3=Done
+  status: number;       
   assignedTo: string;
   createdAt: string;
   sourceEventId: string;
@@ -70,6 +70,9 @@ export class TasksService {
 }
   getMyTasks(): Observable<Task[]> {
   return this.http.get<Task[]>(`${this.apiUrl}/tasks/my`);
+}
+getByStream(streamId: string): Observable<Task[]> {
+  return this.http.get<Task[]>(`${this.apiUrl}/tasks/stream/${streamId}`);
 }
 
    

@@ -8,8 +8,15 @@ public enum GlobalRole
     BusinessTeamLead = 3,    
     TechnicalTeamLead = 4,   
     Consultant = 5   ,
-    DAF =6
+    DAF =6,
+    SuperAdmin = 7
 
+}
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
+public enum ConsultantType
+{
+    Business = 0,
+    Technical = 1
 }
 
 public class User
@@ -29,4 +36,5 @@ public class User
 
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public ConsultantType? ConsultantType { get; set; }
 }

@@ -13,7 +13,17 @@ using Backend.Modules.Auth;
 using System.Security.Claims;
 using Dapr.Messaging.PublishSubscribe.Extensions;  
 using Backend.Modules.Contracts.Services;
+using Backend.Modules.Notifications.Services;
+using Backend.Modules.Chat.Services;
+using Backend.Modules.AI.Configurators;
+using Backend.Modules.Dashboard.Services;
+using Backend.Modules.Git.Services;
+using Backend.Modules.Planning.Services;
+using Backend.Modules.Planning.Tools;
 
+using Backend.Modules.Messaging.Services;
+//test push 1
+//using Backend.Modules.Sla.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -41,12 +51,50 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProjectsService>();
  
 builder.Services.AddScoped<ToolsService>();
-builder.Services.AddSingleton<PluginRegistry>();
+builder.Services.AddScoped<PluginRegistry>();
 
 builder.Services.AddScoped<EventPublisher>();
 
 builder.Services.AddScoped<IClaimsTransformation, KeycloakRoleTransformer>();
 builder.Services.AddScoped<ContractsService>();
+
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<ChatService>();
+builder.Services.AddScoped<IPdfTextExtractor, PdfPigTextExtractor>();
+builder.Services.AddScoped<IContractSummaryService, ContractSummaryService>();
+builder.Services.AddScoped<IActionHandler, SummarizeContractHandler>();
+builder.Services.AddScoped<IContractSummaryService, ContractSummaryService>();
+builder.Services.AddScoped<BriefingService>();
+
+builder.Services.AddScoped<TaskCommentsService>();
+builder.Services.AddHttpClient<TeamsNotificationService>();
+builder.Services.AddScoped<TeamsNotificationService>();
+
+builder.Services.AddScoped<IGitProvider, GitHubProvider>();
+builder.Services.AddScoped<GitService>();
+
+//builder.Services.AddScoped<GraphService>();
+builder.Services.AddScoped<IMessagingProvider, SlackMessagingProvider>();
+builder.Services.AddScoped<IActionHandler, CreateMessagingChannelHandler>();
+builder.Services.AddScoped<MessagingCommentSyncService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<IMessagingProvider, SlackMessagingProvider>();
+builder.Services.AddScoped<IActionHandler, SendCommentEmailHandler>();
+
+builder.Services.AddScoped<PlanningTools>();
+builder.Services.AddScoped<FsdPlanningService>();
+// Ajouter dans Program.cs
+//builder.Services.AddHostedService<SlaMonitoringService>();
+
+
+builder.Services.AddMemoryCache();
+
+var kernelBuilder = builder.Services.AddKernel();
+var provider = builder.Configuration["AI:Provider"]!;
+
+var configurators = new List<IKernelConfigurator> { new GeminiKernelConfigurator(), new GroqKernelConfigurator() };
+var factory = new KernelConfiguratorFactory(configurators);
+factory.Get(provider).Configure(kernelBuilder, builder.Configuration);
 
 builder.Services.AddSignalR();
 builder.Services.AddHttpClient();
@@ -54,7 +102,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddControllers().AddDapr().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles; // ✅
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 });
 
 var keycloakUrl = builder.Configuration["Keycloak:BaseUrl"];
@@ -110,6 +158,10 @@ builder.Services.AddDaprPubSubClient((_, clientBuilder) =>
 {
     clientBuilder.UseGrpcEndpoint("http://localhost:50002");
 });
+builder.Services.AddDaprPubSubClient((_, clientBuilder) =>
+{
+    clientBuilder.UseGrpcEndpoint("http://localhost:50002");
+});
 
 var app = builder.Build();
 
@@ -122,10 +174,11 @@ using (var scope = app.Services.CreateScope())
 app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();
-// ❌ SUPPRIMÉ : app.UseCloudEvents();
-// ❌ SUPPRIMÉ : app.MapSubscribeHandler();
+
 app.MapControllers();
 app.MapHub<Backend.Hubs.NotificationHub>("/hubs/notifications");
+
+app.MapHub<Backend.Hubs.ChatHub>("/hubs/chat");
 
 var workflowRulesService = app.Services.GetRequiredService<WorkflowRulesService>();
 

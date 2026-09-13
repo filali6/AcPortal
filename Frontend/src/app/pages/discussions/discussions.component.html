@@ -1,0 +1,135 @@
+<div class="messenger">
+
+    <!-- Left Panel — Conversation List -->
+    <div class="conv-panel">
+
+        <div class="conv-header">
+            <h2>Discussions</h2>
+        </div>
+
+        <div class="conv-search">
+            <input type="text" placeholder="Search..." class="search-input">
+        </div>
+
+        <!-- Streams -->
+        <div class="conv-section-label">Streams</div>
+        <div class="conv-item" *ngFor="let d of streamDiscussions"
+            [class.active]="selectedConversation?.id === d.id && selectedType === 'stream'" (click)="selectStream(d)">
+            <div class="conv-avatar stream-av">
+                {{ d.name.slice(0,2).toUpperCase() }}
+            </div>
+            <div class="conv-info">
+                <div class="conv-name-row">
+                    <span class="conv-name">{{ d.name }}</span>
+                    <span class="conv-time">{{ getTimeAgo(d.lastMessageTime) }}</span>
+                </div>
+                <span class="conv-project">{{ d.projectName }}</span>
+                <p class="conv-last">
+                    <span *ngIf="d.senderName">{{ d.senderName }}: </span>
+                    {{ d.lastMessage }}
+                </p>
+            </div>
+        </div>
+        <div class="conv-empty" *ngIf="streamDiscussions.length === 0 && !loading">
+            No stream discussions
+        </div>
+
+        <!-- Tasks -->
+        <div class="conv-section-label" style="margin-top: 8px">Tasks</div>
+        <div class="conv-item" *ngFor="let d of taskDiscussions"
+            [class.active]="selectedConversation?.id === d.id && selectedType === 'task'" (click)="selectTask(d)">
+            <div class="conv-avatar task-av">
+                {{ d.title.slice(0,2).toUpperCase() }}
+            </div>
+            <div class="conv-info">
+                <div class="conv-name-row">
+                    <span class="conv-name">{{ d.title }}</span>
+                    <span class="conv-time">{{ getTimeAgo(d.lastMessageTime) }}</span>
+                </div>
+                <p class="conv-last">
+                    <span *ngIf="d.senderName">{{ d.senderName }}: </span>
+                    {{ d.lastMessage }}
+                </p>
+            </div>
+        </div>
+        <div class="conv-empty" *ngIf="taskDiscussions.length === 0 && !loading">
+            No task discussions
+        </div>
+
+        <div class="conv-loading" *ngIf="loading">Loading...</div>
+
+    </div>
+
+    <!-- Center Panel — Chat Thread -->
+    <div class="chat-panel">
+
+        <!-- No conversation selected -->
+        <div class="no-conv" *ngIf="!selectedConversation">
+            <div class="no-conv-icon">💬</div>
+            <p>Select a conversation to start chatting</p>
+        </div>
+
+        <!-- Conversation open -->
+        <ng-container *ngIf="selectedConversation">
+
+            <!-- Chat Header -->
+            <div class="chat-header">
+                
+                <div class="chat-header-av" [class.stream-av]="selectedType === 'stream'"
+                    [class.task-av]="selectedType === 'task'">
+                    {{ getConversationTitle().slice(0,2).toUpperCase() }}
+                </div>
+                <div class="chat-header-info">
+                    <span class="chat-header-name">{{ getConversationTitle() }}</span>
+                    <span class="chat-header-sub" *ngIf="selectedType === 'stream'">
+                        {{ selectedConversation.projectName }}
+                    </span>
+                    <span class="chat-header-sub" *ngIf="selectedType === 'task'">
+                        Task discussion
+                    </span>
+                </div>
+                <button class="summary-btn" (click)="summarizeChat()" [disabled]="summarizing">
+                    {{ summarizing ? 'Summarizing...' : 'Summarize' }}
+                </button>
+            </div>
+            <div class="summary-result" *ngIf="chatSummary">
+                <div class="summary-header" (click)="summaryOpen = !summaryOpen">
+                    <span>AI Summary</span>
+                    <span>{{ summaryOpen ? '▲' : '▼' }}</span>
+                </div>
+                <div class="summary-body" *ngIf="summaryOpen">{{ chatSummary }}</div>
+            </div>
+
+            <!-- Messages -->
+            <div class="messages-area">
+                <div class="message-item" *ngFor="let msg of messages" [class.mine]="isMyMessage(msg)">
+                    <div class="msg-avatar" *ngIf="!isMyMessage(msg)">
+                        {{ getInitials(msg.senderName) }}
+                    </div>
+                    <div class="msg-bubble">
+                        <span class="msg-sender" *ngIf="!isMyMessage(msg)">
+                            {{ msg.senderName }}
+                        </span>
+                        <p class="msg-content">{{ msg.content }}</p>
+                        <span class="msg-time">{{ getTime(msg.createdAt) }}</span>
+                    </div>
+                </div>
+                <div class="no-messages" *ngIf="messages.length === 0">
+                    No messages yet. Start the conversation!
+                </div>
+            </div>
+
+            <!-- Compose -->
+            <div class="compose-area">
+                <input type="text" [(ngModel)]="newMessage" placeholder="Write a message..."
+                    (keyup.enter)="sendMessage()" class="compose-input">
+                <button class="send-btn" (click)="sendMessage()" [disabled]="!newMessage.trim()">
+                    →
+                </button>
+            </div>
+
+        </ng-container>
+
+    </div>
+
+</div>

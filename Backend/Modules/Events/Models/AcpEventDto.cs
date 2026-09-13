@@ -14,9 +14,24 @@ public class AcpEventDto
     public Guid? BusinessTeamLeadId { get; set; }
     public Guid? TechnicalTeamLeadId { get; set; }
     public Guid? StreamId { get; set; }
+    public string? StreamName { get; set; }
 
     // Contrat DAF
     public string? ClientName { get; set; }
     public Guid? ContractId { get; set; }
     public string? ProjectName { get; set; }
+
+    public string? LeadRole { get; set; }
+
+    public string? AuthorKeycloakId { get; set; }
+    public string? AuthorName { get; set; }
+    public string? Content { get; set; }
+    public string? TaskTitle { get; set; }
+
+ 
+   
+    public string? AssignedTo { get; set; }
+    
+
+
 }

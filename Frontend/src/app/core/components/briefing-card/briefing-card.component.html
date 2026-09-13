@@ -1,0 +1,41 @@
+<div class="briefing-wrapper">
+
+    <!-- Bouton déclencheur (pill, bordure dégradée) -->
+    <button class="ai-pill" [class.active]="isOpen" (click)="toggle()" data-tooltip="AI_BRIEFING.TOOLTIP">
+        <span class="ai-pill-inner">
+            <lucide-icon [img]="Sparkles" size="14"></lucide-icon>
+            <span class="ai-pill-label">AI Brief</span>
+        </span>
+    </button>
+
+    <!-- Panneau -->
+    <div class="briefing-panel" *ngIf="isOpen">
+        <div class="briefing-panel-header">
+            <span>{{ 'AI_BRIEFING.TITLE' | translate }}</span>
+        </div>
+
+        <div class="briefing-panel-body">
+
+            <!-- Loading -->
+            <div class="briefing-loading" *ngIf="loading">
+                <div class="shimmer-line"></div>
+                <div class="shimmer-line short"></div>
+            </div>
+
+            <!-- Error -->
+            <div class="briefing-empty" *ngIf="!loading && errored">
+                {{ 'AI_BRIEFING.ERROR' | translate }}
+            </div>
+
+            <!-- Empty -->
+            <div class="briefing-empty" *ngIf="!loading && !errored && !briefing">
+                {{ 'AI_BRIEFING.EMPTY' | translate }}
+            </div>
+
+            <!-- Content -->
+            <p class="briefing-text" *ngIf="!loading && briefing">{{ briefing }}</p>
+
+        </div>
+    </div>
+
+</div>

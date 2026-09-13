@@ -1,18 +1,19 @@
 .tabs-bar {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 2px;
-    padding: 8px 24px 0;
-    border-bottom: 1px solid var(--border);
-    background: white;
+    padding: 8px 8px 0;
+    background: var(--header-bg);
     overflow-x: auto;
+    height: 100%;
+    box-sizing: border-box;
 
     &::-webkit-scrollbar {
         height: 3px;
     }
 
     &::-webkit-scrollbar-thumb {
-        background: var(--border);
+        background: var(--header-border);
         border-radius: 3px;
     }
 }
@@ -21,29 +22,27 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
-    border-radius: 8px 8px 0 0;
-    border: 1px solid transparent;
-    border-bottom: none;
+    padding: 7px 14px;
+    border-radius: 6px 6px 0 0;
     cursor: pointer;
     font-size: 13px;
-    color: var(--text-secondary);
+    color: var(--icon-color);
     white-space: nowrap;
     transition: all 0.15s ease;
-    position: relative;
-    bottom: -1px;
+    height: 34px;
+    box-sizing: border-box;
+    background: transparent;
+    border: none;
 
     &:hover {
-        background: #f3f4f6;
-        color: var(--text-primary);
+        background: var(--accent-tint);
+        color: var(--accent);
     }
 
     &.active {
-        background: white;
-        color: var(--text-primary);
-        font-weight: 500;
-        border-color: var(--border);
-        border-bottom-color: white;
+        background: var(--accent-tint);
+        color: var(--accent);
+        font-weight: 600;
     }
 
     .tab-title {
@@ -57,14 +56,23 @@
         border: none;
         cursor: pointer;
         font-size: 11px;
-        color: var(--text-secondary);
+        color: var(--icon-color);
         padding: 0 2px;
         border-radius: 3px;
         line-height: 1;
 
         &:hover {
-            background: #e5e7eb;
-            color: var(--text-primary);
+            background: var(--danger-bg);
+            color: var(--danger-text);
+        }
+    }
+
+    &.active .tab-close {
+        color: var(--text-secondary);
+
+        &:hover {
+            background: var(--danger-bg);
+            color: var(--danger-text);
         }
     }
 }

@@ -30,7 +30,7 @@ public class ContractsController : ControllerBase
         _env = env;
     }
 
-    // POST /api/contracts
+     
     [HttpPost]
     public async Task<IActionResult> Create([FromForm] CreateContractRequest request)
     {
@@ -89,12 +89,18 @@ public class ContractsController : ControllerBase
                 c.Status,
                 c.CreatedAt,
                 c.ProjectId,
-                c.FilesPaths
+                c.FilesPaths,
+                projectCreatedAt = c.ProjectId.HasValue
+        ? _db.Projects
+            .Where(p => p.Id == c.ProjectId)
+            .Select(p => (DateTime?)p.CreatedAt)
+            .FirstOrDefault()
+        : null
             })
         });
     }
 
-    // GET /api/contracts/{id}
+    
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -103,7 +109,7 @@ public class ContractsController : ControllerBase
         return Ok(contract);
     }
 
-    // PATCH /api/contracts/{id}/files
+    
     [HttpPatch("{id:guid}/files")]
     public async Task<IActionResult> AddFiles(Guid id, [FromForm] AddFilesRequest request)
     {
@@ -113,7 +119,7 @@ public class ContractsController : ControllerBase
         return Ok(contract);
     }
 
-    // GET /api/contracts/files/{fileName}
+   
     [HttpGet("files/{fileName}")]
     public IActionResult DownloadFile(string fileName)
     {
@@ -124,6 +130,70 @@ public class ContractsController : ControllerBase
         var contentType = "application/octet-stream";
         return File(fileBytes, contentType, fileName);
     }
+
+     
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromForm] UpdateContractRequest request)
+    {
+        var contract = await _contractsService.UpdateAsync(
+            id,
+            request.ClientName,
+            request.Description,
+            request.Status,
+            request.NewFiles
+        );
+        if (contract == null) return NotFound();
+        return Ok(contract);
+    }
+
+    
+    [HttpDelete("{id:guid}/files/{fileName}")]
+    public async Task<IActionResult> DeleteFile(Guid id, string fileName)
+    {
+        fileName = Uri.UnescapeDataString(fileName);
+        var contract = await _contractsService.DeleteFileAsync(id, fileName);
+        if (contract == null) return NotFound();
+        return Ok(contract);
+    }
+    [HttpGet("all")]
+    [Authorize(Roles = "HeadOfCDS")]
+    public async Task<IActionResult> GetAll()
+    {
+        var contracts = await _db.Contracts
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => new
+            {
+                c.Id,
+                c.ClientName,
+                c.Description,
+                c.Status,
+                c.CreatedAt,
+                c.ProjectId,
+                c.FilesPaths,
+                c.Summary,         
+                c.SummaryStatus
+            })
+            .ToListAsync();
+        return Ok(contracts);
+    }
+     
+    [HttpPost("{id:guid}/summarize")]
+    public async Task<IActionResult> Summarize(Guid id)
+    {
+        var contract = await _db.Contracts.FindAsync(id);
+        if (contract == null) return NotFound();
+
+        await _eventPublisher.PublishAsync(new
+        {
+            eventType = "ContratSigné",
+            clientName = contract.ClientName,
+            contractId = contract.Id,
+            description = contract.Description
+        });
+
+        return Ok(new { message = "Résumé en cours de génération" });
+    }
+
 }
 
 public class CreateContractRequest
@@ -136,4 +206,12 @@ public class CreateContractRequest
 public class AddFilesRequest
 {
     public List<IFormFile>? Files { get; set; }
+}
+
+public class UpdateContractRequest
+{
+    public string ClientName { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int Status { get; set; }
+    public List<IFormFile>? NewFiles { get; set; }
 }

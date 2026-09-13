@@ -9,8 +9,11 @@ export interface Project {
   description: string;
   portfolioId: string;
   projectManagerId: string;
+  projectManagerName?: string;
   createdAt: string;
   targetDate?: string;
+  streamCount?: number;
+  progress?: number; 
 }
 export interface Portfolio {
   id: string;
@@ -19,6 +22,7 @@ export interface Portfolio {
   createdAt: string;
   director: { id: string; fullName: string; email: string } | null;
   projectCount: number;
+  progress:number;
 }
 
 @Injectable({
@@ -36,7 +40,7 @@ export class ProjectsService {
   }
 
   // GET /api/projects/my → projets du Director connecté
-  getMyProjects(): Observable<Project[]> {
+  getMyProjects(): Observable<any[]> {
     return this.http.get<Project[]>(`${this.apiUrl}/projects/my`);
   }
 
@@ -50,8 +54,8 @@ export class ProjectsService {
 
 
   // POST /api/projects → créer un projet
-  create(name: string, description: string, portfolioId: string, targetDate?: string): Observable<any> {
-  return this.http.post(`${this.apiUrl}/projects`, { name, description, portfolioId, targetDate });
+  create(name: string, description: string, portfolioId: string, targetDate?: string,contractId?: string): Observable<any> {
+  return this.http.post(`${this.apiUrl}/projects`, { name, description, portfolioId, targetDate,contractId });
 }
 getMyPortfolios(): Observable<Portfolio[]> {
     return this.http.get<Portfolio[]>(`${this.apiUrl}/portfolios/my`);
@@ -83,5 +87,21 @@ getMyPortfolios(): Observable<Portfolio[]> {
 
 getStats(): Observable<any> {
   return this.http.get(`${this.apiUrl}/projects/stats`);
+}
+
+getDetails(id: string): Observable<any> {
+  return this.http.get(`${this.apiUrl}/projects/${id}/details`);
+}
+
+assignDirectorToPortfolio(portfolioId: string, directorId: string): Observable<any> {
+  return this.http.patch(`${this.apiUrl}/portfolios/${portfolioId}/director`, { portfolioDirectorId: directorId });
+}
+
+updatePortfolio(id: string, name: string, description: string): Observable<any> {
+  return this.http.patch(`${this.apiUrl}/portfolios/${id}`, { name, description });
+}
+
+deletePortfolio(id: string): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/portfolios/${id}`);
 }
 }

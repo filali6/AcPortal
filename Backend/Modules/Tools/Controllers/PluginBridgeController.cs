@@ -21,24 +21,38 @@ public class PluginBridgeController : ControllerBase
         _db = db;
     }
 
-   
+
     [HttpGet]
     public IActionResult GetAll()
     {
-        var plugins = _registry.GetAll().Select(p => new
-        {
-            p.Id,
-            p.Name,
-            p.Description,
-            p.Category,
-            p.Icon,
-            p.SsoEnabled,
-            accessUrl = _registry.GetAdapter(p.Id)?.GetAccessUrl()
-        });
+        var plugins = _registry.GetAll()
+           .Where(p => p.IsActive && p.AllowedRoles != "[]" && p.AllowedRoles != "")
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.Category,
+                p.Icon,
+                p.SsoEnabled,
+                p.IsActive,
+                p.AllowedRoles,
+                p.FunctionalDomain,
+                url = _registry.GetAdapter(p.Id)?.GetAccessUrl()
+            });
+        return Ok(plugins);
+    }
+    [HttpGet("all")]
+    [Authorize(Roles = "SuperAdmin")]
+    public IActionResult GetAllForAdmin()
+    {
+        
+        var plugins = _registry.GetAll()
+            .Select(p => new { p.Id, p.Name, p.Description, p.Category, p.Icon, p.SsoEnabled, p.IsActive, p.AllowedRoles,p.FunctionalDomain, url = _registry.GetAdapter(p.Id)?.GetAccessUrl() });
         return Ok(plugins);
     }
 
-   
+
     [HttpGet("{pluginId}")]
     public IActionResult GetById(string pluginId)
     {
@@ -54,6 +68,7 @@ public class PluginBridgeController : ControllerBase
             plugin.Category,
             plugin.Icon,
             plugin.SsoEnabled,
+            plugin.FunctionalDomain,
             accessUrl = adapter?.GetAccessUrl()
         });
     }
@@ -84,6 +99,7 @@ public class PluginBridgeController : ControllerBase
                 plugin.Category,
                 plugin.Icon,
                 plugin.SsoEnabled,
+                plugin.IsActive,
                 accessUrl = adapter?.GetAccessUrl(),
                 addedAt = up.AddedAt
             };
@@ -136,5 +152,38 @@ public class PluginBridgeController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(new { message = "Plugin retiré avec succès" });
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> CreateTool([FromBody] PluginDefinition dto)
+    {
+        if (_registry.GetById(dto.Id) != null)
+            return BadRequest(new { message = "Tool already exists" });
+
+        _registry.AddDefinition(dto);
+        return Ok(dto);
+    }
+
+    [HttpPut("{pluginId}")]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> UpdateTool(string pluginId, [FromBody] PluginDefinition dto)
+    {
+        var existing = _registry.GetById(pluginId);
+        if (existing == null) return NotFound();
+
+        dto.Id = pluginId;
+        _registry.AddDefinition(dto);
+        return Ok(dto);
+    }
+    [HttpDelete("{pluginId}")]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> DeleteTool(string pluginId)
+    {
+        if (_registry.GetById(pluginId) == null)
+            return NotFound();
+
+        _registry.RemoveDefinition(pluginId);
+        return Ok(new { message = "Tool deleted" });
     }
 }

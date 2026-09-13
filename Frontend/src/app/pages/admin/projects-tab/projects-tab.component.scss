@@ -1,0 +1,350 @@
+.tab-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+
+    h2 {
+        font-size: 14px;
+        font-weight: 600;
+        flex: 1;
+    }
+}
+
+.card-body {
+    padding: 16px 20px;
+}
+
+.items-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--neutral-bg);
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &.clickable {
+        cursor: pointer;
+
+        &:hover {
+            background: var(--bg-subtle);
+        }
+    }
+}
+
+.item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+}
+
+.item-name {
+    font-size: 13.5px;
+    font-weight: 500;
+}
+
+.item-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.chevron-icon {
+    color: var(--text-secondary);
+}
+
+.progress-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.btn-back {
+    padding: 5px 10px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text-secondary);
+
+    &:hover {
+        background: var(--neutral-bg);
+    }
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.projects-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+        padding: 10px 16px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-subtle);
+    }
+
+    td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--neutral-bg);
+        font-size: 13px;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tr.clickable {
+        cursor: pointer;
+
+        &:hover td {
+            background: var(--bg-subtle);
+        }
+    }
+}
+
+.table-wrapper {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.filter-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    background: var(--selected-bg);
+    color: var(--badge-blue-text);
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--badge-blue-bg);
+    font-weight: 500;
+}
+
+.clear-filter {
+    background: none;
+    border: none;
+    color: var(--badge-blue-text);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0;
+    line-height: 1;
+
+    &:hover {
+        color: var(--danger-text);
+    }
+}
+
+.inline-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.inline-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+
+    h2 {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+}
+
+.panel-close {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+
+    &:hover {
+        background: var(--bg-subtle);
+        color: var(--text-primary);
+    }
+}
+
+.panel-meta {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.progress-section {
+    margin-bottom: 20px;
+}
+
+.progress-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--icon-color);
+    margin-bottom: 6px;
+}
+
+.progress-wrap {
+    height: 6px;
+    background: var(--border-subtle);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.progress-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.streams-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stream-card {
+    background: var(--header-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+}
+
+.stream-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.stream-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stream-progress {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.stream-leads {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.lead-badge {
+    background: var(--accent-tint);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.pm-badge {
+    background: var(--accent-tint);
+    color: var(--accent);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.members-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.member-chip {
+    background: var(--border-subtle);
+    color: var(--icon-color);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.row-selected {
+    background: var(--selected-bg);
+}
+
+.progress-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progress-wrap-sm {
+    width: 80px;
+    height: 4px;
+    background: var(--border-subtle);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-bar-sm {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.progress-pct-sm {
+    font-size: 11px;
+    color: var(--icon-color);
+    min-width: 28px;
+}

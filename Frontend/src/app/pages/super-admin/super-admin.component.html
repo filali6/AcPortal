@@ -1,0 +1,515 @@
+<div class="sa-page">
+
+    <!-- DASHBOARD TAB -->
+    <ng-container *ngIf="activeTabId === 'tasks'">
+
+        <!-- Row 1 — Stats globales (KPI cards, un seul chiffre) -->
+        <div class="stats-grid">
+            <div class="card">
+                <div class="card-body">
+                    <div class="qs-item">
+                        <span class="qs-label">{{ 'DASHBOARD.TOTAL_USERS' | translate }}</span>
+                        <span class="qs-value">{{ stats.totalUsers }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="qs-item">
+                        <span class="qs-label">{{ 'DASHBOARD.TOTAL_PROJECTS' | translate }}</span>
+                        <span class="qs-value">{{ stats.totalProjects }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="qs-item">
+                        <span class="qs-label">{{ 'DASHBOARD.TOTAL_PORTFOLIOS' | translate }}</span>
+                        <span class="qs-value">{{ stats.totalPortfolios }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="qs-item">
+                        <span class="qs-label">{{ 'DASHBOARD.WORKFLOW_RULES' | translate }}</span>
+                        <span class="qs-value">{{ stats.totalRules }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2 — Accès rapide (cliquables → hover conservé) -->
+        <div class="charts-grid">
+            <div class="card chart-card access-card" (click)="openTab('users')">
+                <div class="card-header">
+                    <h2>
+                        <lucide-icon [img]="Users" size="15" style="margin-right:6px"></lucide-icon>
+                        {{ 'DASHBOARD.MANAGE_USERS' | translate }}
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-secondary" style="font-size:13px">{{ 'SA.MANAGE_USERS_DESC' | translate }}</p>
+                </div>
+            </div>
+            <div class="card chart-card access-card" (click)="openTab('tools')">
+                <div class="card-header">
+                    <h2>
+                        <lucide-icon [img]="Wrench" size="15" style="margin-right:6px"></lucide-icon>
+                        {{ 'DASHBOARD.MANAGE_TOOLS' | translate }}
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-secondary" style="font-size:13px">{{ 'SA.MANAGE_TOOLS_DESC' | translate }}</p>
+                </div>
+            </div>
+            <div class="card chart-card access-card" (click)="openTab('workflow')">
+                <div class="card-header">
+                    <h2>
+                        <lucide-icon [img]="GitBranch" size="15" style="margin-right:6px"></lucide-icon>
+                        {{ 'DASHBOARD.MANAGE_WORKFLOW' | translate }}
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-secondary" style="font-size:13px">{{ 'SA.MANAGE_WORKFLOW_DESC' | translate }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3 — Monitoring (charts) -->
+        <div class="charts-grid">
+
+            <!-- Tasks Overview -->
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>{{ 'DASHBOARD.TASKS_OVERVIEW' | translate }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="chartTasksOverview"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>{{ 'DASHBOARD.SYSTEM_STATUS' | translate }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="chartSystemStatus"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users by Role -->
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>{{ 'DASHBOARD.USERS_BY_ROLE' | translate }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="chartUsersByRole"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </ng-container>
+
+    <!-- USERS TAB -->
+    <ng-container *ngIf="activeTabId === 'users'">
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ 'USERS.TITLE' | translate }} ({{ users.length }})</h2>
+                <button class="btn-primary" (click)="openCreateUserModal()">
+                    <lucide-icon [img]="Plus" size="14"></lucide-icon>
+                    {{ 'USERS.ADD' | translate }}
+                </button>
+            </div>
+            <div class="table-wrapper">
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <th>{{ 'USERS.FULL_NAME' | translate }}</th>
+                            <th>{{ 'USERS.EMAIL' | translate }}</th>
+                            <th>{{ 'USERS.ROLE' | translate }}</th>
+                            <th>{{ 'USERS.CREATED' | translate }}</th>
+                            <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let user of users">
+                            <td class="task-title">{{ user.fullName }}</td>
+                            <td class="text-secondary">{{ user.email }}</td>
+                            <td>
+                                <span class="status-badge" [style.background]="getRoleColor(user.role) + '20'"
+                                    [style.color]="getRoleColor(user.role)">
+                                    {{ user.role }}
+                                </span>
+                            </td>
+                            <td class="text-secondary">{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
+                            <td>
+                                <div class="row-actions">
+                                    <button class="btn-small" (click)="openEditUserModal(user)">{{ 'COMMON.EDIT' |
+                                        translate }}</button>
+                                    <button class="btn-delete" (click)="deleteUser(user)">{{ 'COMMON.DELETE' | translate
+                                        }}</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty" *ngIf="users.length === 0">{{ 'SA.NO_USERS' | translate }}</div>
+        </div>
+    </ng-container>
+
+    <!-- TOOLS TAB -->
+    <ng-container *ngIf="activeTabId === 'tools'">
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ 'TOOLS.TITLE' | translate }} ({{ tools.length }})</h2>
+                <button class="btn-primary" (click)="openCreateToolModal()">
+                    <lucide-icon [img]="Plus" size="14"></lucide-icon>
+                    {{ 'SA.ADD_TOOL' | translate }}
+                </button>
+            </div>
+            <div class="table-wrapper">
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>ID</th>
+                            <th>{{ 'COMMON.NAME' | translate }}</th>
+                            <th>{{ 'COMMON.DESCRIPTION' | translate }}</th>
+                            <th>{{ 'SA.CATEGORY' | translate }}</th>
+                            <th>{{ 'COMMON.FUNCTIONALDOMAIN' | translate }}</th>
+                            <th>URL</th>
+                            <th>SSO</th>
+                            <th>{{ 'COMMON.STATUS' | translate }}</th>
+                            <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let tool of tools">
+                            <td>
+                                <img *ngIf="tool.icon" [src]="tool.icon" [alt]="tool.name"
+                                    style="width:26px; height:26px; border-radius:6px; object-fit:contain"
+                                    (error)="onIconPreviewError($event)">
+                                <span *ngIf="!tool.icon" class="text-secondary" title="Aucune icône définie">—</span>
+                            </td>
+                            <td class="text-secondary">{{ tool.id }}</td>
+                            <td class="task-title">{{ tool.name }}</td>
+                            <td class="text-secondary">{{ tool.description || '—' }}</td>
+                            <td class="text-secondary">{{ tool.category || '—' }}</td>
+                            <td class="text-secondary">{{ tool.functionalDomain || '—' }}</td>
+                            <td class="text-secondary">{{ tool.url || '—' }}</td>
+                            <td>
+                                <span *ngIf="tool.ssoEnabled" class="status-badge" style="background:#ede9fe; color:#7c3aed">
+                                     SSO
+                                </span>
+                                <span *ngIf="!tool.ssoEnabled" class="text-secondary">—</span>
+                            </td>
+                            <td>
+                                <span class="status-badge"
+                                    [style.background]="tool.isActive ? '#d1fae520' : '#fee2e220'"
+                                    [style.color]="tool.isActive ? '#10b981' : '#ef4444'">
+                                    {{ tool.isActive ? ('TOOLS.ACTIVE' | translate) : ('TOOLS.INACTIVE' | translate) }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <button class="btn-small" (click)="openEditToolModal(tool)">{{ 'COMMON.EDIT' |
+                                        translate }}</button>
+                                    <button class="btn-delete" (click)="deleteTool(tool)">{{ 'COMMON.DELETE' | translate
+                                        }}</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty" *ngIf="tools.length === 0">{{ 'SA.NO_TOOLS' | translate }}</div>
+        </div>
+    </ng-container>
+
+    <!-- WORKFLOW TAB -->
+    <ng-container *ngIf="activeTabId === 'workflow'">
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ 'WORKFLOW.TITLE' | translate }} ({{ workflowRules.length }})</h2>
+                <button class="btn-primary" (click)="openAddRuleModal()">
+                    <lucide-icon [img]="Plus" size="14"></lucide-icon>
+                    {{ 'WORKFLOW.ADD_RULE' | translate }}
+                </button>
+            </div>
+            <div class="table-wrapper">
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <th>{{ 'WORKFLOW.EVENT' | translate }}</th>
+                            <th>{{ 'WORKFLOW.ACTION' | translate }}</th>
+                            <th>{{ 'WORKFLOW.TASK_TITLE' | translate }}</th>
+                            <th>{{ 'WORKFLOW.TARGET_TYPE' | translate }}</th>
+                            <th>{{ 'WORKFLOW.TARGET_VALUES' | translate }}</th>
+                            <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let rule of workflowRules">
+                            <td>
+                                <span class="status-badge" style="background:#ede9fe; color:#7c3aed">
+                                    {{ rule.eventCode }}
+                                </span>
+                            </td>
+                            <td class="text-secondary">{{ rule.actionType }}</td>
+                            <td class="task-title">{{ rule.taskTitle || '—' }}</td>
+                            <td>
+                                <span class="status-badge" style="background:#dbeafe; color:#1d4ed8">
+                                    {{ rule.targetType }}
+                                </span>
+                            </td>
+                            <td class="text-secondary">{{ rule.targetValues?.join(', ') }}</td>
+                            <td>
+                                <button class="btn-small" (click)="openEditRuleModal(rule)">{{ 'COMMON.EDIT' | translate
+                                    }}</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty" *ngIf="workflowRules.length === 0">{{ 'SA.NO_RULES' | translate }}</div>
+        </div>
+    </ng-container>
+
+    <!-- MODAL USER -->
+    <app-modal *ngIf="showUserModal" [title]="(editingUser ? ('SA.EDIT_USER' | translate) : ('USERS.ADD' | translate))"
+        width="420px" (closed)="showUserModal = false">
+        <div class="form-group">
+            <label>{{ 'USERS.FULL_NAME' | translate }} *</label>
+            <input type="text" [(ngModel)]="userForm.fullName" class="form-input">
+        </div>
+        <div class="form-group">
+            <label>{{ 'USERS.EMAIL' | translate }} *</label>
+            <input type="email" [(ngModel)]="userForm.email" class="form-input" [disabled]="!!editingUser">
+        </div>
+        <div class="form-group" *ngIf="!editingUser">
+            <label>{{ 'USERS.PASSWORD' | translate }} *</label>
+            <input type="password" [(ngModel)]="userForm.password" class="form-input">
+        </div>
+        <div class="form-group">
+            <label>{{ 'USERS.ROLE' | translate }} *</label>
+            <select [(ngModel)]="userForm.role" class="form-input">
+                <option *ngFor="let r of availableRoles" [value]="r">{{ r }}</option>
+            </select>
+        </div>
+        <div class="form-group" *ngIf="userForm.role === 'Consultant'">
+            <label>{{ 'SA.CONSULTANT_TYPE' | translate }}</label>
+            <select class="form-input" [(ngModel)]="userForm.consultantType">
+                <option value="">— Select type —</option>
+                <option value="Business">Business</option>
+                <option value="Technical">Technical</option>
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-small" (click)="showUserModal = false">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button class="btn-primary" (click)="saveUser()" [disabled]="loading">
+                {{ loading ? ('COMMON.LOADING' | translate) : ('COMMON.SAVE' | translate) }}
+            </button>
+        </div>
+    </app-modal>
+
+    <!-- MODAL TOOL -->
+    <app-modal *ngIf="showToolModal" [title]="(editingTool ? ('TOOLS.EDIT' | translate) : ('SA.ADD_TOOL' | translate))"
+        width="480px" (closed)="showToolModal = false">
+        <div class="form-group" *ngIf="!editingTool">
+            <label>ID * (unique, ex: axe-iam)</label>
+            <input type="text" [(ngModel)]="toolForm.id" class="form-input" placeholder="axe-iam">
+        </div>
+        <div class="form-group">
+            <label>{{ 'COMMON.NAME' | translate }} *</label>
+            <input type="text" [(ngModel)]="toolForm.name" class="form-input">
+        </div>
+        <div class="form-group">
+            <label>{{ 'COMMON.DESCRIPTION' | translate }}</label>
+            <input type="text" [(ngModel)]="toolForm.description" class="form-input">
+        </div>
+        <div class="form-group">
+            <label>{{ 'SA.CATEGORY' | translate }}</label>
+            <input type="text" [(ngModel)]="toolForm.category" class="form-input" placeholder="issues, docs, git...">
+        </div>
+        <div class="form-group">
+            <label>Functional Domain</label>
+            <select [(ngModel)]="toolForm.functionalDomain" class="form-input">
+                <option value="">— None —</option>
+                <option value="BusinessRules">Business Rules</option>
+                <option value="ScreenDesign">Screen Design</option>
+                <option value="Workflow">Workflow</option>
+                <option value="Reporting">Reporting</option>
+                <option value="DataConfiguration">Data Configuration</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>URL *</label>
+            <input type="text" [(ngModel)]="toolForm.url" class="form-input" placeholder="http://192.168.X.X:XXXX">
+        </div>
+        <div class="form-group">
+            <label>{{ 'SA.ICON' | translate }}</label>
+            <input type="text" [(ngModel)]="toolForm.icon" class="form-input"
+                placeholder="assets/logos/axe-brm.png ou https://...">
+            <div *ngIf="toolForm.icon" style="margin-top:8px; display:flex; align-items:center; gap:8px">
+                <img [src]="toolForm.icon" alt="preview"
+                    style="width:36px; height:36px; border-radius:8px; object-fit:contain; border:1px solid var(--border); background:#fafafa"
+                    (error)="onIconPreviewError($event)">
+                <span class="text-secondary" style="font-size:12px">{{ 'SA.ICON_PREVIEW' | translate }}</span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{ 'COMMON.STATUS' | translate }}</label>
+            <div style="display:flex; align-items:center; gap:10px">
+                <input type="checkbox" [(ngModel)]="toolForm.isActive" id="isActive">
+                <label for="isActive" style="margin:0; font-size:13px">{{ 'TOOLS.ACTIVE' | translate }}</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>SSO</label>
+            <div style="display:flex; align-items:center; gap:10px">
+                <input type="checkbox" [(ngModel)]="toolForm.ssoEnabled" id="ssoEnabled">
+                <label for="ssoEnabled" style="margin:0; font-size:13px">
+                    Authentification SSO active (OIDC/Keycloak)
+                </label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{ 'TOOLS.ALLOWED_ROLES' | translate }}</label>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px">
+                <label *ngFor="let role of availableRoles"
+                    style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer">
+                    <input type="checkbox" [checked]="toolForm.allowedRoles.includes(role)" (change)="toggleRole(role)">
+                    {{ role }}
+                </label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-small" (click)="showToolModal = false">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button class="btn-primary" (click)="saveTool()" [disabled]="loading">
+                {{ loading ? ('COMMON.LOADING' | translate) : ('COMMON.SAVE' | translate) }}
+            </button>
+        </div>
+    </app-modal>
+
+    <!-- MODAL EDIT RULE -->
+    <app-modal *ngIf="showRuleModal" [title]="'SA.EDIT_RULE' | translate" width="480px"
+        (closed)="showRuleModal = false">
+        <div class="form-group">
+            <label>{{ 'WORKFLOW.EVENT' | translate }}</label>
+            <input type="text" [(ngModel)]="ruleForm.eventCode" class="form-input" disabled>
+        </div>
+        <div class="form-group">
+            <label>{{ 'WORKFLOW.ACTION' | translate }}</label>
+            <select [(ngModel)]="ruleForm.actionType" class="form-input">
+                <option *ngFor="let a of actionTypes" [value]="a">{{ a }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>{{ 'WORKFLOW.TASK_TITLE' | translate }}</label>
+            <input type="text" [(ngModel)]="ruleForm.taskTitle" class="form-input">
+        </div>
+        <div class="form-group">
+            <label>{{ 'SA.TASK_DESCRIPTION' | translate }}</label>
+            <input type="text" [(ngModel)]="ruleForm.taskDescription" class="form-input">
+        </div>
+        <div class="form-group">
+            <label>{{ 'WORKFLOW.TARGET_TYPE' | translate }}</label>
+            <select [(ngModel)]="ruleForm.targetType" class="form-input">
+                <option *ngFor="let t of targetTypes" [value]="t">{{ t }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>{{ 'WORKFLOW.TARGET_VALUES' | translate }}</label>
+            <div class="target-values">
+                <span class="target-chip" *ngFor="let v of ruleForm.targetValues; let i = index">
+                    {{ v }}
+                    <button (click)="removeTargetValue(ruleForm, i)">✕</button>
+                </span>
+            </div>
+            <div class="target-input">
+                <input type="text" [(ngModel)]="newTargetValue" [placeholder]="'SA.ADD_VALUE' | translate"
+                    class="form-input">
+                <button class="btn-small" (click)="addTargetValue(ruleForm)">{{ 'COMMON.ADD' | translate }}</button>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-small" (click)="showRuleModal = false">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button class="btn-primary" (click)="saveRule()" [disabled]="loading">
+                {{ loading ? ('COMMON.LOADING' | translate) : ('COMMON.SAVE' | translate) }}
+            </button>
+        </div>
+    </app-modal>
+
+    <!-- MODAL ADD RULE -->
+    <app-modal *ngIf="showAddRuleModal" [title]="'WORKFLOW.ADD_RULE' | translate" width="480px"
+        (closed)="showAddRuleModal = false">
+        <div class="form-group">
+            <label>{{ 'WORKFLOW.EVENT' | translate }} *</label>
+            <input type="text" [(ngModel)]="newRuleForm.eventCode" class="form-input"
+                placeholder="e.g. NouvelEvenement">
+        </div>
+        <div class="form-group">
+            <label>{{ 'WORKFLOW.ACTION' | translate }} *</label>
+            <select [(ngModel)]="newRuleForm.actionType" class="form-input">
+                <option *ngFor="let a of actionTypes" [value]="a">{{ a }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>{{ 'WORKFLOW.TASK_TITLE' | translate }}</label>
+            <input type="text" [(ngModel)]="newRuleForm.taskTitle" class="form-input">
+        </div>
+        <div class="form-group">
+            <label>{{ 'SA.TASK_DESCRIPTION' | translate }}</label>
+            <input type="text" [(ngModel)]="newRuleForm.taskDescription" class="form-input">
+        </div>
+        <div class="form-group">
+            <label>{{ 'WORKFLOW.TARGET_TYPE' | translate }}</label>
+            <select [(ngModel)]="newRuleForm.targetType" class="form-input">
+                <option *ngFor="let t of targetTypes" [value]="t">{{ t }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>{{ 'WORKFLOW.TARGET_VALUES' | translate }}</label>
+            <div class="target-values">
+                <span class="target-chip" *ngFor="let v of newRuleForm.targetValues; let i = index">
+                    {{ v }}
+                    <button (click)="removeTargetValue(newRuleForm, i)">✕</button>
+                </span>
+            </div>
+            <div class="target-input">
+                <input type="text" [(ngModel)]="newTargetValue" [placeholder]="'SA.ADD_VALUE' | translate"
+                    class="form-input">
+                <button class="btn-small" (click)="addTargetValue(newRuleForm)">{{ 'COMMON.ADD' | translate }}</button>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-small" (click)="showAddRuleModal = false">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button class="btn-primary" (click)="addRule()" [disabled]="loading">
+                {{ loading ? ('COMMON.LOADING' | translate) : ('WORKFLOW.ADD_RULE' | translate) }}
+            </button>
+        </div>
+    </app-modal>
+
+    <!-- MODAL CONFIRM -->
+    <app-modal *ngIf="showConfirmModal" [title]="'COMMON.CONFIRM' | translate" width="360px"
+        (closed)="showConfirmModal = false">
+        <p style="font-size: 14px; color: var(--text-primary); margin-bottom: 8px">
+            {{ confirmMessage }}
+        </p>
+        <div class="modal-footer">
+            <button class="btn-small" (click)="showConfirmModal = false">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button class="btn-delete" (click)="executeConfirm()">{{ 'COMMON.DELETE' | translate }}</button>
+        </div>
+    </app-modal>
+
+</div>

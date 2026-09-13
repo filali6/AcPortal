@@ -1,57 +1,165 @@
 <div class="tools-page">
 
-    <div class="page-header">
-        <h1>Mes outils</h1>
+    <div class="card">
+        <div class="card-header">
+            <div class="header-titles">
+                <h1>{{ 'TOOLS_PAGE.MY_TOOLS' | translate }}</h1>
+                <p>{{ 'TOOLS_PAGE.SUBTITLE' | translate }}</p>
+            </div>
+            <button class="btn-primary" (click)="openMarketplace()">
+                <lucide-icon [img]="Store" size="14"></lucide-icon>
+                {{ 'TOOLS_PAGE.MARKETPLACE' | translate }}
+            </button>
+        </div>
+
+        <div class="card-body">
+
+            <div class="toolbar" *ngIf="!loading && myPlugins.length > 0">
+                <div class="status-filters">
+                    <button class="filter-pill" [class.active]="activeFilter === 'all'" (click)="setFilter('all')">
+                        {{ 'TOOLS_PAGE.ALL' | translate }}
+                    </button>
+                    <button class="filter-pill" [class.active]="activeFilter === 'active'" (click)="setFilter('active')">
+                        {{ 'TOOLS_PAGE.ACTIVE' | translate }}
+                    </button>
+                    <button class="filter-pill" [class.active]="activeFilter === 'inactive'" (click)="setFilter('inactive')">
+                        {{ 'TOOLS_PAGE.INACTIVE' | translate }}
+                    </button>
+                </div>
+                <span class="count-label">{{ myPlugins.length }} {{ 'TOOLS_PAGE.TOOLS_COUNT' | translate }}</span>
+            </div>
+
+            <div *ngIf="loading" class="empty">{{ 'COMMON.LOADING' | translate }}</div>
+
+            <div *ngIf="!loading">
+
+                <div *ngIf="myPlugins.length === 0" class="empty-state">
+                    <span class="emoji">🧰</span>
+                    <h3>{{ 'TOOLS_PAGE.NO_TOOLS' | translate }}</h3>
+                    <p>{{ 'TOOLS_PAGE.NO_TOOLS_DESC' | translate }}</p>
+                    <button class="btn-primary" (click)="openMarketplace()">
+                        <lucide-icon [img]="Store" size="14"></lucide-icon>
+                        {{ 'TOOLS_PAGE.MARKETPLACE' | translate }}
+                    </button>
+                </div>
+
+                <div *ngIf="myPlugins.length > 0 && filteredMyPlugins.length === 0" class="empty">
+                    {{ 'TOOLS_PAGE.NO_MATCH' | translate }}
+                </div>
+
+                <div class="plugins-grid">
+                    <div *ngFor="let plugin of filteredMyPlugins" class="plugin-card" [class.suspended]="isSuspended(plugin)">
+
+                        <div class="card-top">
+                            <div class="plugin-logo">
+                                <img *ngIf="getLogo(plugin)" [src]="getLogo(plugin)" [alt]="plugin.name" (error)="onIconError($event)">
+                            </div>
+                            <span class="status-badge" [class.active]="!isSuspended(plugin)" [class.inactive]="isSuspended(plugin)">
+                                <span class="dot"></span>
+                                {{ (isSuspended(plugin) ? 'TOOLS_PAGE.SUSPENDED' : 'TOOLS_PAGE.ACTIVE') | translate }}
+                            </span>
+                        </div>
+
+                        <div class="plugin-info">
+                            <div class="name-row">
+                                <span class="plugin-name">{{ plugin.name }}</span>
+                                <span class="category-badge">{{ plugin.category }}</span>
+                            </div>
+                            <p class="plugin-desc">{{ plugin.description }}</p>
+                            <p class="suspended-note" *ngIf="isSuspended(plugin)">
+                                <lucide-icon [img]="Lock" size="12"></lucide-icon>
+                                {{ 'TOOLS_PAGE.SUSPENDED_NOTE' | translate }}
+                            </p>
+                        </div>
+
+                        <div class="plugin-actions">
+                            <button class="btn-open" [disabled]="isSuspended(plugin)" (click)="openPlugin(plugin)"
+                                    [title]="isSuspended(plugin) ? ('TOOLS_PAGE.SUSPENDED_NOTE' | translate) : ''">
+                                {{ 'TOOLS_PAGE.OPEN' | translate }}
+                            </button>
+                            <button class="btn-icon-remove" (click)="removePlugin(plugin.id)" [title]="'TOOLS_PAGE.REMOVE' | translate">
+                                <lucide-icon [img]="Trash2" size="14"></lucide-icon>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <div *ngIf="loading" class="empty">Chargement...</div>
+    <!-- Drawer Marketplace -->
+    <div class="marketplace-overlay" [class.open]="marketplaceOpen" (click)="closeMarketplace()"></div>
+    <div class="marketplace-drawer" [class.open]="marketplaceOpen">
+        <div class="drawer-header">
+            <button class="drawer-close" (click)="closeMarketplace()"><lucide-icon [img]="X" size="14"></lucide-icon></button>
+            <span class="drawer-title">{{ 'TOOLS_PAGE.MARKETPLACE' | translate }}</span>
+            <span class="drawer-subtitle">{{ availablePlugins.length }} {{ 'TOOLS_PAGE.AVAILABLE' | translate }}</span>
 
-    <div *ngIf="!loading">
-
-        <!-- Mes outils -->
-        <section class="section">
-            <div *ngIf="myPlugins.length === 0" class="empty">
-                Aucun outil ajouté pour l'instant.
+            <div class="search-row">
+                <input class="search-input" [(ngModel)]="searchTerm" [placeholder]="'TOOLS_PAGE.SEARCH_PLACEHOLDER' | translate">
+                <select class="cat-select" [(ngModel)]="selectedCategory">
+                    <option value="all">{{ 'TOOLS_PAGE.ALL_CATEGORIES' | translate }}</option>
+                    <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+                </select>
             </div>
-            <div class="plugins-grid">
-                <div *ngFor="let plugin of myPlugins" class="plugin-card">
-                    <div class="plugin-info">
-                        <span class="plugin-name">{{ plugin.name }}</span>
-                        <span class="category-badge">{{ plugin.category }}</span>
-                        <p class="plugin-desc">{{ plugin.description }}</p>
-                    </div>
-                    <div class="plugin-actions">
-                        <button class="btn-open" (click)="openPlugin(plugin)">Ouvrir</button>
-                        <button class="btn-remove" (click)="removePlugin(plugin.id)">Retirer</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Catalogue -->
-        <div class="page-header">
-            <h1>Catalogue</h1>
         </div>
-        <section class="section">
-            <div class="plugins-grid">
-                <div *ngFor="let plugin of allPlugins" class="plugin-card" [class.added]="isAdded(plugin.id)">
-                    <div class="plugin-info">
+
+        <div class="drawer-body">
+
+            <span class="section-label" *ngIf="availablePlugins.length > 0">{{ 'TOOLS_PAGE.AVAILABLE' | translate }}</span>
+
+            <div *ngIf="availablePlugins.length === 0" class="empty">
+                {{ 'TOOLS_PAGE.NO_MATCH' | translate }}
+            </div>
+
+            <div *ngFor="let plugin of availablePlugins" class="drawer-plugin-item">
+                <div class="drawer-plugin-logo">
+                    <img *ngIf="getLogo(plugin)" [src]="getLogo(plugin)" [alt]="plugin.name" (error)="onIconError($event)">
+                </div>
+                <div class="drawer-plugin-info">
+                    <div class="drawer-plugin-top">
                         <span class="plugin-name">{{ plugin.name }}</span>
                         <span class="category-badge">{{ plugin.category }}</span>
-                        <p class="plugin-desc">{{ plugin.description }}</p>
                     </div>
-                    <div class="plugin-actions">
-                        <button *ngIf="!isAdded(plugin.id)" class="btn-add" (click)="addPlugin(plugin.id)">
-                            + Ajouter
-                        </button>
-                        <button *ngIf="isAdded(plugin.id)" class="btn-added" disabled>
-                            Ajouté
-                        </button>
-                    </div>
+                    <p class="plugin-desc">{{ plugin.description }}</p>
+                </div>
+                <div class="drawer-plugin-action">
+                    <button class="btn-add" (click)="addPlugin(plugin.id)">
+                        <lucide-icon [img]="Plus" size="12"></lucide-icon>
+                        {{ 'COMMON.ADD' | translate }}
+                    </button>
                 </div>
             </div>
-        </section>
 
+            <!-- Séparateur / accordéon -->
+            <div class="drawer-separator" *ngIf="addedPlugins.length > 0" (click)="toggleAddedSection()">
+                <span>{{ 'TOOLS_PAGE.ADDED' | translate }} ({{ addedPlugins.length }})</span>
+                <span class="chevron" [class.rotated]="!addedSectionCollapsed">▾</span>
+            </div>
+
+            <ng-container *ngIf="!addedSectionCollapsed">
+                <div *ngFor="let plugin of addedPlugins" class="drawer-plugin-item added">
+                    <div class="drawer-plugin-logo">
+                        <img *ngIf="getLogo(plugin)" [src]="getLogo(plugin)" [alt]="plugin.name" (error)="onIconError($event)">
+                    </div>
+                    <div class="drawer-plugin-info">
+                        <div class="drawer-plugin-top">
+                            <span class="plugin-name">{{ plugin.name }}</span>
+                            <span class="category-badge">{{ plugin.category }}</span>
+                            <span class="status-badge small" [class.active]="!isSuspended(plugin)" [class.inactive]="isSuspended(plugin)">
+                                {{ (isSuspended(plugin) ? 'TOOLS_PAGE.SUSPENDED' : 'TOOLS_PAGE.ACTIVE') | translate }}
+                            </span>
+                        </div>
+                        <p class="plugin-desc">{{ plugin.description }}</p>
+                    </div>
+                    <div class="drawer-plugin-action">
+                        <span class="badge-added"><lucide-icon [img]="Check" size="12"></lucide-icon> {{ 'TOOLS_PAGE.ADDED' | translate }}</span>
+                    </div>
+                </div>
+            </ng-container>
+
+        </div>
     </div>
 
 </div>
