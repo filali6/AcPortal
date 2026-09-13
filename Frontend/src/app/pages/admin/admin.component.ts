@@ -80,6 +80,11 @@ export class AdminComponent implements OnInit {
     contractsNotTreated: 0,
     activeProjects: 0
   };
+  portfolioGlobalStats = {
+  avgProgress: 0,
+  totalPortfolios: 0,
+  totalProjects: 0
+};
 
   readonly FileText = FileText;
   readonly FolderOpen = FolderOpen;
@@ -125,14 +130,19 @@ export class AdminComponent implements OnInit {
     this.notificationService.notifications$.subscribe(() => this.refreshTasks());
     this.tabsService.activeTabId.subscribe(id => {
       this.activeTabId = id;
-      if (id === 'tasks') this.showProjectsView = false;
+      if (id === 'tasks') {this.showProjectsView = false;setTimeout(() => this.renderCharts(), 100);}
     });
   }
 
   loadAll(): void {
     this.projectsService.getPortfolioDirectors().subscribe({ next: (d) => this.directors = d });
-    this.projectsService.getAllPortfolios().subscribe({ next: (p) => this.portfolios = p });
-    this.projectsService.getStats().subscribe({ next: (s) => this.stats = s });
+this.projectsService.getAllPortfolios().subscribe({
+    next: (p) => {
+      this.portfolios = p;
+      this.computePortfolioGlobalStats();   
+    }
+  });    this.projectsService.getStats().subscribe({ next: (s) => this.stats = s });
+    
     this.contractsService.getAll().subscribe({ next: (c) => {
       this.allContracts = c;
       this.computeBottomStats();
@@ -413,5 +423,12 @@ retrySummary(contractId: string): void {
       this.loading = false;
     }
   });
+}
+computePortfolioGlobalStats(): void {
+  this.portfolioGlobalStats.totalPortfolios = this.portfolios.length;
+  this.portfolioGlobalStats.totalProjects = this.portfolios.reduce((sum, p) => sum + (p.projectCount || 0), 0);
+  this.portfolioGlobalStats.avgProgress = this.portfolios.length
+    ? Math.round(this.portfolios.reduce((sum, p) => sum + (p.progress || 0), 0) / this.portfolios.length)
+    : 0;
 }
 }

@@ -37,6 +37,7 @@ public class PluginBridgeController : ControllerBase
                 p.SsoEnabled,
                 p.IsActive,
                 p.AllowedRoles,
+                p.FunctionalDomain,
                 url = _registry.GetAdapter(p.Id)?.GetAccessUrl()
             });
         return Ok(plugins);
@@ -45,9 +46,9 @@ public class PluginBridgeController : ControllerBase
     [Authorize(Roles = "SuperAdmin")]
     public IActionResult GetAllForAdmin()
     {
-        // Pour SuperAdmin — tous les tools sans filtre
+        
         var plugins = _registry.GetAll()
-            .Select(p => new { p.Id, p.Name, p.Description, p.Category, p.Icon, p.SsoEnabled, p.IsActive, p.AllowedRoles, url = _registry.GetAdapter(p.Id)?.GetAccessUrl() });
+            .Select(p => new { p.Id, p.Name, p.Description, p.Category, p.Icon, p.SsoEnabled, p.IsActive, p.AllowedRoles,p.FunctionalDomain, url = _registry.GetAdapter(p.Id)?.GetAccessUrl() });
         return Ok(plugins);
     }
 
@@ -67,6 +68,7 @@ public class PluginBridgeController : ControllerBase
             plugin.Category,
             plugin.Icon,
             plugin.SsoEnabled,
+            plugin.FunctionalDomain,
             accessUrl = adapter?.GetAccessUrl()
         });
     }
@@ -97,6 +99,7 @@ public class PluginBridgeController : ControllerBase
                 plugin.Category,
                 plugin.Icon,
                 plugin.SsoEnabled,
+                plugin.IsActive,
                 accessUrl = adapter?.GetAccessUrl(),
                 addedAt = up.AddedAt
             };

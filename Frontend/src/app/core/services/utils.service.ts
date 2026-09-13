@@ -21,6 +21,17 @@ export class UtilsService {
     }
   }
 
+  // Nouvelle méthode : retourne une classe CSS (qui utilise les variables --status-*)
+  // au lieu d'une couleur en dur, pour que le badge s'adapte au dark mode.
+  getTaskStatusClass(status: number): string {
+    switch (status) {
+      case 0: return 'status-pending';
+      case 1: return 'status-blocked';
+      case 2: return 'status-done';
+      default: return '';
+    }
+  }
+
   getContractStatusLabel(status: number): string {
     switch (status) {
       case 0: return 'Signed';
@@ -36,6 +47,16 @@ export class UtilsService {
       case 1: return '#10b981';
       case 2: return '#6366f1';
       default: return '#888';
+    }
+  }
+
+  // Même principe que getTaskStatusClass, pour les statuts de contrat.
+  getContractStatusClass(status: number): string {
+    switch (status) {
+      case 0: return 'status-pending';
+      case 1: return 'status-done';
+      case 2: return 'status-contract-progress';
+      default: return '';
     }
   }
 

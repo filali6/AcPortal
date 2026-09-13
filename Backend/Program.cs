@@ -18,8 +18,12 @@ using Backend.Modules.Chat.Services;
 using Backend.Modules.AI.Configurators;
 using Backend.Modules.Dashboard.Services;
 using Backend.Modules.Git.Services;
+using Backend.Modules.Planning.Services;
+using Backend.Modules.Planning.Tools;
 
 using Backend.Modules.Messaging.Services;
+//test push 1
+//using Backend.Modules.Sla.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -76,12 +80,19 @@ builder.Services.AddScoped<MessagingCommentSyncService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<IMessagingProvider, SlackMessagingProvider>();
 builder.Services.AddScoped<IActionHandler, SendCommentEmailHandler>();
+
+builder.Services.AddScoped<PlanningTools>();
+builder.Services.AddScoped<FsdPlanningService>();
+// Ajouter dans Program.cs
+//builder.Services.AddHostedService<SlaMonitoringService>();
+
+
 builder.Services.AddMemoryCache();
 
 var kernelBuilder = builder.Services.AddKernel();
 var provider = builder.Configuration["AI:Provider"]!;
 
-var configurators = new List<IKernelConfigurator> { new GeminiKernelConfigurator() };
+var configurators = new List<IKernelConfigurator> { new GeminiKernelConfigurator(), new GroqKernelConfigurator() };
 var factory = new KernelConfiguratorFactory(configurators);
 factory.Get(provider).Configure(kernelBuilder, builder.Configuration);
 
@@ -91,7 +102,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddControllers().AddDapr().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles; 
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 });
 
 var keycloakUrl = builder.Configuration["Keycloak:BaseUrl"];
@@ -142,6 +153,10 @@ builder.Services.AddCors(options =>
 builder.Services.AddDaprClient(builder =>
 {
     builder.UseHttpEndpoint("http://localhost:3500");
+});
+builder.Services.AddDaprPubSubClient((_, clientBuilder) =>
+{
+    clientBuilder.UseGrpcEndpoint("http://localhost:50002");
 });
 builder.Services.AddDaprPubSubClient((_, clientBuilder) =>
 {

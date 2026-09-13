@@ -181,22 +181,38 @@
                 <table class="tasks-table">
                     <thead>
                         <tr>
+                            <th></th>
                             <th>ID</th>
                             <th>{{ 'COMMON.NAME' | translate }}</th>
                             <th>{{ 'COMMON.DESCRIPTION' | translate }}</th>
                             <th>{{ 'SA.CATEGORY' | translate }}</th>
+                            <th>{{ 'COMMON.FUNCTIONALDOMAIN' | translate }}</th>
                             <th>URL</th>
+                            <th>SSO</th>
                             <th>{{ 'COMMON.STATUS' | translate }}</th>
                             <th>{{ 'COMMON.ACTIONS' | translate }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr *ngFor="let tool of tools">
+                            <td>
+                                <img *ngIf="tool.icon" [src]="tool.icon" [alt]="tool.name"
+                                    style="width:26px; height:26px; border-radius:6px; object-fit:contain"
+                                    (error)="onIconPreviewError($event)">
+                                <span *ngIf="!tool.icon" class="text-secondary" title="Aucune icône définie">—</span>
+                            </td>
                             <td class="text-secondary">{{ tool.id }}</td>
                             <td class="task-title">{{ tool.name }}</td>
                             <td class="text-secondary">{{ tool.description || '—' }}</td>
                             <td class="text-secondary">{{ tool.category || '—' }}</td>
+                            <td class="text-secondary">{{ tool.functionalDomain || '—' }}</td>
                             <td class="text-secondary">{{ tool.url || '—' }}</td>
+                            <td>
+                                <span *ngIf="tool.ssoEnabled" class="status-badge" style="background:#ede9fe; color:#7c3aed">
+                                     SSO
+                                </span>
+                                <span *ngIf="!tool.ssoEnabled" class="text-secondary">—</span>
+                            </td>
                             <td>
                                 <span class="status-badge"
                                     [style.background]="tool.isActive ? '#d1fae520' : '#fee2e220'"
@@ -290,6 +306,14 @@
                 <option *ngFor="let r of availableRoles" [value]="r">{{ r }}</option>
             </select>
         </div>
+        <div class="form-group" *ngIf="userForm.role === 'Consultant'">
+            <label>{{ 'SA.CONSULTANT_TYPE' | translate }}</label>
+            <select class="form-input" [(ngModel)]="userForm.consultantType">
+                <option value="">— Select type —</option>
+                <option value="Business">Business</option>
+                <option value="Technical">Technical</option>
+            </select>
+        </div>
         <div class="modal-footer">
             <button class="btn-small" (click)="showUserModal = false">{{ 'COMMON.CANCEL' | translate }}</button>
             <button class="btn-primary" (click)="saveUser()" [disabled]="loading">
@@ -318,14 +342,45 @@
             <input type="text" [(ngModel)]="toolForm.category" class="form-input" placeholder="issues, docs, git...">
         </div>
         <div class="form-group">
+            <label>Functional Domain</label>
+            <select [(ngModel)]="toolForm.functionalDomain" class="form-input">
+                <option value="">— None —</option>
+                <option value="BusinessRules">Business Rules</option>
+                <option value="ScreenDesign">Screen Design</option>
+                <option value="Workflow">Workflow</option>
+                <option value="Reporting">Reporting</option>
+                <option value="DataConfiguration">Data Configuration</option>
+            </select>
+        </div>
+        <div class="form-group">
             <label>URL *</label>
             <input type="text" [(ngModel)]="toolForm.url" class="form-input" placeholder="http://192.168.X.X:XXXX">
+        </div>
+        <div class="form-group">
+            <label>{{ 'SA.ICON' | translate }}</label>
+            <input type="text" [(ngModel)]="toolForm.icon" class="form-input"
+                placeholder="assets/logos/axe-brm.png ou https://...">
+            <div *ngIf="toolForm.icon" style="margin-top:8px; display:flex; align-items:center; gap:8px">
+                <img [src]="toolForm.icon" alt="preview"
+                    style="width:36px; height:36px; border-radius:8px; object-fit:contain; border:1px solid var(--border); background:#fafafa"
+                    (error)="onIconPreviewError($event)">
+                <span class="text-secondary" style="font-size:12px">{{ 'SA.ICON_PREVIEW' | translate }}</span>
+            </div>
         </div>
         <div class="form-group">
             <label>{{ 'COMMON.STATUS' | translate }}</label>
             <div style="display:flex; align-items:center; gap:10px">
                 <input type="checkbox" [(ngModel)]="toolForm.isActive" id="isActive">
                 <label for="isActive" style="margin:0; font-size:13px">{{ 'TOOLS.ACTIVE' | translate }}</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>SSO</label>
+            <div style="display:flex; align-items:center; gap:10px">
+                <input type="checkbox" [(ngModel)]="toolForm.ssoEnabled" id="ssoEnabled">
+                <label for="ssoEnabled" style="margin:0; font-size:13px">
+                    Authentification SSO active (OIDC/Keycloak)
+                </label>
             </div>
         </div>
         <div class="form-group">

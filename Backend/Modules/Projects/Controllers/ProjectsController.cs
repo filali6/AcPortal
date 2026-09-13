@@ -162,11 +162,41 @@ public class ProjectsController : ControllerBase
         if (user == null) return NotFound();
 
         var projects = await _db.Projects
+            .Include(p => p.Streams)
             .Where(p => p.ProjectManagerId == user.Id)
             .ToListAsync();
 
-        return Ok(projects);
+        var projectIds = projects.Select(p => p.Id).ToList();
+        var allTasks = await _db.AcpTasks
+            .Where(t => t.ProjectId != null && projectIds.Contains(t.ProjectId.Value))
+            .ToListAsync();
+
+        var result = projects.Select(p =>
+        {
+            var projectTasks = allTasks.Where(t => t.ProjectId == p.Id).ToList();
+            var progress = projectTasks.Any()
+                ? (int)Math.Round(
+                    projectTasks.Count(t => t.Status == AcpTaskStatus.Done) * 100.0
+                    / projectTasks.Count)
+                : 0;
+
+            return new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.CreatedAt,
+                p.TargetDate,
+                p.PortfolioId,
+                p.ProjectManagerId,
+                streamCount = p.Streams.Count,
+                progress
+            };
+        });
+
+        return Ok(result);
     }
+
     [HttpPatch("{id:guid}")]
     [Authorize(Roles = "HeadOfCDS")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProjectRequest request)
@@ -265,6 +295,7 @@ public class ProjectsController : ControllerBase
                 members = s.Members.Select(m => new
                 {
                     m.Id,
+                    consultantId = m.ConsultantId,
                     m.Consultant.FullName,
                     m.Consultant.Email,
                     teamType=m.TeamType.ToString()

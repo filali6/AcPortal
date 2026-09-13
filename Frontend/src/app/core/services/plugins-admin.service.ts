@@ -13,6 +13,7 @@ export interface PluginDto {
   ssoEnabled: boolean;
   isActive: boolean;
   allowedRoles: string[];
+  functionalDomain?:string;
 }
 
 @Injectable({ providedIn: 'root' })

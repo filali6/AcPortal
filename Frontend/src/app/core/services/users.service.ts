@@ -8,6 +8,7 @@ export interface User {
   fullName: string;
   email: string;
   role: string;
+  consultantType:string;
   projectCount?: number;
   streamCount?: number;
 }
@@ -50,16 +51,17 @@ export class UsersService {
   return this.http.get<User[]>(`${this.apiUrl}/auth/users/all`);
 }
 
-createUser(data: { fullName: string, email: string, password: string, role: string }): Observable<any> {
+createUser(data: { fullName: string, email: string, password: string, role: string ,consultantType?: string}): Observable<any> {
   return this.http.post(`${this.apiUrl}/auth/users`, {
     fullName: data.fullName,
     email: data.email,
     password: data.password,
-    role: this.getRoleNumber(data.role)
+    role: this.getRoleNumber(data.role),
+    consultantType: data.consultantType || null
   });
 }
 
-updateUser(id: string, data: { fullName?: string, role?: string }): Observable<any> {
+updateUser(id: string, data: { fullName?: string, role?: string, consultantType?: string }): Observable<any> {
   return this.http.patch(`${this.apiUrl}/auth/users/${id}`, data);
 }
 

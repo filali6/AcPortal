@@ -1,0 +1,11 @@
+<svg id="Glue" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="126.419" height="123.641" viewBox="0 0 126.419 123.641">
+  <defs>
+    <clipPath id="clip-path">
+      <rect id="Rectangle_50" data-name="Rectangle 50" width="126.419" height="123.641" fill="none"/>
+    </clipPath>
+  </defs>
+  <g id="Group_139" data-name="Group 139" transform="translate(0 0)" clip-path="url(#clip-path)">
+    <path id="Path_134" data-name="Path 134" d="M59.582,22.935V37.918a6.61,6.61,0,0,1-6.61,6.61H16.935a6.61,6.61,0,0,0-6.61,6.607V75.556a6.61,6.61,0,0,0,6.61,6.607H46.112a6.607,6.607,0,0,0,6.61-6.607V53.617a6.608,6.608,0,0,1,6.61-6.61h34.9a6.61,6.61,0,0,0,6.61-6.61V22.935a6.613,6.613,0,0,0-6.61-6.61H66.192a6.61,6.61,0,0,0-6.61,6.61" transform="translate(25.797 41.228)" fill="#09f"/>
+    <path id="Path_135" data-name="Path 135" d="M120.305,0H58.06a6.61,6.61,0,0,0-6.61,6.61V31.122a6.61,6.61,0,0,1-6.607,6.61H6.607A6.607,6.607,0,0,0,0,44.339V71.334a6.607,6.607,0,0,0,6.607,6.61H31.122a6.607,6.607,0,0,0,6.607-6.61V47.77a6.61,6.61,0,0,1,6.61-6.607h75.966a6.613,6.613,0,0,0,6.61-6.61V6.61A6.61,6.61,0,0,0,120.305,0" transform="translate(-0.278 0)" fill="#09f"/>
+  </g>
+</svg>

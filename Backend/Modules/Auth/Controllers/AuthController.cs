@@ -54,7 +54,9 @@ public class AuthController : ControllerBase
                 id = u.Id,
                 fullName = u.FullName,
                 email = u.Email,
-                role = u.Role.ToString()
+                role = u.Role.ToString(),
+                consultantType = u.ConsultantType.HasValue ? u.ConsultantType.ToString() : null  
+
             })
             .ToListAsync();
 
@@ -125,7 +127,13 @@ public class AuthController : ControllerBase
     {
         // Réutilise RegisterAsync qui existe déjà
         var user = await _authService.RegisterAsync(
-            request.FullName, request.Email, request.Password, request.Role);
+    request.FullName, request.Email, request.Password, request.Role);
+
+        if (user != null && request.ConsultantType.HasValue)
+        {
+            user.ConsultantType = request.ConsultantType;
+            await _db.SaveChangesAsync();
+        }
         if (user == null)
             return BadRequest(new { message = "Error creating user" });
         return Ok(user);
@@ -148,7 +156,10 @@ public class AuthController : ControllerBase
             await _authService.UpdateUserRoleAsync(
                 user.KeycloakId, user.Role.ToString(), role.ToString());
             user.Role = role;
+ 
         }
+        if (request.ConsultantType.HasValue)
+            user.ConsultantType = request.ConsultantType;
 
         await _db.SaveChangesAsync();
         return Ok(new { message = "User updated" });
@@ -180,6 +191,7 @@ public class AuthController : ControllerBase
         [MinLength(6,ErrorMessage ="password needs to have at least 6 carac")]
         public string Password{get;set;}=string.Empty;
         public GlobalRole Role{get;set;}=GlobalRole.Consultant;
+        public ConsultantType? ConsultantType{get;set;}
     }
    
 
@@ -187,6 +199,7 @@ public class AuthController : ControllerBase
     {
         public string? FullName { get; set; }
         public string? Role { get; set; }
+        public ConsultantType? ConsultantType { get; set; }
     }
 
 

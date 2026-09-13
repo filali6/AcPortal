@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Modules.Contracts.Models;
 using Backend.Modules.Notifications.Models;
 using Backend.Modules.Chat.Models;
+using Backend.Modules.Planning.Models;
+//using Backend.Modules.Sla.Models;
 namespace Backend.Data;
 
 public class AppDbContext : DbContext
@@ -35,6 +37,9 @@ public class AppDbContext : DbContext
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<TaskComment> TaskComments { get; set; }
     public DbSet<StepConfigFile> StepConfigFiles { get; set; }
+    public DbSet<PlanningProposal> PlanningProposals { get; set; }
+
+    //public DbSet<SlaRule> SlaRules => Set<SlaRule>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -189,6 +194,20 @@ public class AppDbContext : DbContext
                 entity.Property(c => c.Mentions)
                     .HasColumnType("jsonb");
             });
+
+
+        // // Ajouter dans OnModelCreating
+        // modelBuilder.Entity<AcpTask>()
+        //     .Property(t => t.SlaStatus)
+        //     .HasConversion<string>();
+
+        // modelBuilder.Entity<Backend.Modules.Projects.Models.Stream>()
+        //     .Property(s => s.SlaStatus)
+        //     .HasConversion<string>();
+
+        // //modelBuilder.Entity<SlaRule>()
+        //     .HasIndex(r => r.TaskType)
+        //     .IsUnique();
 
     }
     

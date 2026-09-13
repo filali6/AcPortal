@@ -11,7 +11,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { UtilsService } from '../../core/services/utils.service';
 import { ChartService } from '../../core/services/chart.service';
 import { PluginBridgeService } from '../../core/services/plugin-bridge.service';
-import { LucideAngularModule, ChevronRight, Layers, MessageSquare } from 'lucide-angular';
+import { LucideAngularModule, ChevronRight, Layers, MessageSquare,Sparkles } from 'lucide-angular';
 import { Subscription } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
@@ -51,8 +51,13 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
   selectedStream: any = null;
 
   selectedIds: Set<string> = new Set();
-  openTabs: { [tabId: string]: { task: any, steps: any[] } } = {};
-
+  //: { [tabId: string]: { task: any, steps: any[] } } = {};
+  openTabs: { [tabId: string]: {
+    task: any,
+    steps: any[],
+    isAiReview: boolean,
+    loadingAiSteps: boolean
+  }} = {};
   loading = false;
   private api = environment.apiUrl;
   private subs: Subscription[] = [];
@@ -78,6 +83,7 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
   readonly ChevronRight = ChevronRight;
   readonly Layers = Layers;
   readonly MessageSquare = MessageSquare;
+  readonly Sparkles=Sparkles;
 
   constructor(
     private http: HttpClient,
@@ -224,26 +230,71 @@ export class TeamLeadComponent implements OnInit, OnDestroy {
     });
   }
 
-  get workflowTasks(): Task[] { return this.filteredTasks.filter(t => !t.stepId); }
-  get stepTasks(): Task[] { return this.filteredTasks.filter(t => !!t.stepId); }
-
+   
   // ===== NAVIGATION =====
   openStreamsTab(): void {
     this.tabsService.openTab({ id: 'my-streams', title: 'My Streams', type: 'create-project' });
   }
 
   // ===== TASK CLICK =====
+  // onTaskClick(task: any): void {
+  //   if (task.status === 2) return;
+  //   if (task.stepId) { this.openTool(task); return; }
+  //   const tabId = `define-steps-${task.id}`;
+  //   if (!this.openTabs[tabId]) {
+  //     this.openTabs[tabId] = {
+  //       task,
+  //       steps: [{ stepName: '', toolName: '', order: 1, dependsOnStepId: null }]
+  //     };
+  //   }
+  //   this.tabsService.openTab({ id: tabId, title: task.title, type: 'define-steps', data: task });
+  // }
   onTaskClick(task: any): void {
     if (task.status === 2) return;
     if (task.stepId) { this.openTool(task); return; }
+    console.log('=== TASK CLICK ===', task);
+    console.log('streamId:', task.streamId);
+    console.log('isAiReview:', task.title?.toLowerCase().includes('vérifier') || task.title?.toLowerCase().includes('verify') || task.title?.toLowerCase().includes('ai'));
+
+    const isAiReview = task.title?.toLowerCase().includes('vérifier') ||
+                       task.title?.toLowerCase().includes('verify') ||
+                       task.title?.toLowerCase().includes('ai');
+
     const tabId = `define-steps-${task.id}`;
     if (!this.openTabs[tabId]) {
       this.openTabs[tabId] = {
         task,
-        steps: [{ stepName: '', toolName: '', order: 1, dependsOnStepId: null }]
+        steps: [{ stepName: '', toolName: '', order: 1, dependsOnStepId: null }],
+        isAiReview,
+        loadingAiSteps: false
       };
+
+      // Si c'est une tâche IA, charger les steps existants depuis le backend
+      if (isAiReview && task.streamId) {
+        this.openTabs[tabId].loadingAiSteps = true;
+        this.http.get<any[]>(`${this.api}/steps/stream/${task.streamId}/ai-steps`).subscribe({
+          next: (steps) => {
+            this.openTabs[tabId].steps = steps.map(s => ({
+              stepName: s.stepName,
+              toolName: s.toolName,
+              order: s.order,
+              dependsOnStepId: null
+            }));
+            this.openTabs[tabId].loadingAiSteps = false;
+          },
+          error: () => {
+            this.openTabs[tabId].loadingAiSteps = false;
+          }
+        });
+      }
     }
-    this.tabsService.openTab({ id: tabId, title: task.title, type: 'define-steps', data: task });
+
+    this.tabsService.openTab({
+      id: tabId,
+      title: task.title,
+      type: 'define-steps',
+      data: task
+    });
   }
 
   openTool(task: any): void {
@@ -399,4 +450,28 @@ validateStream(streamId: string): void {
 openExternalLink(url: string): void {
     window.open(url, '_blank');
 }
+approveAiSteps(tabId: string): void {
+    const tab = this.openTabs[tabId];
+    if (!tab || !tab.task.streamId) return;
+
+    this.loading = true;
+    this.http.post(`${this.api}/steps/stream/${tab.task.streamId}/approve`, {
+      steps: tab.steps.map(s => ({
+        stepName: s.stepName,
+        toolName: s.toolName,
+        order: s.order,
+        canBeParallel: false
+      }))
+    }).subscribe({
+      next: () => {
+        this.toastService.show('Steps approved! Tasks are being created for consultants.', 'success');
+        this.loading = false;
+        this.endTask(tabId);
+      },
+      error: () => {
+        this.toastService.show('Error approving steps', 'error');
+        this.loading = false;
+      }
+    });
+  }
 }

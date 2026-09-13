@@ -8,7 +8,7 @@ export interface Task {
   title: string;
   description: string;
   toolName: string;
-  status: number;       // 0=Pending, 3=Done
+  status: number;       
   assignedTo: string;
   createdAt: string;
   sourceEventId: string;

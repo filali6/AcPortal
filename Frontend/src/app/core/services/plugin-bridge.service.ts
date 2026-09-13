@@ -14,6 +14,8 @@ export interface Plugin {
   addedAt?: string;
   isActive: boolean;
   allowedRoles: string[];
+  functionalDomain?:string;
+
 }
 
 @Injectable({ providedIn: 'root' })

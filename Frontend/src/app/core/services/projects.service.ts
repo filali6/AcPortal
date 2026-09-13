@@ -12,6 +12,8 @@ export interface Project {
   projectManagerName?: string;
   createdAt: string;
   targetDate?: string;
+  streamCount?: number;
+  progress?: number; 
 }
 export interface Portfolio {
   id: string;
@@ -20,6 +22,7 @@ export interface Portfolio {
   createdAt: string;
   director: { id: string; fullName: string; email: string } | null;
   projectCount: number;
+  progress:number;
 }
 
 @Injectable({
@@ -92,5 +95,13 @@ getDetails(id: string): Observable<any> {
 
 assignDirectorToPortfolio(portfolioId: string, directorId: string): Observable<any> {
   return this.http.patch(`${this.apiUrl}/portfolios/${portfolioId}/director`, { portfolioDirectorId: directorId });
+}
+
+updatePortfolio(id: string, name: string, description: string): Observable<any> {
+  return this.http.patch(`${this.apiUrl}/portfolios/${id}`, { name, description });
+}
+
+deletePortfolio(id: string): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/portfolios/${id}`);
 }
 }

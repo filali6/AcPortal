@@ -2,13 +2,11 @@
   "WorkflowRules": [
     {
       "EventCode": "ContratSign\u00E9",
-      "ActionType": "CREATE_TASK",
-      "TaskTitle": "Cr\u00E9er le projet pour le client : {clientName}",
-      "TaskDescription": "Un contrat a \u00E9t\u00E9 sign\u00E9 \u2014 cr\u00E9er le projet correspondant",
+      "ActionType": "CREATE_MESSAGING_CHANNEL",
+      "TaskTitle": "summarizecontract",
+      "TaskDescription": "resum\u00E9 de contrat ",
       "TargetType": "ROLE",
-      "TargetValues": [
-        "HeadOfCDS"
-      ],
+      "TargetValues": [],
       "Config": null
     },
     {
@@ -67,7 +65,6 @@
       ],
       "Config": null
     },
-     
     {
       "EventCode": "StreamCr\u00E9\u00E9",
       "ActionType": "CREATE_MESSAGING_CHANNEL",
@@ -78,13 +75,44 @@
       "Config": null
     },
     {
-  "EventCode": "CommentaireAjouté",
-  "ActionType": "SEND_COMMENT_EMAIL",
-  "TaskTitle": "",
-  "TaskDescription": "",
-  "TargetType": "",
-  "TargetValues": [],
-  "Config": null
-}
+      "EventCode": "CommentaireAjout\u00E9",
+      "ActionType": "SEND_COMMENT_EMAIL",
+      "TaskTitle": "",
+      "TaskDescription": "",
+      "TargetType": "",
+      "TargetValues": [],
+      "Config": null
+    },
+    {
+      "EventCode": "StreamCr\u00E9\u00E9ParIA",
+      "ActionType": "CREATE_TASK",
+      "TaskTitle": "VV\u00E9rifier les steps Business \u2014 {streamName}",
+      "TaskDescription": "L\u0027agent IA a propos\u00E9 des steps Business \u2014 v\u00E9rifiez et approuvez",
+      "TargetType": "CONTEXT_USER",
+      "TargetValues": [
+        "BusinessTeamLeadId"
+      ],
+      "Config": null
+    },
+    {
+      "EventCode": "StreamCr\u00E9\u00E9ParIA",
+      "ActionType": "CREATE_TASK",
+      "TaskTitle": "V\u00E9rifier les steps Techniques \u2014 {streamName}",
+      "TaskDescription": "L\u0027agent IA a propos\u00E9 des steps Technical \u2014 v\u00E9rifiez et approuvez",
+      "TargetType": "CONTEXT_USER",
+      "TargetValues": [
+        "TechnicalTeamLeadId"
+      ],
+      "Config": null
+    },
+    {
+      "EventCode": "StreamCr\u00E9\u00E9ParIA",
+      "ActionType": "CREATE_MESSAGING_CHANNEL",
+      "TaskTitle": "",
+      "TaskDescription": "",
+      "TargetType": "",
+      "TargetValues": [],
+      "Config": null
+    }
   ]
 }

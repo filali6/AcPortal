@@ -1,7 +1,7 @@
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--overlay-bg);
     z-index: 100;
 }
 
@@ -9,12 +9,15 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    background: white;
+    background: var(--bg-card);
     border: none;
     border-radius: 10px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
     z-index: 101;
     overflow: hidden;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
 
     &.minimized {
         top: auto;
@@ -30,10 +33,11 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 18px;
-    background: #0080ff;
+    background: var(--accent);
     color: white;
     cursor: grab;
     user-select: none;
+    flex-shrink: 0;
 
     &:active {
         cursor: grabbing;
@@ -66,4 +70,6 @@
 
 .modal-content {
     padding: 20px;
+    overflow-y: auto;
+    flex: 1;
 }
