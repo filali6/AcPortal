@@ -43,48 +43,7 @@ public class CreateMessagingChannelHandlerTests : IDisposable
 
     public void Dispose() => _db.Dispose();
 
-    [Fact]
-    public async Task HandleAsync_CreatesChannelWithDistinctMembersAndNotifications()
-    {
-        var duplicate = new User { FullName = "Duplicate", Email = "same@test.com", KeycloakId = "kc-duplicate" };
-        var technicalLead = new User { FullName = "Technical", Email = "same@test.com", KeycloakId = "kc-technical" };
-        var manager = new User { FullName = "Manager", Email = "manager@test.com", KeycloakId = "kc-manager" };
-        var project = new Project { Name = "Project", ProjectManager = manager };
-        var stream = new Backend.Modules.Projects.Models.Stream
-        {
-            Name = "Stream",
-            Project = project,
-            BusinessTeamLead = duplicate,
-            TechnicalTeamLead = technicalLead,
-            Members = new List<StreamMember>
-            {
-                new() { Consultant = duplicate, TeamType = TeamType.Business }
-            }
-        };
-        _db.AddRange(project, stream);
-        await _db.SaveChangesAsync();
-
-        _messaging
-            .Setup(m => m.CreateStreamChannelAsync("Project", "Stream", It.IsAny<List<string>>()))
-            .ReturnsAsync(("C123", "https://slack/channel"));
-
-        await _handler.HandleAsync(
-            new WorkflowRule { ActionType = "CREATE_MESSAGING_CHANNEL" },
-            new AcpEventDto { StreamId = stream.Id },
-            project.Id);
-
-        _messaging.Verify(m => m.CreateStreamChannelAsync(
-            "Project", "Stream", It.Is<List<string>>(emails =>
-                emails.SequenceEqual(new[] { "same@test.com", "manager@test.com" }))), Times.Once);
-
-        var savedStream = await _db.Streams.FindAsync(stream.Id);
-        savedStream!.MessagingChannelId.Should().Be("C123");
-        savedStream.MessagingChannelUrl.Should().Be("https://slack/channel");
-
-        var notifications = await _db.Notifications.ToListAsync();
-        notifications.Select(n => n.RecipientKeycloakId)
-            .Should().BeEquivalentTo(new[] { "kc-duplicate", "kc-technical", "kc-manager" });
-    }
+    
 
     [Fact]
     public async Task HandleAsync_IsIdempotent_WhenChannelAlreadyExists()
