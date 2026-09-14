@@ -24,6 +24,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DrawerService } from '../../core/services/drawer.service';
 import { BriefingCardComponent } from '../../core/components/briefing-card/briefing-card.component';
 import { GitService } from '../../core/services/git.service';
+import { SlaService, SlaTaskItem } from '../../core/services/sla.service';
 @Component({
   selector: 'app-consultant',
   standalone: true,
@@ -71,6 +72,9 @@ chatToolName: string | null = null;
   loadingMock: Set<string> = new Set();
   taskConfigs: Map<string, any> = new Map();
 
+  // US62 — SLA : délai restant par tâche (clé = taskId)
+  slaByTaskId: Map<string, SlaTaskItem> = new Map();
+
   statsBottom = {
     pendingTasks: 0,
     completionRate: 0,
@@ -97,7 +101,8 @@ chatToolName: string | null = null;
     private keycloak:KeycloakService,
     private chatService:ChatService,
     private drawerService:DrawerService,
-    private gitService: GitService
+    private gitService: GitService,
+    private slaService: SlaService
 
   ) {}
 
@@ -150,6 +155,7 @@ chatToolName: string | null = null;
       this.loading = false;
       this.loadProjects();
       this.computeStats();
+      this.loadSlaInfo();
 
       
       tasks.filter(t => t.stepId).forEach(task => {
@@ -159,6 +165,40 @@ chatToolName: string | null = null;
     error: () => this.loading = false
   });
 }
+
+  // US62 — récupère le statut SLA (OnTrack/AtRisk/Overdue) + jours restants de chaque tâche
+  loadSlaInfo(): void {
+    this.slaService.getMyTasksWithSla().subscribe({
+      next: (items) => {
+        this.slaByTaskId.clear();
+        items.forEach(item => this.slaByTaskId.set(item.id, item));
+      },
+      error: () => {
+        // Silencieux : l'absence d'info SLA ne doit pas empêcher l'affichage des tâches.
+        this.slaByTaskId.clear();
+      }
+    });
+  }
+
+  getSla(taskId: string): SlaTaskItem | null {
+    return this.slaByTaskId.get(taskId) || null;
+  }
+
+  // Le backend sérialise l'enum SlaStatus (OnTrack=0, AtRisk=1, Overdue=2) en nombre.
+  // On normalise ici pour toujours comparer/afficher des chaînes, que le backend
+  // renvoie un nombre ou (un jour) directement une chaîne.
+  private readonly SLA_STATUS_LABELS = ['OnTrack', 'AtRisk', 'Overdue'];
+
+  getSlaStatusLabel(status: number | string): string {
+    return typeof status === 'number' ? (this.SLA_STATUS_LABELS[status] || 'OnTrack') : status;
+  }
+
+  getSlaBadgeClass(status: number | string): string {
+    const s = this.getSlaStatusLabel(status);
+    if (s === 'Overdue') return 'sla-overdue';
+    if (s === 'AtRisk') return 'sla-atrisk';
+    return 'sla-ontrack';
+  }
 
   loadProjects(): void {
     this.projects = [];

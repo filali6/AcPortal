@@ -9,7 +9,7 @@ using Backend.Modules.Contracts.Models;
 using Backend.Modules.Notifications.Models;
 using Backend.Modules.Chat.Models;
 using Backend.Modules.Planning.Models;
-//using Backend.Modules.Sla.Models;
+using Backend.Modules.Sla.Models;
 namespace Backend.Data;
 
 public class AppDbContext : DbContext
@@ -39,7 +39,8 @@ public class AppDbContext : DbContext
     public DbSet<StepConfigFile> StepConfigFiles { get; set; }
     public DbSet<PlanningProposal> PlanningProposals { get; set; }
 
-    //public DbSet<SlaRule> SlaRules => Set<SlaRule>();
+    public DbSet<SlaRule> SlaRules => Set<SlaRule>();
+    public DbSet <SlaWeeklyReport> SlaWeeklyReports=>Set<SlaWeeklyReport>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

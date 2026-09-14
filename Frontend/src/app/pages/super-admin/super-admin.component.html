@@ -74,6 +74,17 @@
                     <p class="text-secondary" style="font-size:13px">{{ 'SA.MANAGE_WORKFLOW_DESC' | translate }}</p>
                 </div>
             </div>
+            <div class="card chart-card access-card" (click)="openTab('sla')">
+                <div class="card-header">
+                    <h2>
+                        <lucide-icon [img]="Clock" size="15" style="margin-right:6px"></lucide-icon>
+                        {{ 'DASHBOARD.MANAGE_SLA' | translate }}
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-secondary" style="font-size:13px">{{ 'SA.MANAGE_SLA_DESC' | translate }}</p>
+                </div>
+            </div>
         </div>
 
         <!-- Row 3 — Monitoring (charts) -->
@@ -208,8 +219,9 @@
                             <td class="text-secondary">{{ tool.functionalDomain || '—' }}</td>
                             <td class="text-secondary">{{ tool.url || '—' }}</td>
                             <td>
-                                <span *ngIf="tool.ssoEnabled" class="status-badge" style="background:#ede9fe; color:#7c3aed">
-                                     SSO
+                                <span *ngIf="tool.ssoEnabled" class="status-badge"
+                                    style="background:#ede9fe; color:#7c3aed">
+                                    SSO
                                 </span>
                                 <span *ngIf="!tool.ssoEnabled" class="text-secondary">—</span>
                             </td>
@@ -282,6 +294,62 @@
                 </table>
             </div>
             <div class="empty" *ngIf="workflowRules.length === 0">{{ 'SA.NO_RULES' | translate }}</div>
+        </div>
+    </ng-container>
+
+    <!-- SLA RULES TAB (US59 / US60 / US61) -->
+    <ng-container *ngIf="activeTabId === 'sla'">
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ 'SLA.TITLE' | translate }} ({{ slaRules.length }})</h2>
+                <div class="row-actions">
+                    <button class="btn-small" (click)="applySlaRules()" [disabled]="applyingSlaRules">
+                        <lucide-icon [img]="RefreshCw" size="14"></lucide-icon>
+                        {{ applyingSlaRules ? ('COMMON.LOADING' | translate) : ('SLA.APPLY_RULES' | translate) }}
+                    </button>
+                    <button class="btn-primary" (click)="openCreateSlaRuleModal()">
+                        <lucide-icon [img]="Plus" size="14"></lucide-icon>
+                        {{ 'SLA.ADD_RULE' | translate }}
+                    </button>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <th>{{ 'COMMON.NAME' | translate }}</th>
+                            <th>{{ 'COMMON.DESCRIPTION' | translate }}</th>
+                            <th>{{ 'SLA.TYPE' | translate }}</th>
+                            <th>{{ 'SLA.DAYS' | translate }}</th>
+                            <th>{{ 'USERS.CREATED' | translate }}</th>
+                            <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let rule of slaRules">
+                            <td class="task-title">{{ rule.name }}</td>
+                            <td class="text-secondary">{{ rule.description || '—' }}</td>
+                            <td>
+                                <span class="status-badge" [style.background]="rule.type === 0 ? '#dbeafe' : '#ede9fe'"
+                                    [style.color]="rule.type === 0 ? '#1d4ed8' : '#7c3aed'">
+                                    {{ getSlaTypeLabel(rule.type) }}
+                                </span>
+                            </td>
+                            <td class="text-secondary">{{ rule.slaDays }} j</td>
+                            <td class="text-secondary">{{ rule.createdAt | date:'dd/MM/yyyy' }}</td>
+                            <td>
+                                <div class="row-actions">
+                                    <button class="btn-small" (click)="openEditSlaRuleModal(rule)">{{ 'COMMON.EDIT' |
+                                        translate }}</button>
+                                    <button class="btn-delete" (click)="deleteSlaRule(rule)">{{ 'COMMON.DELETE' |
+                                        translate }}</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty" *ngIf="slaRules.length === 0">{{ 'SLA.NO_RULES' | translate }}</div>
         </div>
     </ng-container>
 
@@ -442,6 +510,13 @@
                 <button class="btn-small" (click)="addTargetValue(ruleForm)">{{ 'COMMON.ADD' | translate }}</button>
             </div>
         </div>
+        <!-- US56 : prompt IA configurable, uniquement pour la règle de résumé de contrat -->
+        <div class="form-group" *ngIf="ruleForm.actionType === 'SUMMARIZE_CONTRACT'">
+            <label>{{ 'SA.AI_PROMPT' | translate }}</label>
+            <textarea [(ngModel)]="ruleForm.config.prompt" class="form-input" rows="12"
+                style="font-family: monospace; font-size:12px; resize: vertical;"></textarea>
+            <p class="text-secondary" style="font-size:12px; margin-top:4px">{{ 'SA.AI_PROMPT_HINT' | translate }}</p>
+        </div>
         <div class="modal-footer">
             <button class="btn-small" (click)="showRuleModal = false">{{ 'COMMON.CANCEL' | translate }}</button>
             <button class="btn-primary" (click)="saveRule()" [disabled]="loading">
@@ -496,6 +571,37 @@
             <button class="btn-small" (click)="showAddRuleModal = false">{{ 'COMMON.CANCEL' | translate }}</button>
             <button class="btn-primary" (click)="addRule()" [disabled]="loading">
                 {{ loading ? ('COMMON.LOADING' | translate) : ('WORKFLOW.ADD_RULE' | translate) }}
+            </button>
+        </div>
+    </app-modal>
+
+    <!-- MODAL SLA RULE (create + edit — US59/US60) -->
+    <app-modal *ngIf="showSlaRuleModal"
+        [title]="(editingSlaRule ? ('SLA.EDIT_RULE' | translate) : ('SLA.ADD_RULE' | translate))" width="420px"
+        (closed)="showSlaRuleModal = false">
+        <div class="form-group">
+            <label>{{ 'COMMON.NAME' | translate }} *</label>
+            <input type="text" [(ngModel)]="slaRuleForm.name" class="form-input" placeholder="Standard 7j">
+        </div>
+        <div class="form-group">
+            <label>{{ 'COMMON.DESCRIPTION' | translate }}</label>
+            <input type="text" [(ngModel)]="slaRuleForm.description" class="form-input">
+        </div>
+        <div class="form-group">
+            <label>{{ 'SLA.TYPE' | translate }} *</label>
+            <select [(ngModel)]="slaRuleForm.type" class="form-input">
+                <option [ngValue]="1">Task</option>
+                <option [ngValue]="0">Stream</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>{{ 'SLA.DAYS' | translate }} *</label>
+            <input type="number" min="1" [(ngModel)]="slaRuleForm.slaDays" class="form-input">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-small" (click)="showSlaRuleModal = false">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button class="btn-primary" (click)="saveSlaRule()" [disabled]="loading">
+                {{ loading ? ('COMMON.LOADING' | translate) : ('COMMON.SAVE' | translate) }}
             </button>
         </div>
     </app-modal>

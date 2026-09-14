@@ -136,6 +136,10 @@
                     </div>
                 </div>
                 <div class="panel-header-right">
+                    <button class="btn-primary" (click)="analyzeProjectRisks()">
+                        <lucide-icon [img]="Sparkles" size="14" style="margin-right:4px"></lucide-icon>
+                        AI Risk Insights
+                    </button>
                     <button class="btn-primary" (click)="openPlanHistoryModal()">AI Plan History</button>
                     <button class="panel-close-btn" (click)="selectedProjectDetail = null">✕</button>
                 </div>
@@ -179,6 +183,15 @@
                                 Slack
                             </button>
                             <span class="messaging-status" *ngIf="!stream.messagingChannelUrl">⏳ Slack...</span>
+
+                            <!-- US63 : DueDate du stream -->
+                            <span class="text-secondary" *ngIf="!stream.dueDate" style="font-size:12px">—</span>
+                            <span *ngIf="stream.dueDate" class="date-chip"
+                                [class.date-overdue]="isOverdue(stream.dueDate)"
+                                [class.date-soon]="isDueSoon(stream.dueDate) && !isOverdue(stream.dueDate)">
+                                <lucide-icon [img]="Calendar" size="11" style="margin-right:3px"></lucide-icon>
+                                {{ stream.dueDate | date:'dd/MM/yyyy' }}
+                            </span>
                         </div>
 
                         <!-- Barre de progression du stream -->
@@ -261,35 +274,39 @@
                     <!-- US24 : Liste des tâches du stream -->
                     <div class="stream-tasks-section" *ngIf="stream.streamTasks?.length > 0">
                         <div class="stream-tasks-header" (click)="toggleStreamTasks(stream.id)">
-                        <span class="stream-tasks-title">
-                            {{ 'STREAMS.STREAM_TASKS' | translate }} ({{ stream.streamTasks.length }})
-                        </span>
+                            <span class="stream-tasks-title">
+                                {{ 'STREAMS.STREAM_TASKS' | translate }} ({{ stream.streamTasks.length }})
+                            </span>
                             <lucide-icon [img]="isStreamTasksOpen(stream.id) ? ChevronUp : ChevronDown" size="14">
                             </lucide-icon>
                         </div>
                         <div class="stream-tasks-list" *ngIf="isStreamTasksOpen(stream.id)">
-                        <div class="stream-task-row" *ngFor="let task of stream.streamTasks">
-                            <span class="task-status-dot" [ngClass]="{
+                            <div class="stream-task-row" *ngFor="let task of stream.streamTasks">
+                                <span class="task-status-dot" [ngClass]="{
                                     'dot-done':    task.status === 2,
                                     'dot-pending': task.status === 0,
                                     'dot-blocked': task.status === 1
                                 }">
-                            </span>
-                            <span class="stream-task-title">{{ task.title }}</span>
-                            <span class="status-badge" [ngClass]="utils.getTaskStatusClass(task.status)">
-                                {{ utils.getTaskStatusLabel(task.status) }}
-                            </span>
-                        </div>
+                                </span>
+                                <span class="stream-task-title">{{ task.title }}</span>
+                                <span class="status-badge" [ngClass]="utils.getTaskStatusClass(task.status)">
+                                    {{ utils.getTaskStatusLabel(task.status) }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div class="empty" *ngIf="!stream.streamTasks?.length" style="padding: 8px 16px; font-size:12px">
                         {{ 'TASKS.NO_TASKS' | translate }}
                     </div>
 
-                    <!-- Edit leads -->
+                    <!-- Edit leads / Due date -->
                     <div class="stream-footer">
                         <button class="btn-edit-leads-full" (click)="openEditLeadsModal(stream)">
                             ✎ {{ 'PM.EDIT_LEADS' | translate }}
+                        </button>
+                        <button class="btn-edit-leads-full" (click)="openSetDueDateModal(stream)">
+                            <lucide-icon [img]="Calendar" size="13" style="margin-right:4px"></lucide-icon>
+                            {{ 'PM.SET_DUE_DATE' | translate }}
                         </button>
                     </div>
 
@@ -301,7 +318,7 @@
             </div>
         </div>
 
-        
+
         <div class="card">
             <div class="card-header">
                 <h2>{{ 'PM.MY_PROJECTS' | translate }} ({{ projects.length }})</h2>
@@ -417,6 +434,53 @@
             </div>
         </app-modal>
 
+        <!-- MODAL SET DUE DATE (US63) -->
+        <app-modal *ngIf="showSetDueDateModal" [title]="'PM.SET_DUE_DATE' | translate" width="360px"
+            (closed)="closeSetDueDateModal()">
+            <div class="form-group">
+                <label>{{ 'COMMON.DEADLINE' | translate }}</label>
+                <input type="date" [(ngModel)]="editingDueDateValue" class="form-input">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-small" (click)="closeSetDueDateModal()">{{ 'COMMON.CANCEL' | translate }}</button>
+                <button class="btn-primary" (click)="saveStreamDueDate()" [disabled]="loading">
+                    {{ loading ? ('COMMON.LOADING' | translate) : ('COMMON.SAVE' | translate) }}
+                </button>
+            </div>
+        </app-modal>
+
+        <!-- MODAL AI RISK INSIGHTS (US75/76) -->
+        <app-modal *ngIf="showRiskModal" title="AI Risk Insights" width="560px" (closed)="showRiskModal = false">
+            <div class="empty" *ngIf="loadingRiskAnalysis">
+                <div class="ai-spinner" style="margin: 0 auto;"></div>
+            </div>
+            <div *ngIf="!loadingRiskAnalysis && riskAnalysis">
+                <h3 style="font-size:14px; margin-bottom:8px;">
+                    At-Risk Tasks ({{ riskAnalysis.atRiskTasks?.length || 0 }})
+                </h3>
+                <div class="empty" *ngIf="!riskAnalysis.atRiskTasks?.length" style="padding:8px 0; font-size:13px;">
+                    No at-risk tasks identified.
+                </div>
+                <div *ngFor="let t of riskAnalysis.atRiskTasks"
+                    style="padding:8px 0; border-bottom:1px solid var(--border);">
+                    <div class="task-title" style="font-size:13px;">{{ t.title }}</div>
+                    <div class="text-secondary" style="font-size:12px;">{{ t.reason }}</div>
+                </div>
+                <h3 style="font-size:14px; margin:16px 0 8px;">Recommendations</h3>
+                <ul style="padding-left:18px; margin:0;">
+                    <li *ngFor="let r of riskAnalysis.recommendations" style="font-size:13px; margin-bottom:6px;">
+                        {{ r }}
+                    </li>
+                </ul>
+                <div class="empty" *ngIf="!riskAnalysis.recommendations?.length" style="padding:8px 0; font-size:13px;">
+                    No recommendations.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-small" (click)="showRiskModal = false">{{ 'COMMON.CLOSE' | translate }}</button>
+            </div>
+        </app-modal>
+
         <app-modal *ngIf="showPlanHistoryModal" title="AI Plan History" width="600px"
             (closed)="showPlanHistoryModal = false">
             <div style="max-height: 70vh; overflow-y: auto; padding-right: 4px;">
@@ -525,6 +589,10 @@
                             <label>{{ 'PM.STREAM_NAME' | translate }} *</label>
                             <input type="text" [(ngModel)]="tab.streamName" placeholder="e.g. Functional Stream 1"
                                 class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>{{ 'COMMON.DEADLINE' | translate }}</label>
+                            <input type="date" [(ngModel)]="tab.streamDueDate" class="form-input">
                         </div>
                         <div class="stream-diagram">
                             <div class="diagram-col">
@@ -785,6 +853,49 @@
                                     <input type="text" [ngModel]="stream.name"
                                         (ngModelChange)="updateStreamName(tabId, i, $event)" class="form-input">
                                 </div>
+
+                                <!-- US70 : édition des leads et consultants de la proposition IA -->
+                                <div class="form-group">
+                                    <label>{{ 'PM.BIZ_LEAD' | translate }}</label>
+                                    <select class="form-input" [ngModel]="stream.businessLeadId"
+                                        (ngModelChange)="updateStreamLead(tabId, i, $event, 'business')">
+                                        <option value="">{{ 'PORTFOLIOS.SELECT_PLACEHOLDER' | translate }}</option>
+                                        <option *ngFor="let u of bizLeads" [value]="u.id">{{ u.fullName }}</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>{{ 'PM.TECH_LEAD' | translate }}</label>
+                                    <select class="form-input" [ngModel]="stream.technicalLeadId"
+                                        (ngModelChange)="updateStreamLead(tabId, i, $event, 'technical')">
+                                        <option value="">{{ 'PORTFOLIOS.SELECT_PLACEHOLDER' | translate }}</option>
+                                        <option *ngFor="let u of techLeads" [value]="u.id">{{ u.fullName }}</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>{{ 'PM.BIZ_CONSULTANTS' | translate }}</label>
+                                    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px">
+                                        <label *ngFor="let c of consultants"
+                                            style="display:flex; align-items:center; gap:4px; font-size:12px; cursor:pointer">
+                                            <input type="checkbox"
+                                                [checked]="isStreamConsultantSelected(tabId, i, c.id, 'business')"
+                                                (change)="toggleStreamConsultant(tabId, i, c.id, 'business')">
+                                            {{ c.fullName }}
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>{{ 'PM.TECH_CONSULTANTS' | translate }}</label>
+                                    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px">
+                                        <label *ngFor="let c of consultants"
+                                            style="display:flex; align-items:center; gap:4px; font-size:12px; cursor:pointer">
+                                            <input type="checkbox"
+                                                [checked]="isStreamConsultantSelected(tabId, i, c.id, 'technical')"
+                                                (change)="toggleStreamConsultant(tabId, i, c.id, 'technical')">
+                                            {{ c.fullName }}
+                                        </label>
+                                    </div>
+                                </div>
+
                                 <div class="edit-stream-footer">
                                     <button class="btn-primary" (click)="cancelEditStream(tabId)">Done</button>
                                 </div>
@@ -805,7 +916,10 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="bottom-actions">
+                        <div class="bottom-actions" style="display:flex; gap:10px;">
+                            <button class="btn-small" (click)="rejectPlan(tabId)" [disabled]="approvingPlan || loading">
+                                {{ 'PM.REJECT_PLAN' | translate }}
+                            </button>
                             <button class="btn-primary" (click)="approvePlan(tabId)" [disabled]="approvingPlan">
                                 {{ approvingPlan ? ('PM.APPROVING' | translate) : ('PM.APPROVE_PLAN' | translate) }}
                             </button>
