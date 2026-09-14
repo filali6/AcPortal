@@ -446,10 +446,6 @@ namespace Backend.Migrations
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("SlaStatus")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<Guid?>("TechnicalTeamLeadId")
                         .HasColumnType("uuid");
 
@@ -501,22 +497,52 @@ namespace Backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("MaxDurationDays")
-                        .HasColumnType("integer");
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
 
-                    b.Property<string>("TaskType")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("WarningThresholdPercent")
+                    b.Property<int>("SlaDays")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Type")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TaskType")
-                        .IsUnique();
-
                     b.ToTable("SlaRules");
+                });
+
+            modelBuilder.Entity("Backend.Modules.Sla.Models.SlaWeeklyReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AtRiskStreamsCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AtRiskTasksCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("GeneratedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("OverdueStreamsCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("OverdueTasksCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SlaWeeklyReports");
                 });
 
             modelBuilder.Entity("Backend.Modules.Tasks.Models.AcpTask", b =>
@@ -552,10 +578,6 @@ namespace Backend.Migrations
 
                     b.Property<Guid?>("SlaRuleId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("SlaStatus")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<Guid?>("SourceEventId")
                         .HasColumnType("uuid");

@@ -37,17 +37,17 @@
                     <table class="tasks-table">
 
                         <!-- Single sticky header -->
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>{{ 'COMMON.NAME' | translate }}</th>
-                            <th>{{ 'TASKS.TOOL' | translate }}</th>
-                            <th>{{ 'COMMON.STATUS' | translate }}</th>
-                            <th>{{ 'COMMON.DATE' | translate }}</th>
-                            <th>{{ 'COMMON.DEADLINE' | translate }}</th>
-                            <th>{{ 'COMMON.ACTIONS' | translate }}</th>
-                        </tr>
-                    </thead>
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>{{ 'COMMON.NAME' | translate }}</th>
+                                <th>{{ 'TASKS.TOOL' | translate }}</th>
+                                <th>{{ 'COMMON.STATUS' | translate }}</th>
+                                <th>{{ 'COMMON.DATE' | translate }}</th>
+                                <th>{{ 'COMMON.DEADLINE' | translate }}</th>
+                                <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+                            </tr>
+                        </thead>
 
                         <!-- One ng-container per group -->
                         <ng-container *ngFor="let projectId of filteredProjectIds">
@@ -100,9 +100,28 @@
 
                                     <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy' }}</td>
 
-                                <td>
-                                    <span class="text-secondary">—</span>
-                                </td>
+                                    <!-- US62 : badge SLA (délai restant / à risque / en retard) -->
+                                    <td (click)="$event.stopPropagation()">
+                                        <ng-container *ngIf="getSla(task.id) as sla; else noSla">
+                                            <span class="sla-badge" [ngClass]="getSlaBadgeClass(sla.slaStatus)">
+                                                <ng-container *ngIf="getSlaStatusLabel(sla.slaStatus) === 'Overdue'">
+                                                    {{ 'SLA.OVERDUE_BY' | translate: { days: (sla.daysRemaining < 0 ?
+                                                        -sla.daysRemaining : sla.daysRemaining) } }} </ng-container>
+                                                        <ng-container
+                                                            *ngIf="getSlaStatusLabel(sla.slaStatus) === 'AtRisk'">
+                                                            {{ 'SLA.DUE_TODAY' | translate }}
+                                                        </ng-container>
+                                                        <ng-container
+                                                            *ngIf="getSlaStatusLabel(sla.slaStatus) === 'OnTrack'">
+                                                            {{ 'SLA.DAYS_REMAINING' | translate: { days:
+                                                            sla.daysRemaining } }}
+                                                        </ng-container>
+                                            </span>
+                                        </ng-container>
+                                        <ng-template #noSla>
+                                            <span class="text-secondary">—</span>
+                                        </ng-template>
+                                    </td>
 
                                     <td (click)="$event.stopPropagation()">
                                         <div class="action-cell">
@@ -205,45 +224,45 @@
     </ng-container>
 
     <!-- MY STREAMS TAB -->
-<ng-container *ngIf="activeTabId === 'my-streams'">
-    <div class="card">
-        <div class="card-header"style="justify-content: flex-end">
-            <!-- <h2>{{ 'STREAMS.MY_STREAMS' | translate }} ({{ myStreams.length }})</h2> -->
-            <select [(ngModel)]="selectedProjectId" class="form-input filter-select"
-                (ngModelChange)="onProjectChange()">
-                <option value="">{{ 'TASKS.ALL_PROJECTS' | translate }}</option>
-                <option *ngFor="let p of projects" [value]="p.id">{{ p.name }}</option>
-            </select>
+    <ng-container *ngIf="activeTabId === 'my-streams'">
+        <div class="card">
+            <div class="card-header" style="justify-content: flex-end">
+                <!-- <h2>{{ 'STREAMS.MY_STREAMS' | translate }} ({{ myStreams.length }})</h2> -->
+                <select [(ngModel)]="selectedProjectId" class="form-input filter-select"
+                    (ngModelChange)="onProjectChange()">
+                    <option value="">{{ 'TASKS.ALL_PROJECTS' | translate }}</option>
+                    <option *ngFor="let p of projects" [value]="p.id">{{ p.name }}</option>
+                </select>
+            </div>
+
+            <div class="table-scroll-wrapper">
+                <table class="tasks-table streams-table">
+                    <thead>
+                        <tr>
+                            <th>{{ 'COMMON.NAME' | translate }}</th>
+                            <th>{{ 'TASKS.ALL_PROJECTS' | translate }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let stream of filteredStreams">
+                            <td class="task-title">{{ stream.name }}</td>
+                            <td>
+                                <span class="tool-badge">{{ getProjectName(stream.projectId) }}</span>
+                            </td>
+                        </tr>
+                        <tr *ngIf="filteredStreams.length === 0">
+                            <td colspan="2" class="empty">{{ 'CONSULTANT.NO_STREAMS' | translate }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
         </div>
+    </ng-container>
 
-        <div class="table-scroll-wrapper">
-            <table class="tasks-table streams-table">
-                <thead>
-                    <tr>
-                        <th>{{ 'COMMON.NAME' | translate }}</th>
-                        <th>{{ 'TASKS.ALL_PROJECTS' | translate }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let stream of filteredStreams">
-                        <td class="task-title">{{ stream.name }}</td>
-                        <td>
-                            <span class="tool-badge">{{ getProjectName(stream.projectId) }}</span>
-                        </td>
-                    </tr>
-                    <tr *ngIf="filteredStreams.length === 0">
-                        <td colspan="2" class="empty">{{ 'CONSULTANT.NO_STREAMS' | translate }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-    </div>
-</ng-container>
-
-<app-chat-panel [isOpen]="chatOpen" [taskId]="chatTaskId" [streamId]="chatStreamId" [title]="chatTitle"
-    [taskStatus]="chatTaskStatus" [toolName]="chatToolName" [messagingChannelUrl]="chatMessagingChannelUrl"
-    (closed)="closeChat()">
-</app-chat-panel>
+    <app-chat-panel [isOpen]="chatOpen" [taskId]="chatTaskId" [streamId]="chatStreamId" [title]="chatTitle"
+        [taskStatus]="chatTaskStatus" [toolName]="chatToolName" [messagingChannelUrl]="chatMessagingChannelUrl"
+        (closed)="closeChat()">
+    </app-chat-panel>
 
 </div>

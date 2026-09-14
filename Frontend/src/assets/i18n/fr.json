@@ -18,7 +18,9 @@
     "SELECT": "séléctionné(s)" ,
     "FUNCTIONALDOMAIN":"Domaine Fonctionnel",
      "EDIT": "Modifier",
-  "DELETE": "Supprimer"
+  "DELETE": "Supprimer",
+  "REFRESH":"Actualiser",
+  "DEADLINE": "Date limite"
   },
   "AUTH": {
     "LOGOUT": "Se déconnecter"
@@ -145,7 +147,9 @@
     "USERS_BY_ROLE": "Utilisateurs par rôle",
     "MANAGE_USERS": "Gérer les utilisateurs",
     "MANAGE_TOOLS": "Gérer les outils",
-    "MANAGE_WORKFLOW": "Gérer le workflow"
+    "MANAGE_WORKFLOW": "Gérer le workflow",
+    
+"MANAGE_SLA": "Gérer les SLA"
   },
   "DISCUSSIONS": {
     "TITLE": "Discussions",
@@ -282,7 +286,9 @@
   "APPROVE_PLAN": "Approuver le Plan",
   "APPROVING": "Approbation en cours...",
   "PLAN_APPROVED": "Plan Approuvé !",
-  "STREAMS_BEING_CREATED": "Les streams sont en cours de création et votre équipe est notifiée."
+  "STREAMS_BEING_CREATED": "Les streams sont en cours de création et votre équipe est notifiée.",
+    "SET_DUE_DATE": "Définir la date limite",
+"REJECT_PLAN": "Rejeter et recommencer"
 
 },"SA": {
   "ROLES": "Rôles",
@@ -299,7 +305,11 @@
   "TASK_DESCRIPTION": "Description de la tâche",
   "ADD_VALUE": "Ajouter une valeur...",
   "ICON_PREVIEW":"Aperçu",
-  "ICON":"Icône"
+  "ICON":"Icône",
+  "AI_PROMPT": "Prompt du résumé IA",
+"AI_PROMPT_HINT": "Ce prompt est envoyé au modèle IA avec le texte du contrat à chaque génération de résumé.",
+  
+"MANAGE_SLA_DESC": "Définir les règles de SLA et suivre les retards sur les tâches et streams."
 },
 "TOOLS_PAGE": {
   "MY_TOOLS": "Mes outils",
@@ -350,5 +360,32 @@
   "VERIFY_AI_STEPS": "Vérifier les steps générés par l'IA",
   "AI_STEPS_CONTEXT": "Ces steps ont été générés par l'agent IA. Vérifiez, modifiez si nécessaire, puis approuvez.",
   "APPROVE_AI_STEPS": "Approuver les steps"
+},
+"SLA": {
+  "TITLE": "Règles SLA",
+  "ADD_RULE": "Ajouter une règle SLA",
+  "EDIT_RULE": "Modifier la règle SLA",
+  "APPLY_RULES": "Appliquer les règles",
+  "TYPE": "Type",
+  "DAYS": "Délai SLA (jours)",
+  "NO_RULES": "Aucune règle SLA trouvée.",
+"OVERDUE_BY": "Overdue {{days}}d",
+"DASHBOARD_TITLE": "Dashboard SLA",
+"OVERDUE_ITEMS": "en retard",
+"OVERDUE_TASKS": "Tâches en retard",
+"AT_RISK_TASKS": "Tâches à risque",
+"OVERDUE_STREAMS": "Streams en retard",
+"AT_RISK_STREAMS": "Streams à risque",
+"TASKS_TITLE": "Tâches en retard / à risque",
+"STREAMS_TITLE": "Streams en retard / à risque",
+"NO_OVERDUE_TASKS": "Aucune tâche en retard ou à risque.",
+"NO_OVERDUE_STREAMS": "Aucun stream en retard ou à risque.",
+"WEEKLY_REPORT_TITLE": "Rapport IA hebdomadaire",
+"GENERATE_NOW": "Générer maintenant",
+"NO_REPORT_YET": "Aucun rapport généré pour l'instant.",
+"GENERATED_ON": "Généré le",
+"DAYS_REMAINING": "{{days}}j restants",
+"DUE_TODAY": "Aujourd'hui"
+
 }
 }

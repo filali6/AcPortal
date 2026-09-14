@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 3,
   "targets": {
     "net10.0": {
       "Azure.AI.OpenAI/2.9.0-beta.1": {
@@ -6065,40 +6065,32 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\mbokri\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\HP\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\mbokri\\Desktop\\chaima\\AcPortal\\Backend.Tests\\Backend.Tests.csproj",
+      "projectUniqueName": "C:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\Backend.Tests.csproj",
       "projectName": "Backend.Tests",
-      "projectPath": "C:\\Users\\mbokri\\Desktop\\chaima\\AcPortal\\Backend.Tests\\Backend.Tests.csproj",
-      "packagesPath": "C:\\Users\\mbokri\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\mbokri\\Desktop\\chaima\\AcPortal\\Backend.Tests\\obj\\",
+      "projectPath": "C:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\Backend.Tests.csproj",
+      "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend.Tests\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\mbokri\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net10.0": {
-          "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "C:\\Users\\mbokri\\Desktop\\chaima\\AcPortal\\Backend\\Backend.csproj": {
-              "projectPath": "C:\\Users\\mbokri\\Desktop\\chaima\\AcPortal\\Backend\\Backend.csproj"
+            "C:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend\\Backend.csproj": {
+              "projectPath": "C:\\Users\\HP\\Desktop\\PFE\\ACPortal\\Backend\\Backend.csproj"
             }
           }
         }
@@ -6113,11 +6105,10 @@
         "auditLevel": "low",
         "auditMode": "all"
       },
-      "SdkAnalysisLevel": "10.0.300"
+      "SdkAnalysisLevel": "10.0.200"
     },
     "frameworks": {
       "net10.0": {
-        "framework": "net10.0",
         "targetAlias": "net10.0",
         "dependencies": {
           "FluentAssertions": {
@@ -6175,7 +6166,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.CSharp": "(,4.7.32767]",
           "Microsoft.VisualBasic": "(,10.4.32767]",

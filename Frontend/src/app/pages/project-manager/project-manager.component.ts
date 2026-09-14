@@ -11,7 +11,7 @@ import { TabsService } from '../../core/services/tabs.service';
 import { ToastService } from '../../core/services/toast.service';
 import { UtilsService } from '../../core/services/utils.service';
 import { ChartService } from '../../core/services/chart.service';
-import { LucideAngularModule, ChevronRight, Layers, Edit, Sparkles, FileUp, Check, Send ,Trash2, Plus,ChevronUp,ChevronDown,Edit2,X} from 'lucide-angular';
+import { LucideAngularModule, ChevronRight, Layers, Edit, Sparkles, FileUp, Check, Send ,Trash2, Plus,ChevronUp,ChevronDown,Edit2,X,Calendar} from 'lucide-angular';
 import { Subscription } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
@@ -20,6 +20,7 @@ import { ModalComponent } from '../../core/components/modal/modal.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BriefingCardComponent } from '../../core/components/briefing-card/briefing-card.component';
 import { PlanningService } from '../../core/services/planning.service';
+import { SlaService } from '../../core/services/sla.service';
 
 @Component({
   selector: 'app-project-manager',
@@ -49,6 +50,7 @@ selectedHistoryPlan: any = null;
     selectedMode: 'manual' | 'ai' | null,
     aiSubStep: 'upload' | 'review' | 'done',
     streamName: string,
+    streamDueDate: string,
     selectedBizLeadId: string,
     selectedTechLeadId: string,
     businessTeamConsultants: string[],
@@ -81,6 +83,16 @@ selectedHistoryPlan: any = null;
   approvingPlan = false;
   openStreamTasks = new Set<string>();
 
+  // US63 — Définir / modifier la date limite (DueDate) d'un stream existant
+  showSetDueDateModal = false;
+  editingDueDateStreamId = '';
+  editingDueDateValue = '';
+
+  // US75/76 — Analyse des risques par l'agent IA (à la demande, par projet)
+  showRiskModal = false;
+  loadingRiskAnalysis = false;
+  riskAnalysis: { atRiskTasks: { taskId: string; title: string; reason: string }[]; recommendations: string[] } | null = null;
+
   private donutChart: Chart | null = null;
   private barChart: Chart | null = null;
   private subs: Subscription[] = [];
@@ -105,6 +117,7 @@ selectedHistoryPlan: any = null;
   readonly Edit2=Edit2;
   readonly X=X;
   readonly Plus=Plus;
+  readonly Calendar=Calendar;
 
   constructor(
     private authService: AuthService,
@@ -118,7 +131,8 @@ selectedHistoryPlan: any = null;
     public utils: UtilsService,
     private chartService: ChartService,
     private translate: TranslateService,
-    private planningService: PlanningService
+    private planningService: PlanningService,
+    private slaService: SlaService
   ) {}
 
   ngOnInit(): void {
@@ -213,6 +227,7 @@ selectedHistoryPlan: any = null;
         selectedMode: null,
         aiSubStep: 'upload',
         streamName: '',
+        streamDueDate: '',
         selectedBizLeadId: '',
         selectedTechLeadId: '',
         businessTeamConsultants: [],
@@ -278,9 +293,17 @@ selectedHistoryPlan: any = null;
       tab.businessTeamConsultants,
       tab.technicalTeamConsultants
     ).subscribe({
-      next: () => {
+      next: (createdStream: any) => {
         this.toastService.show('Stream created successfully!', 'success');
         this.loading = false;
+
+        // US63 — si une date limite a été renseignée à la création, on l'applique
+        // juste après la création du stream (l'API create() ne prend pas encore ce champ).
+        const newStreamId = createdStream?.id;
+        if (tab.streamDueDate && newStreamId) {
+          this.slaService.setStreamDueDate(newStreamId, tab.streamDueDate).subscribe();
+        }
+
         this.endTask(tabId);
       },
       error: () => {
@@ -398,6 +421,31 @@ selectedHistoryPlan: any = null;
       error: () => {
         this.toastService.show('Approval failed. Please try again.', 'error');
         this.approvingPlan = false;
+      }
+    });
+  }
+
+  // US72 — Rejeter la proposition IA et repartir de zéro (nouveau FSD/guidelines)
+  rejectPlan(tabId: string): void {
+    const tab = this.openTabs[tabId];
+    if (!tab || !tab.proposalId) return;
+
+    this.loading = true;
+    this.planningService.reject(tab.proposalId).subscribe({
+      next: () => {
+        this.toastService.show('Proposal rejected. You can submit a new FSD.', 'success');
+        this.loading = false;
+        // Reset du flux IA pour permettre une nouvelle soumission
+        tab.aiSubStep = 'upload';
+        tab.plan = null;
+        tab.proposalId = null;
+        tab.file = null;
+        tab.chatHistory = [];
+        tab.editingStreamIndex = null;
+      },
+      error: () => {
+        this.toastService.show('Error rejecting proposal', 'error');
+        this.loading = false;
       }
     });
   }
@@ -678,4 +726,56 @@ toggleStreamTasks(streamId: string): void {
 isStreamTasksOpen(streamId: string): boolean {
   return this.openStreamTasks.has(streamId);
 }
+
+  // ===== SLA — US63 : Définir la date limite (DueDate) d'un stream =====
+
+  openSetDueDateModal(stream: any): void {
+    this.editingDueDateStreamId = stream.id;
+    // <input type="date"> attend un format yyyy-MM-dd
+    this.editingDueDateValue = stream.dueDate ? stream.dueDate.substring(0, 10) : '';
+    this.showSetDueDateModal = true;
+  }
+
+  closeSetDueDateModal(): void {
+    this.showSetDueDateModal = false;
+    this.editingDueDateStreamId = '';
+    this.editingDueDateValue = '';
+  }
+
+  saveStreamDueDate(): void {
+    if (!this.editingDueDateStreamId) return;
+    this.loading = true;
+    this.slaService.setStreamDueDate(this.editingDueDateStreamId, this.editingDueDateValue || null).subscribe({
+      next: () => {
+        this.toastService.show('Stream due date updated!', 'success');
+        this.loading = false;
+        this.closeSetDueDateModal();
+        this.refreshProjectDetail();
+      },
+      error: () => {
+        this.toastService.show('Error updating due date', 'error');
+        this.loading = false;
+      }
+    });
+  }
+
+  // ===== SLA — US75/76 : Analyse des risques par l'agent IA (par projet) =====
+
+  analyzeProjectRisks(): void {
+    if (!this.selectedProjectDetail) return;
+    this.loadingRiskAnalysis = true;
+    this.riskAnalysis = null;
+    this.showRiskModal = true;
+    this.slaService.getProjectRiskAnalysis(this.selectedProjectDetail.id).subscribe({
+      next: (res: any) => {
+        this.riskAnalysis = res;
+        this.loadingRiskAnalysis = false;
+      },
+      error: () => {
+        this.toastService.show('AI risk analysis failed. Please try again.', 'error');
+        this.loadingRiskAnalysis = false;
+        this.showRiskModal = false;
+      }
+    });
+  }
 }
