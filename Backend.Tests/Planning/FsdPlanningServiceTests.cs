@@ -1,4 +1,5 @@
 using Backend.Data;
+using Backend.Modules.AI.Services;
 using Backend.Modules.Auth.Models;
 using Backend.Modules.Planning.Services;
 using Backend.Modules.Planning.Tools;
@@ -48,7 +49,9 @@ public class FsdPlanningServiceTests
     {
         using var db = CreateDb();
         var tools = new PlanningTools(db, new PluginRegistry(db));
-        return new FsdPlanningService(kernel, db, tools, config ?? CreateConfig(), NullLogger<FsdPlanningService>.Instance);
+        var resolvedConfig = config ?? CreateConfig();
+        var invocationHelper = new KernelInvocationHelper(resolvedConfig, NullLogger<KernelInvocationHelper>.Instance);
+        return new FsdPlanningService(kernel, db, tools, resolvedConfig, invocationHelper, NullLogger<FsdPlanningService>.Instance);
     }
 
     [Fact]
