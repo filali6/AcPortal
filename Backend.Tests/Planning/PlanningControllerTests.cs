@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Backend.Data;
+using Backend.Modules.AI.Services;
 using Backend.Modules.Auth.Models;
 using Backend.Modules.Contracts.Services;
 using Backend.Modules.Events.Services;
@@ -80,7 +81,8 @@ public class PlanningControllerTests
             ["Planning:MaxRetries"] = maxRetries.ToString(),
             ["Planning:RetryDelayMs"] = "0"
         });
-        return new FsdPlanningService(kernel, db, tools, config, NullLogger<FsdPlanningService>.Instance);
+        var invocationHelper = new KernelInvocationHelper(config, NullLogger<KernelInvocationHelper>.Instance);
+        return new FsdPlanningService(kernel, db, tools, config, invocationHelper, NullLogger<FsdPlanningService>.Instance);
     }
 
     private static (PlanningController Controller, Mock<IPdfTextExtractor> Extractor, Mock<IGitProvider> GitProvider) BuildController(

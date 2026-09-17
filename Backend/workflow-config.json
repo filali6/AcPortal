@@ -2,13 +2,16 @@
   "WorkflowRules": [
     {
       "EventCode": "ContratSign\u00E9",
-      "ActionType": "CREATE_MESSAGING_CHANNEL",
-      "TaskTitle": "summarizecontract",
-      "TaskDescription": "resum\u00E9 de contrat ",
+      "ActionType": "CREATE_TASK",
+      "TaskTitle": "Cr\u00E9er le projet pour le client : {clientName}",
+      "TaskDescription": "Un contrat a \u00E9t\u00E9 sign\u00E9 \u2014 cr\u00E9er le projet correspondant",
       "TargetType": "ROLE",
-      "TargetValues": [],
+      "TargetValues": [
+        "HeadOfCDS"
+      ],
       "Config": null
     },
+     
     {
       "EventCode": "ContratSign\u00E9",
       "ActionType": "SUMMARIZE_CONTRACT",

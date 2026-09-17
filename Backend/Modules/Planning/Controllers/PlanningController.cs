@@ -289,6 +289,28 @@ public class PlanningController : ControllerBase
         return Ok(new { message = "Proposal rejected" });
     }
 
+    // // GET /api/planning/project/{projectId}
+    // [HttpGet("project/{projectId:guid}")]
+    // public async Task<IActionResult> GetByProject(Guid projectId)
+    // {
+    //     var proposals = await _db.PlanningProposals
+    //         .Where(p => p.ProjectId == projectId)
+    //         .OrderByDescending(p => p.CreatedAt)
+    //         .ToListAsync();
+
+    //     return Ok(proposals.Select(p => new
+    //     {
+    //         p.Id,
+    //         p.Status,
+    //         p.Guidelines,
+    //         p.CreatedAt,
+    //         p.UpdatedAt,
+    //         plan = JsonSerializer.Deserialize<object>(p.ProposalJson, JsonOpts)
+    //     }));
+    // }
+
+
+
     // GET /api/planning/project/{projectId}
     [HttpGet("project/{projectId:guid}")]
     public async Task<IActionResult> GetByProject(Guid projectId)
@@ -305,10 +327,22 @@ public class PlanningController : ControllerBase
             p.Guidelines,
             p.CreatedAt,
             p.UpdatedAt,
-            plan = JsonSerializer.Deserialize<object>(p.ProposalJson, JsonOpts)
+            plan = TryDeserializePlan(p.ProposalJson)
         }));
     }
-
+    private object? TryDeserializePlan(string? proposalJson)
+    {
+        if (string.IsNullOrWhiteSpace(proposalJson)) return null;
+        try
+        {
+            return JsonSerializer.Deserialize<object>(proposalJson, JsonOpts);
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogWarning(ex, "Invalid ProposalJson encountered, returning null plan");
+            return null;
+        }
+    }
 
 
 

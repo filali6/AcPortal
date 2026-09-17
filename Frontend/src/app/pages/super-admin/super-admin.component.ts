@@ -9,12 +9,13 @@ import { UtilsService } from '../../core/services/utils.service';
 import { TabsService } from '../../core/services/tabs.service';
 import { ChartService } from '../../core/services/chart.service';
 import { ModalComponent } from '../../core/components/modal/modal.component';
-import { LucideAngularModule, Users, Wrench, GitBranch, LayoutDashboard, Plus, Trash2, Edit, ChevronRight } from 'lucide-angular';
+import { LucideAngularModule, Users, Wrench, GitBranch, LayoutDashboard, Plus, Trash2, Edit, ChevronRight, Clock, RefreshCw } from 'lucide-angular';
 import { Subscription } from 'rxjs';
 import { ProjectsService } from '../../core/services/projects.service';
 import { TasksService } from '../../core/services/tasks.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Chart } from 'chart.js';
+import { SlaService, SlaRule } from '../../core/services/sla.service';
 
 @Component({
   selector: 'app-super-admin',
@@ -64,6 +65,15 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     taskDescription: '', targetType: 'ROLE', targetValues: []
   };
 
+  // SLA Rules (US59 / US60 / US61)
+  slaRules: SlaRule[] = [];
+  showSlaRuleModal = false;
+  editingSlaRule: SlaRule | null = null;
+  slaRuleForm: { name: string; description: string; type: number; slaDays: number } = {
+    name: '', description: '', type: 1, slaDays: 5
+  };
+  applyingSlaRules = false;
+
 
   // Stats
   stats = {
@@ -75,6 +85,7 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     tasksPending: 0,
     tasksBlocked: 0,
     tasksDone: 0,
+    totalSlaRules: 0,
     usersByRole: [] as { role: string; count: number }[]
   };
   showConfirmModal = false;
@@ -97,6 +108,8 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
   readonly Trash2 = Trash2;
   readonly Edit = Edit;
   readonly ChevronRight = ChevronRight;
+  readonly Clock = Clock;
+  readonly RefreshCw = RefreshCw;
 
   constructor(
     private usersService: UsersService,
@@ -109,6 +122,7 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     private tasksService: TasksService,
     private chartService: ChartService,
     private translate: TranslateService,
+    private slaService: SlaService,
   ) {}
 
   ngOnInit(): void {
@@ -135,10 +149,11 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     this.loadUsers();
     this.loadTools();
     this.loadWorkflow();
+    this.loadSlaRules();
   }
 
-  openTab(type: 'users' | 'tools' | 'workflow'): void {
-    const titles = { users: 'Users', tools: 'Tools', workflow: 'Workflow' };
+  openTab(type: 'users' | 'tools' | 'workflow' | 'sla'): void {
+    const titles = { users: 'Users', tools: 'Tools', workflow: 'Workflow', sla: 'SLA Rules' };
     this.tabsService.openTab({
       id: type,
       title: titles[type],
@@ -150,6 +165,7 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     this.stats.totalUsers = this.users.length;
     this.stats.totalTools = this.tools.length;
     this.stats.totalRules = this.workflowRules.length;
+    this.stats.totalSlaRules = this.slaRules.length;
     const roleCount: { [key: string]: number } = {};
     this.users.forEach(u => {
       roleCount[u.role] = (roleCount[u.role] || 0) + 1;
@@ -374,7 +390,14 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
 
   openEditRuleModal(rule: any): void {
     this.editingRule = rule;
-    this.ruleForm = { ...rule, targetValues: [...rule.targetValues] };
+    // On copie aussi `config` (pas juste une référence) pour ne pas muter la règle
+    // d'origine avant la sauvegarde, et pour garantir que `config.prompt` existe
+    // même si la règle n'en avait pas encore (cas SUMMARIZE_CONTRACT sans prompt configuré).
+    this.ruleForm = {
+      ...rule,
+      targetValues: [...rule.targetValues],
+      config: rule.config ? { ...rule.config } : {}
+    };
     this.showRuleModal = true;
   }
 
@@ -423,6 +446,101 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
       },
       error: () => this.toastService.show('Error adding rule', 'error')
     });
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // SLA Rules — US59 (créer) / US60 (modifier) / US61 (supprimer)
+  // ─────────────────────────────────────────────────────────────
+
+  loadSlaRules(): void {
+    this.slaService.getAllRules().subscribe({
+      next: (rules) => { this.slaRules = rules; this.computeStats(); },
+      error: () => this.toastService.show('Error loading SLA rules', 'error')
+    });
+  }
+
+  openCreateSlaRuleModal(): void {
+    this.editingSlaRule = null;
+    this.slaRuleForm = { name: '', description: '', type: 1, slaDays: 5 };
+    this.showSlaRuleModal = true;
+  }
+
+  openEditSlaRuleModal(rule: SlaRule): void {
+    this.editingSlaRule = rule;
+    this.slaRuleForm = {
+      name: rule.name,
+      description: rule.description || '',
+      type: rule.type,
+      slaDays: rule.slaDays
+    };
+    this.showSlaRuleModal = true;
+  }
+
+  saveSlaRule(): void {
+    if (!this.slaRuleForm.name || !this.slaRuleForm.slaDays || this.slaRuleForm.slaDays < 1) {
+      this.toastService.show('Name and a valid number of SLA days are required', 'error');
+      return;
+    }
+    this.loading = true;
+
+    if (this.editingSlaRule) {
+      this.slaService.updateRule(this.editingSlaRule.id, {
+        name: this.slaRuleForm.name,
+        description: this.slaRuleForm.description || undefined,
+        type: this.slaRuleForm.type,
+        slaDays: this.slaRuleForm.slaDays
+      }).subscribe({
+        next: () => {
+          this.toastService.show('SLA rule updated!', 'success');
+          this.loading = false;
+          this.showSlaRuleModal = false;
+          this.loadSlaRules();
+        },
+        error: () => { this.toastService.show('Error updating SLA rule', 'error'); this.loading = false; }
+      });
+    } else {
+      this.slaService.createRule({
+        name: this.slaRuleForm.name,
+        description: this.slaRuleForm.description || undefined,
+        type: this.slaRuleForm.type,
+        slaDays: this.slaRuleForm.slaDays
+      }).subscribe({
+        next: () => {
+          this.toastService.show('SLA rule created!', 'success');
+          this.loading = false;
+          this.showSlaRuleModal = false;
+          this.loadSlaRules();
+        },
+        error: () => { this.toastService.show('Error creating SLA rule', 'error'); this.loading = false; }
+      });
+    }
+  }
+
+  deleteSlaRule(rule: SlaRule): void {
+    this.openConfirm(`Delete SLA rule "${rule.name}"?`, () => {
+      this.slaService.deleteRule(rule.id).subscribe({
+        next: () => { this.toastService.show('SLA rule deleted!', 'success'); this.loadSlaRules(); },
+        error: () => this.toastService.show('Error deleting SLA rule', 'error')
+      });
+    });
+  }
+
+  applySlaRules(): void {
+    this.applyingSlaRules = true;
+    this.slaService.applyRules().subscribe({
+      next: () => {
+        this.toastService.show('SLA rules applied to all tasks!', 'success');
+        this.applyingSlaRules = false;
+      },
+      error: () => {
+        this.toastService.show('Error applying SLA rules', 'error');
+        this.applyingSlaRules = false;
+      }
+    });
+  }
+
+  getSlaTypeLabel(type: number): string {
+    return type === 0 ? 'Stream' : 'Task';
   }
 
   getRoleColor(role: string): string {

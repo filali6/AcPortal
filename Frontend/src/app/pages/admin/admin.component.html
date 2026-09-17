@@ -1,6 +1,5 @@
-
 <div class="admin-page">
-   
+
 
     <!-- TASK LIST -->
     <ng-container *ngIf="activeTabId === 'tasks'">
@@ -88,6 +87,17 @@
                 </div>
                 <lucide-icon [img]="ChevronRight" size="16" class="access-arrow"></lucide-icon>
             </div>
+            <!-- US64 : accès rapide au Dashboard SLA -->
+            <div class="access-card" (click)="openAccessTab('sla')">
+                <lucide-icon [img]="Clock" size="18" class="access-icon"></lucide-icon>
+                <div class="access-info">
+                    <span class="access-title">{{ 'SLA.DASHBOARD_TITLE' | translate }}</span>
+                    <span class="access-sub" [class.access-sub-alert]="slaOverdueTotal > 0">
+                        {{ slaOverdueTotal }} {{ 'SLA.OVERDUE_ITEMS' | translate }}
+                    </span>
+                </div>
+                <lucide-icon [img]="ChevronRight" size="16" class="access-arrow"></lucide-icon>
+            </div>
         </div>
 
         <!-- CHARTS -->
@@ -102,7 +112,7 @@
             </div>
             <div class="card chart-card">
                 <div class="card-header">
-                <h2>{{ 'CHARTS.TASKS_COMPLETED_MONTH' | translate }}</h2>
+                    <h2>{{ 'CHARTS.TASKS_COMPLETED_MONTH' | translate }}</h2>
                 </div>
                 <div class="card-body chart-body">
                     <canvas id="adminBarChart"></canvas>
@@ -159,9 +169,10 @@
                                 {{ tab.contractInfo.description }}
                             </p>
                             <div class="files-list" *ngIf="tab.contractInfo.filesPaths?.length > 0">
-                            <a *ngFor="let f of tab.contractInfo.filesPaths" [href]="getFileUrl(f)" target="_blank" class="file-link">
-                                📄 {{ getFileName(f) }}
-                            </a>
+                                <a *ngFor="let f of tab.contractInfo.filesPaths" [href]="getFileUrl(f)" target="_blank"
+                                    class="file-link">
+                                    📄 {{ getFileName(f) }}
+                                </a>
                             </div>
                             <div class="summary-section" *ngIf="tab.contractInfo?.summary">
                                 <span class="summary-badge">{{ 'AI.SUMMARY' | translate }}</span>
@@ -173,7 +184,8 @@
                             </div>
                             <div class="summary-failed" *ngIf="tab.contractInfo?.summaryStatus === 3">
                                 <span>{{ 'AI.SUMMARY_FAILED' | translate }}</span>
-                                <button class="btn-secondary" (click)="retrySummary(tab.contractInfo.id)" [disabled]="loading">
+                                <button class="btn-secondary" (click)="retrySummary(tab.contractInfo.id)"
+                                    [disabled]="loading">
                                     {{ 'AI.RETRY_SUMMARY' | translate }}
                                 </button>
                             </div>
@@ -297,6 +309,150 @@
     <!-- CONTRACTS TAB -->
     <ng-container *ngIf="activeTabId === 'contracts-tab'">
         <app-contracts-tab></app-contracts-tab>
+    </ng-container>
+
+    <!-- SLA DASHBOARD TAB (US64) -->
+    <ng-container *ngIf="activeTabId === 'sla-tab'">
+
+        <!-- US77 : Rapport hebdomadaire généré par l'agent IA -->
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ 'SLA.WEEKLY_REPORT_TITLE' | translate }}</h2>
+                <button class="btn-small" (click)="generateWeeklyReport()" [disabled]="generatingWeeklyReport">
+                    {{ generatingWeeklyReport ? ('COMMON.LOADING' | translate) : ('SLA.GENERATE_NOW' | translate) }}
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="empty" *ngIf="loadingWeeklyReport">{{ 'COMMON.LOADING' | translate }}</div>
+                <div class="empty" *ngIf="!loadingWeeklyReport && !weeklyReport">
+                    {{ 'SLA.NO_REPORT_YET' | translate }}
+                </div>
+                <div *ngIf="!loadingWeeklyReport && weeklyReport">
+                    <span class="text-secondary" style="font-size:12px;">
+                        {{ 'SLA.GENERATED_ON' | translate }} {{ weeklyReport.generatedAt | date:'dd/MM/yyyy HH:mm' }}
+                    </span>
+                    <markdown [data]="weeklyReport.content" style="display:block; margin-top:8px; font-size:13px;">
+                    </markdown>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI cards : grid CSS inline (4 colonnes) pour garantir l'alignement horizontal,
+             indépendamment des classes .stats-grid / .quick-stats existantes -->
+        <div class="card" style="min-height:auto; height:auto;">
+            <div class="card-header">
+                <h2>{{ 'SLA.DASHBOARD_TITLE' | translate }}</h2>
+            </div>
+            <div class="card-body"
+                style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px; min-height:auto; height:auto; padding-bottom: 20px;">
+                <div class="qs-item" [class.qs-alert]="(slaDashboard?.summary?.totalOverdueTasks || 0) > 0"
+                    style="display:flex; flex-direction:column; gap:4px;">
+                    <span class="qs-label">{{ 'SLA.OVERDUE_TASKS' | translate }}</span>
+                    <span class="qs-value">{{ slaDashboard?.summary?.totalOverdueTasks || 0 }}</span>
+                </div>
+                <div class="qs-item" style="display:flex; flex-direction:column; gap:4px;">
+                    <span class="qs-label">{{ 'SLA.AT_RISK_TASKS' | translate }}</span>
+                    <span class="qs-value">{{ slaDashboard?.summary?.totalAtRiskTasks || 0 }}</span>
+                </div>
+                <div class="qs-item" [class.qs-alert]="(slaDashboard?.summary?.totalOverdueStreams || 0) > 0"
+                    style="display:flex; flex-direction:column; gap:4px;">
+                    <span class="qs-label">{{ 'SLA.OVERDUE_STREAMS' | translate }}</span>
+                    <span class="qs-value">{{ slaDashboard?.summary?.totalOverdueStreams || 0 }}</span>
+                </div>
+                <div class="qs-item" style="display:flex; flex-direction:column; gap:4px;">
+                    <span class="qs-label">{{ 'SLA.AT_RISK_STREAMS' | translate }}</span>
+                    <span class="qs-value">{{ slaDashboard?.summary?.totalAtRiskStreams || 0 }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tâches en retard / à risque -->
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ 'SLA.TASKS_TITLE' | translate }} ({{ slaDashboard?.tasks?.length || 0 }})</h2>
+                <button class="btn-small" (click)="loadSlaDashboard()" [disabled]="loadingSlaDashboard">
+                    {{ loadingSlaDashboard ? ('COMMON.LOADING' | translate) : ('COMMON.REFRESH' | translate) }}
+                </button>
+            </div>
+            <div class="table-wrapper">
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <th>{{ 'COMMON.NAME' | translate }}</th>
+                            <th>{{ 'COMMON.STATUS' | translate }}</th>
+                            <th>{{ 'COMMON.DEADLINE' | translate }}</th>
+                            <th>SLA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let t of slaDashboard?.tasks">
+                            <td class="task-title">{{ t.title }}</td>
+                            <td>
+                                <span class="status-badge" [ngClass]="utils.getTaskStatusClass(t.status)">
+                                    {{ utils.getTaskStatusLabel(t.status) }}
+                                </span>
+                            </td>
+                            <td class="text-secondary">{{ t.dueDate ? (t.dueDate | date:'dd/MM/yyyy') : '—' }}</td>
+                            <td>
+                                <span class="sla-badge" [ngClass]="getSlaBadgeClass(t.slaStatus)">
+                                    <ng-container *ngIf="getSlaStatusLabel(t.slaStatus) === 'Overdue'">
+                                        {{ 'SLA.OVERDUE_BY' | translate: { days: (t.daysRemaining < 0 ? -t.daysRemaining
+                                            : t.daysRemaining) } }} </ng-container>
+                                            <ng-container *ngIf="getSlaStatusLabel(t.slaStatus) === 'AtRisk'">
+                                                {{ 'SLA.DUE_TODAY' | translate }}
+                                            </ng-container>
+                                            <ng-container *ngIf="getSlaStatusLabel(t.slaStatus) === 'OnTrack'">
+                                                {{ 'SLA.DAYS_REMAINING' | translate: { days: t.daysRemaining } }}
+                                            </ng-container>
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty" *ngIf="!slaDashboard?.tasks?.length">{{ 'SLA.NO_OVERDUE_TASKS' | translate }}</div>
+        </div>
+
+        <!-- Streams en retard / à risque -->
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ 'SLA.STREAMS_TITLE' | translate }} ({{ slaDashboard?.streams?.length || 0 }})</h2>
+            </div>
+            <div class="table-wrapper">
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <th>{{ 'COMMON.NAME' | translate }}</th>
+                            <th>{{ 'PROJECTS.TITLE' | translate }}</th>
+                            <th>{{ 'COMMON.DEADLINE' | translate }}</th>
+                            <th>SLA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let s of slaDashboard?.streams">
+                            <td class="task-title">{{ s.name }}</td>
+                            <td class="text-secondary">{{ s.projectName }}</td>
+                            <td class="text-secondary">{{ s.dueDate ? (s.dueDate | date:'dd/MM/yyyy') : '—' }}</td>
+                            <td>
+                                <span class="sla-badge" [ngClass]="getSlaBadgeClass(s.slaStatus)">
+                                    <ng-container *ngIf="getSlaStatusLabel(s.slaStatus) === 'Overdue'">
+                                        {{ 'SLA.OVERDUE_BY' | translate: { days: (s.daysRemaining < 0 ? -s.daysRemaining
+                                            : s.daysRemaining) } }} </ng-container>
+                                            <ng-container *ngIf="getSlaStatusLabel(s.slaStatus) === 'AtRisk'">
+                                                {{ 'SLA.DUE_TODAY' | translate }}
+                                            </ng-container>
+                                            <ng-container *ngIf="getSlaStatusLabel(s.slaStatus) === 'OnTrack'">
+                                                {{ 'SLA.DAYS_REMAINING' | translate: { days: s.daysRemaining } }}
+                                            </ng-container>
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty" *ngIf="!slaDashboard?.streams?.length">{{ 'SLA.NO_OVERDUE_STREAMS' | translate }}</div>
+        </div>
+
     </ng-container>
 
 </div>

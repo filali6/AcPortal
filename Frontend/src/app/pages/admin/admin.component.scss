@@ -842,3 +842,30 @@ tr.selected td {
     align-items: center;
     justify-content: space-between;
 }
+.sla-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+
+    &.sla-ontrack {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    &.sla-atrisk {
+        background: #fef3c7;
+        color: #b45309;
+    }
+
+    &.sla-overdue {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+}
+
+.access-sub-alert {
+    color: #dc2626;
+    font-weight: 600;
+}
