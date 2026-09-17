@@ -1,0 +1,113 @@
+.briefing-wrapper {
+    position: relative;
+}
+
+/* ─── Bouton pill, bordure dégradée ─── */
+.ai-pill {
+    border: none;
+    background: linear-gradient(135deg, var(--shimmer-2), var(--shimmer-1));
+    border-radius: 999px;
+    padding: 1px; // épaisseur de la "bordure" dégradée
+    cursor: pointer;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+        opacity: 0.85;
+    }
+
+    &.active .ai-pill-inner {
+        background: var(--accent-light);
+    }
+}
+
+.ai-pill-inner {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--header-bg); // doit matcher le fond du header
+    border-radius: 999px;
+    padding: 0 12px;
+    height: 100%;
+    color: var(--text-primary);
+    transition: background 0.15s ease;
+}
+
+.ai-pill-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+/* ─── Panneau déroulant ─── */
+.briefing-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 320px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.briefing-panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.briefing-panel-body {
+    padding: 16px;
+}
+
+.briefing-text {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.briefing-empty {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 8px 0;
+}
+
+/* ─── Shimmer loading ─── */
+.briefing-loading {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.shimmer-line {
+    height: 13px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--shimmer-1) 25%, var(--shimmer-2) 50%, var(--shimmer-1) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+
+    &.short {
+        width: 60%;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}

@@ -15,6 +15,103 @@ services:
       - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9093
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: keycloak
+    ports:
+      - "8181:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_CACHE_THEME: false      
+      KC_CACHE_TEMPLATES: false     
+    command: start-dev --import-realm
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+      - ./acp-realm.json:/opt/keycloak/data/import/acp-realm.json
+      - ./keycloak/themes:/opt/keycloak/themes
+
+   
+
+  dapr-zipkin:
+    image: openzipkin/zipkin
+    container_name: dapr-zipkin
+    ports:
+      - "9411:9411"
+  
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  dapr-placement:
+    image: daprio/dapr:1.13.0
+    container_name: dapr-placement
+    command: ["./placement", "-port", "50006"]
+    ports:
+      - "50006:50006"
+
+  
+ 
+  plugins-db:
+    image: postgres:16-alpine
+    container_name: plugins-db
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: plugins
+      POSTGRES_PASSWORD: plugins
+      POSTGRES_DB: plugins
+    volumes:
+      - plugins-db-data:/var/lib/postgresql/data
+
+      
+  demo-sso-plugin:
+      build:
+        context: ../../DemoSsoPlugin
+        dockerfile: Dockerfile
+      container_name: demo-sso-plugin
+      ports:
+        - "5300:8080"
+      environment:
+        Keycloak__PublicAuthority: "http://localhost:8181/realms/acp-portal"
+        Keycloak__InternalAuthority: "http://keycloak:8080/realms/acp-portal"
+        Keycloak__ClientId: "demo-plugin-client"
+        Keycloak__ClientSecret: "Ct63V9TJtjfyU79IHBOK4fRW29SI1u9K"
+        Keycloak__RequireHttpsMetadata: "false"
+      depends_on:
+        - keycloak
+      volumes: 
+        - demo-sso-plugin-keys:/root/.aspnet/DataProtection-Keys
+ 
+   
+  
+volumes:
+  
+  kafka-data:
+  keycloak-data:
+  plugins-db-data:
+  demo-sso-plugin-keys:
+   
+  
+  

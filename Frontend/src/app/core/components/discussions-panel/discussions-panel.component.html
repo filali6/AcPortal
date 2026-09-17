@@ -1,0 +1,57 @@
+<div class="discussions-overlay" *ngIf="isOpen" (click)="close()"></div>
+
+<div class="discussions-panel" [class.open]="isOpen">
+
+    <div class="panel-header">
+        <div class="panel-title">
+            <span>{{ 'DISCUSSIONS.TITLE' | translate }}</span>
+        </div>
+        <button class="close-btn" (click)="close()">{{ 'COMMON.CLOSE' | translate }}</button>
+    </div>
+
+    <div class="panel-body">
+
+        <div class="section-label">{{ 'DISCUSSIONS.STREAM_DISCUSSIONS' | translate }}</div>
+        <div class="discussion-item" *ngFor="let d of streamDiscussions" (click)="openDiscussion('stream', d.id)">
+            <div class="disc-avatar stream-avatar">
+                {{ d.name.slice(0,2).toUpperCase() }}
+            </div>
+            <div class="disc-info">
+                <div class="disc-header">
+                    <span class="disc-name">{{ d.name }}</span>
+                    <span class="disc-time">{{ getTimeAgo(d.lastMessageTime) }}</span>
+                </div>
+                <span class="disc-project">{{ d.projectName }}</span>
+                <p class="disc-last">
+                    <span *ngIf="d.senderName">{{ d.senderName }}: </span>
+                    {{ d.lastMessage }}
+                </p>
+            </div>
+        </div>
+        <div class="empty-section" *ngIf="streamDiscussions.length === 0">
+            {{ 'DISCUSSIONS.NO_STREAM' | translate }}
+        </div>
+
+        <div class="section-label" style="margin-top: 8px">{{ 'DISCUSSIONS.TASK_DISCUSSIONS' | translate }}</div>
+    <div class="discussion-item" *ngFor="let d of taskDiscussions" (click)="openDiscussion('task', d.id)">
+            <div class="disc-avatar task-avatar">
+                {{ d.title.slice(0,2).toUpperCase() }}
+            </div>
+            <div class="disc-info">
+                <div class="disc-header">
+                    <span class="disc-name">{{ d.title }}</span>
+                    <span class="disc-time">{{ getTimeAgo(d.lastMessageTime) }}</span>
+                </div>
+                <p class="disc-last">
+                    <span *ngIf="d.senderName">{{ d.senderName }}: </span>
+                    {{ d.lastMessage }}
+                </p>
+            </div>
+        </div>
+        <div class="empty-section" *ngIf="taskDiscussions.length === 0">
+            {{ 'DISCUSSIONS.NO_TASK' | translate }}
+        </div>
+
+    </div>
+
+</div>

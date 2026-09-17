@@ -1,0 +1,203 @@
+<div *ngIf="showLayout" class="app-layout">
+
+    <!-- FIXED HEADER -->
+    <header class="app-header">
+
+        <!-- Left : Logo -->
+        <div class="header-logo">
+            <div class="logo-icon-wrap" data-tooltip="TOOLTIP.HOME">
+                <lucide-icon [img]="Briefcase" size="18" color="white"></lucide-icon>
+            </div>
+            <span class="logo-text">Axe Config Studio</span>
+        </div>
+
+        <!-- Center : Tabs -->
+        <div class="header-tabs">
+            <app-tabs-bar></app-tabs-bar>
+        </div>
+
+        <!-- Right : Actions -->
+        <div class="header-actions">
+
+            <!-- AI Briefing — pill cliquable, n'apparaît que sur demande -->
+            <app-briefing-card></app-briefing-card>
+
+            <!-- Notifications — icon only -->
+            <div data-tooltip="TOOLTIP.NOTIFICATIONS">
+                <app-notifications-dropdown></app-notifications-dropdown>
+            </div>
+
+            <!-- User Avatar -->
+            <div class="dropdown-wrapper">
+                <button class="user-avatar-btn" (click)="toggleUserMenu()" data-tooltip="TOOLTIP.PROFILE">
+                    {{ getUserInitials() }}
+                </button>
+                <div class="user-dropdown" *ngIf="userMenuOpen">
+                    <div class="user-dropdown-info">
+                        <div class="user-dropdown-avatar">{{ getUserInitials() }}</div>
+                        <div class="user-dropdown-details">
+                            <span class="user-dropdown-name">{{ userInfo?.name }}</span>
+                            <span class="user-dropdown-role">{{ getRoleLabel() }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- BODY -->
+    <div class="app-body">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+
+                <!-- HeadOfCDS -->
+                <ng-container *ngIf="isAdmin()">
+                    <a class="nav-item" [class.active]="isActive('admin')" (click)="navigate('/admin')"
+                        data-tooltip="TOOLTIP.DASHBOARD">
+                        <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
+                        <span>{{ 'SIDEBAR.DASHBOARD' | translate }}</span>
+                    </a>
+                </ng-container>
+
+                <!-- PortfolioDirector -->
+                <ng-container *ngIf="isDirector()">
+                    <a class="nav-item" [class.active]="isActive('director')" (click)="navigate('/director')"
+                        data-tooltip="TOOLTIP.DASHBOARD">
+                        <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
+                        <span>{{ 'SIDEBAR.DASHBOARD' | translate }}</span>
+                    </a>
+                </ng-container>
+
+                <!-- ProjectManager -->
+                <ng-container *ngIf="isProjectManager()">
+                    <a class="nav-item" [class.active]="isActive('project-manager')"
+                        (click)="navigate('/project-manager')" data-tooltip="TOOLTIP.DASHBOARD">
+                        <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
+                        <span>{{ 'SIDEBAR.DASHBOARD' | translate }}</span>
+                    </a>
+                </ng-container>
+
+                <!-- TeamLead -->
+                <ng-container *ngIf="isTeamLead()">
+                    <a class="nav-item" [class.active]="isActive('team-lead')" (click)="navigate('/team-lead')"
+                        data-tooltip="TOOLTIP.DASHBOARD">
+                        <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
+                        <span>{{ 'SIDEBAR.DASHBOARD' | translate }}</span>
+                    </a>
+                    <a class="nav-item" [class.active]="isActive('/tools-page')" (click)="navigate('/tools-page')"
+                        data-tooltip="TOOLTIP.TOOLS">
+                        <lucide-icon [img]="Wrench" size="16" class="nav-icon"></lucide-icon>
+                        <span>{{ 'TOOLS.TITLE' | translate }}</span>
+                    </a>
+                </ng-container>
+
+                <!-- Consultant -->
+                <ng-container *ngIf="isConsultant()">
+                    <a class="nav-item" [class.active]="isActive('/consultant')" (click)="navigate('/consultant')"
+                        data-tooltip="TOOLTIP.DASHBOARD">
+                        <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
+                        <span>{{ 'SIDEBAR.DASHBOARD' | translate }}</span>
+                    </a>
+                    <a class="nav-item" [class.active]="isActive('/tools-page')" (click)="navigate('/tools-page')"
+                        data-tooltip="TOOLTIP.TOOLS">
+                        <lucide-icon [img]="Wrench" size="16" class="nav-icon"></lucide-icon>
+                        <span>{{ 'TOOLS.TITLE' | translate }}</span>
+                    </a>
+                </ng-container>
+
+                <!-- DAF -->
+                <ng-container *ngIf="isDAF()">
+                    <a class="nav-item" [class.active]="isActive('daf')" (click)="navigate('/daf')"
+                        data-tooltip="TOOLTIP.CONTRACTS">
+                        <lucide-icon [img]="FileText" size="16" class="nav-icon"></lucide-icon>
+                        <span>{{ 'CONTRACTS.TITLE' | translate }}</span>
+                    </a>
+                </ng-container>
+
+                <!-- SuperAdmin -->
+                <ng-container *ngIf="isSuperAdmin()">
+                    <a class="nav-item" [class.active]="(tabsService.activeTabId | async) === 'tasks'"
+                        (click)="navigate('/super-admin')" data-tooltip="TOOLTIP.DASHBOARD">
+                        <lucide-icon [img]="LayoutDashboard" size="16" class="nav-icon"></lucide-icon>
+                        <span>{{ 'SIDEBAR.DASHBOARD' | translate }}</span>
+                    </a>
+                    <a class="nav-item" [class.active]="(tabsService.activeTabId | async) === 'users'"
+                        (click)="tabsService.openTab({id:'users', title:'Users', type:'create-project'})"
+                        data-tooltip="TOOLTIP.USERS">
+                        <lucide-icon [img]="Users" size="16" class="nav-icon"></lucide-icon>
+                        <span>{{ 'USERS.TITLE' | translate }}</span>
+                    </a>
+                    <a class="nav-item" [class.active]="(tabsService.activeTabId | async) === 'tools'"
+                        (click)="tabsService.openTab({id:'tools', title:'Tools', type:'create-project'})"
+                        data-tooltip="TOOLTIP.TOOLS">
+                        <lucide-icon [img]="Wrench" size="16" class="nav-icon"></lucide-icon>
+                        <span>{{ 'TOOLS.TITLE' | translate }}</span>
+                    </a>
+                    <a class="nav-item" [class.active]="(tabsService.activeTabId | async) === 'workflow'"
+                        (click)="tabsService.openTab({id:'workflow', title:'Workflow', type:'create-project'})"
+                        data-tooltip="TOOLTIP.WORKFLOW">
+                        <lucide-icon [img]="GitBranch" size="16" class="nav-icon"></lucide-icon>
+                        <span>{{ 'WORKFLOW.TITLE' | translate }}</span>
+                    </a>
+                </ng-container>
+
+                 
+
+            </nav>
+
+            <!-- Sidebar Footer : lang + separator + logout -->
+            <div class="sidebar-footer">
+                <div class="lang-switcher">
+                    <button *ngFor="let lang of languageService.availableLanguages"
+                        [class.active]="languageService.getCurrentLang() === lang" (click)="onSwitchLang(lang)"
+                        [attr.data-tooltip]="'TOOLTIP.LANG_' + lang.toUpperCase()">
+                        {{ lang.toUpperCase() }}
+                    </button>
+                </div>
+                <div class="footer-separator"></div>
+                <button class="theme-toggle-btn" (click)="themeService.toggleTheme()"
+                    [attr.aria-label]="themeService.theme() === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'">
+                    @if (themeService.theme() === 'dark') {
+                    <lucide-icon [img]="Sun" [size]="14"></lucide-icon>
+                    } @else {
+                    <lucide-icon [img]="Moon" [size]="14"></lucide-icon>
+                    }
+                </button>
+                <a class="nav-item logout-item" (click)="logout()" data-tooltip="TOOLTIP.LOGOUT">
+                    <lucide-icon [img]="LogOut" size="16" class="nav-icon"></lucide-icon>
+                    <!-- <span>{{ 'AUTH.LOGOUT' | translate }}</span> -->
+                </a>
+            </div>
+
+        </aside>
+
+        <!-- Main -->
+        <main class="main-content" [class.drawer-open]="isDrawerOpen">
+            <app-toast></app-toast>
+            <router-outlet />
+        </main>
+
+    </div>
+
+    <app-chat-panel *ngIf="chatOpen" [isOpen]="chatOpen" [streamId]="chatStreamId" [taskId]="chatTaskId"
+        [title]="chatTitle" (closed)="chatOpen = false">
+    </app-chat-panel>
+
+</div>
+
+<!-- Toast notification -->
+<div class="toast-notif" *ngIf="toastVisible">
+    <div class="toast-body">
+        <span class="toast-title">New notification</span>
+        <span class="toast-message">{{ toastMessage }}</span>
+    </div>
+    <button class="toast-close" (click)="closeToast()" data-tooltip="TOOLTIP.CLOSE">✕</button>
+</div>
+
+<!-- No layout -->
+<div *ngIf="!showLayout">
+    <router-outlet />
+</div>

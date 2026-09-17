@@ -1,7 +1,14 @@
+//using Backend.Modules.Sla.Models;
+
 namespace Backend.Modules.Tasks.Models;
 
- 
- 
+public enum AcpTaskStatus
+{
+    Pending,  
+    Blocked,   
+    Done        
+}
+
 public class AcpTask
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -26,6 +33,21 @@ public class AcpTask
     // Quand la tâche a été mise à jour pour la dernière fois
     public DateTime? UpdatedAt { get; set; }
 
-    // Lien vers l'événement qui a généré cette tâche
-    public Guid SourceEventId { get; set; }
+     public Guid ?SourceEventId { get; set; }
+
+    public Guid? ProjectId { get; set; }
+    public Guid? StepId { get; set; }
+    public Guid? StreamId { get; set; }
+
+    public Guid? ContractId { get; set; }
+    public ICollection<TaskComment> Comments { get; set; } = new List<TaskComment>();
+
+    public string? MessagingThreadId { get; set; }
+    public string? MessagingThreadUrl { get; set; }
+    // Ajouter dans AcpTask.cs
+    public DateTime? DueDate { get; set; }
+    public Guid? SlaRuleId { get; set; }
+    //public SlaStatus SlaStatus { get; set; } = SlaStatus.OnTrack;
+
+
 }

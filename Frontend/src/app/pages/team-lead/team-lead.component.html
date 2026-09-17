@@ -1,0 +1,391 @@
+<div class="tl-page">
+    <!-- <app-briefing-card /> -->
+
+    <!-- TASK INBOX -->
+    <ng-container *ngIf="activeTabId === 'tasks'">
+
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ 'TASKS.TITLE' | translate }} ({{ myTasks.length }})</h2>
+            </div>
+
+            <div class="search-bar">
+                <input type="text" [(ngModel)]="searchQuery" [placeholder]="'TASKS.SEARCH' | translate"
+                    class="form-input search-input">
+                <select [(ngModel)]="filterStatus" class="form-input filter-select">
+                    <option value="all">{{ 'TASKS.ALL_STATUSES' | translate }}</option>
+                    <option value="0">{{ 'TASKS.PENDING' | translate }}</option>
+                    <option value="1">{{ 'TASKS.BLOCKED' | translate }}</option>
+                    <option value="2">{{ 'TASKS.DONE' | translate }}</option>
+                </select>
+                <select [(ngModel)]="filterProjectId" class="form-input filter-select"
+                    (ngModelChange)="filterStreamId = ''">
+                    <option value="">{{ 'TASKS.ALL_PROJECTS' | translate }}</option>
+                    <option *ngFor="let p of projects" [value]="p.id">{{ p.name }}</option>
+                </select>
+                <select [(ngModel)]="filterStreamId" class="form-input filter-select">
+                    <option value="">{{ 'TASKS.ALL_STREAMS' | translate }}</option>
+                    <option *ngFor="let s of filteredStreams" [value]="s.id">{{ s.name }}</option>
+                </select>
+            </div>
+
+            <div class="action-bar" *ngIf="hasSelection">
+                <span class="selection-count">{{ selectedIds.size }} {{ 'COMMON.SELECTED' | translate }}</span>
+                <button class="action-btn success" (click)="markDone()">✓ {{ 'TASKS.MARK_DONE' | translate }}</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="tasks-table" *ngIf="filteredTasks.length > 0">
+                    <thead>
+                        <tr>
+                            <th style="width:40px"></th>
+                            <th>{{ 'COMMON.NAME' | translate }}</th>
+                            <th>{{ 'TASKS.STREAM' | translate }}</th>
+                            <th>{{ 'COMMON.STATUS' | translate }}</th>
+                            <th>{{ 'COMMON.DATE' | translate }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let task of filteredTasks" [class.task-done]="task.status === 2"
+                            [class.selected]="isSelected(task.id)" (click)="onTaskClick(task)">
+                            <td (click)="toggleSelect(task.id); $event.stopPropagation()">
+                                <div class="checkbox" [class.checked]="isSelected(task.id)">
+                                    <span *ngIf="isSelected(task.id)">✓</span>
+                                </div>
+                            </td>
+                            <td class="task-title">{{ task.title }}</td>
+                            <td class="text-secondary">{{ getStreamName(task.streamId ?? '') }}</td>
+                            <td>
+                                <span class="status-badge" [ngClass]="utils.getTaskStatusClass(task.status)">
+                                    {{ utils.getTaskStatusLabel(task.status) }}
+                                </span>
+                            </td>
+                            <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty" *ngIf="filteredTasks.length === 0">{{ 'TASKS.NO_TASKS' | translate }}</div>
+        </div>
+
+        <div class="access-card" (click)="openStreamsTab()">
+            <lucide-icon [img]="Layers" size="18" class="access-icon"></lucide-icon>
+            <div class="access-info">
+                <span class="access-title">{{ 'STREAMS.MY_STREAMS' | translate }}</span>
+                <span class="access-sub">{{ myStreams.length }} {{ 'STREAMS.TITLE' | translate | lowercase }}</span>
+            </div>
+            <lucide-icon [img]="ChevronRight" size="16" class="access-arrow"></lucide-icon>
+        </div>
+
+        <div class="charts-grid">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>{{ 'CHARTS.TASK_DISTRIBUTION' | translate }}</h2>
+                </div>
+                <div class="card-body chart-body"><canvas id="tlDonutChart"></canvas></div>
+            </div>
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>{{ 'CHARTS.TASKS_PER_MONTH' | translate }}</h2>
+                </div>
+                <div class="card-body chart-body"><canvas id="tlBarChart"></canvas></div>
+            </div>
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>{{ 'CHARTS.STATISTICS' | translate }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="quick-stats">
+                        <div class="qs-item" [class.qs-alert]="statsBottom.pendingTasks > 0">
+                            <span class="qs-label">{{ 'STREAMS.PENDING_TASKS' | translate }}</span>
+                            <span class="qs-value">{{ statsBottom.pendingTasks }}</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">{{ 'STREAMS.COMPLETION_RATE' | translate }}</span>
+                            <span class="qs-value">{{ statsBottom.completionRate }}%</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">{{ 'STREAMS.ACTIVE' | translate }}</span>
+                            <span class="qs-value">{{ statsBottom.activeStreams }}</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">{{ 'STREAMS.NEXT_DELIVERY' | translate }}</span>
+                            <span class="qs-value qs-name">{{ statsBottom.nextDelivery.name }}</span>
+                            <span class="qs-sub">{{ statsBottom.nextDelivery.date }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </ng-container>
+
+    <!-- MY STREAMS TAB -->
+    <ng-container *ngIf="activeTabId === 'my-streams'">
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ 'STREAMS.MY_STREAMS' | translate }} ({{ filteredStreams.length }})</h2>
+                <select [(ngModel)]="filterProjectId" class="form-input filter-select">
+                    <option value="">{{ 'TASKS.ALL_PROJECTS' | translate }}</option>
+                    <option *ngFor="let p of projects" [value]="p.id">{{ p.name }}</option>
+                </select>
+            </div>
+            <div class="streams-list">
+                <div class="stream-item" *ngFor="let stream of filteredStreams" (click)="selectStream(stream)">
+                    <div class="stream-header">
+                        <span class="stream-name">{{ stream.name }}</span>
+                        <span class="project-tag">{{ stream.projectName }}</span>
+                        <div class="progress-mini">
+                            <div class="progress-wrap" style="width:80px">
+                                <div class="progress-bar" [style.width.%]="stream.streamProgress"></div>
+                            </div>
+                            <span class="progress-pct-sm">{{ stream.streamProgress }}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="empty" *ngIf="filteredStreams.length === 0">{{ 'COMMON.NO_DATA' | translate }}</div>
+            </div>
+        </div>
+    </ng-container>
+
+    <!-- STREAM DETAIL TAB -->
+    <ng-container *ngIf="selectedStream && activeTabId === 'stream-detail-' + selectedStream.id">
+
+        <div class="card">
+            <div class="card-header">
+                <div class="project-header-info">
+                    <h2>{{ selectedStream.name }}</h2>
+                    <span class="project-tag">{{ selectedStream.projectName }}</span>
+                </div>
+                <div class="progress-header">
+                    <div class="progress-wrap" style="width:160px">
+                        <div class="progress-bar" [style.width.%]="selectedStream.streamProgress"></div>
+                    </div>
+                    <span class="progress-pct">{{ selectedStream.streamProgress }}%</span>
+
+                    <button class="btn-slack-link" *ngIf="selectedStream.messagingChannelUrl"
+                        (click)="openExternalLink(selectedStream.messagingChannelUrl)">
+                        <svg width="14" height="14" viewBox="0 0 122.8 122.8" fill="none">
+                            <path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9z"
+                                fill="#E01E5A" />
+                            <path
+                                d="M32.3 77.6c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z"
+                                fill="#E01E5A" />
+                            <path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2z"
+                                fill="#36C5F0" />
+                            <path
+                                d="M45.2 32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z"
+                                fill="#36C5F0" />
+                            <path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2z"
+                                fill="#2EB67D" />
+                            <path
+                                d="M90.5 45.2c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z"
+                                fill="#2EB67D" />
+                            <path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9z"
+                                fill="#ECB22E" />
+                            <path
+                                d="M77.6 90.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z"
+                                fill="#ECB22E" />
+                        </svg>
+                        Slack
+                    </button>
+                    <span class="messaging-status" *ngIf="!selectedStream.messagingChannelUrl">⏳ Slack...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-grid">
+            <div class="detail-col">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>{{ 'STREAMS.TEAM' | translate }}</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="team-block" *ngIf="selectedStream.businessTeamLead">
+                            <span class="team-section-label business">Business Team</span>
+                            <div class="team-row">
+                                <span class="role-tag btl">BTL</span>
+                                <span class="member-name">{{ selectedStream.businessTeamLead.fullName }}</span>
+                            </div>
+                            <div class="team-row" *ngFor="let m of selectedStream.members | teamFilter:'Business'">
+                                <span class="role-tag consultant">DEV</span>
+                                <span class="member-name">{{ m.fullName }}</span>
+                            </div>
+                        </div>
+                        <div class="team-block" *ngIf="selectedStream.technicalTeamLead">
+                            <span class="team-section-label technical">Technical Team</span>
+                            <div class="team-row">
+                                <span class="role-tag ttl">TTL</span>
+                                <span class="member-name">{{ selectedStream.technicalTeamLead.fullName }}</span>
+                            </div>
+                            <div class="team-row" *ngFor="let m of selectedStream.members | teamFilter:'Technical'">
+                                <span class="role-tag consultant">DEV</span>
+                                <span class="member-name">{{ m.fullName }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-col">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>{{ 'STREAMS.STEPS_TASKS' | translate }}</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="step-task-row" *ngFor="let step of selectedStream.steps">
+                            <div class="step-order">{{ step.order }}</div>
+                            <div class="step-info">
+                                <span class="step-name">{{ step.stepName }}</span>
+                                <span class="tool-badge" *ngIf="step.toolName">{{ step.toolName }}</span>
+                            </div>
+                            <div class="step-assignee" *ngIf="step.task">
+                                <span class="assignee-name">{{ step.task.assignedName }}</span>
+                                <span class="status-badge" [ngClass]="utils.getTaskStatusClass(step.task.status)">
+                                    {{ utils.getTaskStatusLabel(step.task.status) }}
+                                </span>
+                            </div>
+                            <button class="btn-comments"
+                                (click)="openTaskComments(step.task, selectedStream.id); $event.stopPropagation()">
+                                💬
+                            </button>
+                            <span class="no-task" *ngIf="!step.task">{{ 'STREAMS.NOT_ASSIGNED' | translate }}</span>
+                        </div>
+                        <div class="empty" *ngIf="!selectedStream.steps?.length">{{ 'STREAMS.NO_STEPS' | translate }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Git Configs Card -->
+            <div class="detail-col" style="grid-column: 1 / -1;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2> Stream Configurations</h2>
+                        <a *ngIf="streamConfigs[selectedStream.id]?.repoUrl"
+                            [href]="streamConfigs[selectedStream.id]?.repoUrl" target="_blank" class="btn-github">
+                            🔗 View on GitHub
+                        </a>
+                        <button class="btn-primary" *ngIf="streamConfigs[selectedStream.id]?.repoUrl"
+                            (click)="validateStream(selectedStream.id)" [disabled]="validatingStream">
+                            {{ validatingStream ? 'Validating...' : ' Validate Stream (v1.0)' }}
+                        </button>
+                    </div>
+                    <div class="card-body">
+
+                        <!-- Loading -->
+                        <div class="empty" *ngIf="loadingConfigs">Loading configs...</div>
+
+                        <!-- No configs yet -->
+                        <div class="empty"
+                            *ngIf="!loadingConfigs && !streamConfigs[selectedStream.id]?.dbFiles?.length">
+                            No configurations uploaded yet.
+                        </div>
+
+                        <!-- Configs list -->
+                        <div class="config-list"
+                            *ngIf="!loadingConfigs && streamConfigs[selectedStream.id]?.dbFiles?.length">
+                            <div class="config-item" *ngFor="let file of streamConfigs[selectedStream.id]?.dbFiles">
+                                <div class="config-step">
+                                    <span class="step-badge">{{ file.stepName }}</span>
+                                    <span class="tool-badge">{{ file.toolName }}</span>
+                                </div>
+                                <div class="config-file-info">
+                                    <span class="config-filename">📄 {{ file.fileName }}</span>
+                                    <span class="config-meta">
+                                        v{{ file.version }} —
+                                        commit: {{ file.commitHash | slice:0:7 }} —
+                                        {{ file.uploadedAt | date:'dd/MM/yyyy HH:mm' }} —
+                                        by {{ file.uploadedBy }}
+                                    </span>
+                                </div>
+                                <a [href]="streamConfigs[selectedStream.id]?.repoUrl" target="_blank"
+                                    class="config-link">
+                                    🔗
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </ng-container>
+
+    <!-- DEFINE STEPS TAB -->
+    <ng-container *ngFor="let tabId of getOpenTabIds()">
+        <ng-container *ngIf="activeTabId === tabId">
+            <div class="card" *ngIf="getTabData(tabId) as tab">
+
+                <div class="card-header">
+                    <h2>
+                        <!-- Badge IA si c'est une tâche de vérification -->
+                        <span class="ai-review-badge" *ngIf="tab.isAiReview">
+                            <lucide-icon [img]="Sparkles" size="13"></lucide-icon>
+                            AI
+                        </span>
+                        {{ tab.isAiReview ? ('TL.VERIFY_AI_STEPS' | translate) : ('STREAMS.DEFINE_STEPS' | translate) }}
+                    </h2>
+                </div>
+
+                <div class="card-body">
+                    <div class="project-info-block">
+                        <span class="label">Stream</span>
+                        <span class="project-name">{{ getStreamName(tab.task?.streamId ?? '') }}</span>
+                    </div>
+
+                    <!-- Message contextuel pour la tâche IA -->
+                    <div class="ai-context-banner" *ngIf="tab.isAiReview">
+                        <lucide-icon [img]="Sparkles" size="14"></lucide-icon>
+                        <span>{{ 'TL.AI_STEPS_CONTEXT' | translate }}</span>
+                    </div>
+
+                    <!-- Loading spinner -->
+                    <div class="empty" *ngIf="tab.loadingAiSteps">
+                        <div class="ai-spinner" style="margin: 0 auto;"></div>
+                    </div>
+
+                    <!-- Steps list (même composant pour manuel et IA) -->
+                    <div class="steps-container" *ngIf="!tab.loadingAiSteps">
+                        <div class="step-row" *ngFor="let step of tab.steps; let i = index">
+                            <span class="step-number">{{ i + 1 }}</span>
+                            <input type="text" [(ngModel)]="step.stepName"
+                                [placeholder]="'STREAMS.STEP_NAME' | translate" class="form-input">
+                            <select [(ngModel)]="step.toolName" class="form-input tool-select">
+                                <option value="">{{ 'STREAMS.SELECT_TOOL' | translate }}</option>
+                                <option *ngFor="let plugin of availablePlugins" [value]="plugin.id">
+                                    {{ plugin.name }}
+                                </option>
+                            </select>
+                            <button class="btn-remove" (click)="removeStep(tabId, i)"
+                                *ngIf="tab.steps.length > 1">✕</button>
+                        </div>
+                    </div>
+
+                    <button class="btn-add" (click)="addStep(tabId)" *ngIf="!tab.loadingAiSteps">
+                        {{ 'STREAMS.ADD_STEP' | translate }}
+                    </button>
+
+                    <div class="bottom-actions" *ngIf="!tab.loadingAiSteps">
+                        <!-- Bouton IA : Approuver les steps -->
+                        <button class="btn-primary" *ngIf="tab.isAiReview" (click)="approveAiSteps(tabId)"
+                            [disabled]="loading || !tab.steps.length">
+                            {{ loading ? ('COMMON.LOADING' | translate) : ('TL.APPROVE_AI_STEPS' | translate) }}
+                        </button>
+
+                        <!-- Bouton Manuel : Sauvegarder les steps -->
+                        <button class="btn-primary" *ngIf="!tab.isAiReview" (click)="saveSteps(tabId)"
+                            [disabled]="loading || !tab.steps.length">
+                            {{ loading ? ('STREAMS.SAVING' | translate) : ('STREAMS.SAVE_STEPS' | translate) }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+    </ng-container>
+    <app-chat-panel [isOpen]="chatOpen" [streamId]="chatStreamId" [taskId]="chatTaskId" [title]="chatTitle"
+        (closed)="closeChat()">
+    </app-chat-panel>
+
+</div>

@@ -1,0 +1,16 @@
+{
+  "id": "gitea",
+  "name": "Gitea",
+  "description": "Gestion de code source ",
+  "category": "git",
+  "icon": "\uD83D\uDCBB",
+  "baseUrlEnvKey": "PLUGIN_GITEA_URL",
+  "adapterType": "gitea",
+  "ssoEnabled": true,
+  "isActive": false,
+  "allowedRoles": [
+    "Consultant",
+    "TechnicalTeamLead",
+    "BusinessTeamLead"
+  ]
+}

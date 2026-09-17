@@ -1,0 +1,302 @@
+
+<div class="admin-page">
+   
+
+    <!-- TASK LIST -->
+    <ng-container *ngIf="activeTabId === 'tasks'">
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ 'TASKS.TITLE' | translate }} ({{ myTasks.length }})</h2>
+            </div>
+            <div class="search-bar">
+                <input type="text" [(ngModel)]="searchQuery" [placeholder]="'TASKS.SEARCH' | translate"
+                    class="form-input search-input">
+                <select [(ngModel)]="filterStatus" class="form-input filter-select">
+                    <option value="all">{{ 'TASKS.ALL_STATUSES' | translate }}</option>
+                    <option value="0">{{ 'TASKS.PENDING' | translate }}</option>
+                    <option value="1">{{ 'TASKS.BLOCKED' | translate }}</option>
+                    <option value="2">{{ 'TASKS.DONE' | translate }}</option>
+                </select>
+                <input type="date" [(ngModel)]="filterDateFrom" class="form-input date-input" title="From">
+                <input type="date" [(ngModel)]="filterDateTo" class="form-input date-input" title="To">
+                <button class="btn-reset" (click)="resetFilters()"
+                    *ngIf="searchQuery || filterStatus !== 'all' || filterDateFrom || filterDateTo">✕</button>
+            </div>
+            <div class="action-bar" *ngIf="hasSelection">
+                <span class="selection-count">{{ selectedIds.size }} {{ 'COMMON.SELECT' | translate }}</span>
+                <button class="action-btn success" (click)="markDone()">✓ {{ 'TASKS.MARK_DONE' | translate }}</button>
+            </div>
+            <div class="table-wrapper">
+                <table class="tasks-table" *ngIf="myTasks.length > 0">
+                    <thead>
+                        <tr>
+                            <th style="width:40px"></th>
+                            <th>{{ 'COMMON.NAME' | translate }}</th>
+                            <th>{{ 'TASKS.TOOL' | translate }}</th>
+                            <th>{{ 'COMMON.STATUS' | translate }}</th>
+                            <th>{{ 'COMMON.DATE' | translate }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let task of filteredTasks" [class.task-done]="task.status === 2"
+                            [class.selected]="isSelected(task.id)" (click)="onMyTaskClick(task)">
+                            <td (click)="toggleSelect(task.id); $event.stopPropagation()">
+                                <div class="checkbox" [class.checked]="isSelected(task.id)">
+                                    <span *ngIf="isSelected(task.id)">✓</span>
+                                </div>
+                            </td>
+                            <td><span class="task-title">{{ task.title }}</span></td>
+                            <td><span class="tool-badge">{{ task.toolName }}</span></td>
+                            <td>
+                                <span class="status-badge" [ngClass]="utils.getTaskStatusClass(task.status)">
+                                    {{ utils.getTaskStatusLabel(task.status) }}
+                                </span>
+                            </td>
+                            <td class="text-secondary">{{ task.createdAt | date:'dd/MM/yyyy' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty" *ngIf="myTasks.length === 0">{{ 'TASKS.NO_TASKS' | translate }}</div>
+        </div>
+
+        <!-- ACCESS CARDS -->
+        <div class="access-grid">
+            <div class="access-card" (click)="openAccessTab('portfolios')">
+                <lucide-icon [img]="FolderOpen" size="18" class="access-icon"></lucide-icon>
+                <div class="access-info">
+                    <span class="access-title">{{ 'PORTFOLIOS.TITLE' | translate }}</span>
+                    <span class="access-sub">{{ portfolios.length }} {{ 'PORTFOLIOS.TITLE' | translate | lowercase
+                        }}</span>
+                </div>
+                <lucide-icon [img]="ChevronRight" size="16" class="access-arrow"></lucide-icon>
+            </div>
+            <div class="access-card" (click)="openAccessTab('projects')">
+                <lucide-icon [img]="BarChart2" size="18" class="access-icon"></lucide-icon>
+                <div class="access-info">
+                    <span class="access-title">{{ 'PROJECTS.TITLE' | translate }}</span>
+                    <span class="access-sub">{{ projects.length }} {{ 'PROJECTS.TITLE' | translate | lowercase }}</span>
+                </div>
+                <lucide-icon [img]="ChevronRight" size="16" class="access-arrow"></lucide-icon>
+            </div>
+            <div class="access-card" (click)="openAccessTab('contracts')">
+                <lucide-icon [img]="FileText" size="18" class="access-icon"></lucide-icon>
+                <div class="access-info">
+                    <span class="access-title">{{ 'CONTRACTS.TITLE' | translate }}</span>
+                    <span class="access-sub">{{ stats.contracts }} {{ 'CONTRACTS.TITLE' | translate | lowercase
+                        }}</span>
+                </div>
+                <lucide-icon [img]="ChevronRight" size="16" class="access-arrow"></lucide-icon>
+            </div>
+        </div>
+
+        <!-- CHARTS -->
+        <div class="charts-grid">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>{{ 'CHARTS.TASK_DISTRIBUTION' | translate }}</h2>
+                </div>
+                <div class="card-body chart-body">
+                    <canvas id="adminDonutChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card">
+                <div class="card-header">
+                <h2>{{ 'CHARTS.TASKS_COMPLETED_MONTH' | translate }}</h2>
+                </div>
+                <div class="card-body chart-body">
+                    <canvas id="adminBarChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>{{ 'CHARTS.STATISTICS' | translate }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="quick-stats">
+                        <div class="qs-item" [class.qs-alert]="statsBottom.pendingTasks > 0">
+                            <span class="qs-label">{{ 'STREAMS.PENDING_TASKS' | translate }}</span>
+                            <span class="qs-value">{{ statsBottom.pendingTasks }}</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">{{ 'STREAMS.COMPLETION_RATE' | translate }}</span>
+                            <span class="qs-value">{{ statsBottom.completionRate }}%</span>
+                        </div>
+                        <div class="qs-item" [class.qs-alert]="statsBottom.contractsNotTreated > 0">
+                            <span class="qs-label">{{ 'CONTRACTS.UNTREATED' | translate }}</span>
+                            <span class="qs-value">{{ statsBottom.contractsNotTreated }}</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">{{ 'ADMIN.ACTIVE_PROJECTS' | translate }}</span>
+                            <span class="qs-value">{{ statsBottom.activeProjects }}</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">Portfolios Avg Progress</span>
+                            <span class="qs-value">{{ portfolioGlobalStats.avgProgress }}%</span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ng-container>
+
+    <!-- CREATE PROJECT TAB -->
+    <ng-container *ngFor="let tabId of getOpenTabIds()">
+        <ng-container *ngIf="activeTabId === tabId">
+            <div class="card" *ngIf="getTabData(tabId) as tab">
+                <div class="card-header">
+                    <h2>{{ 'PROJECTS.CREATE' | translate }}</h2>
+                </div>
+                <div class="card-body">
+
+                    <!-- Contract Info -->
+                    <div class="contract-info" *ngIf="tab.contractInfo">
+                        <div class="contract-banner">
+                            <span class="contract-badge">{{ 'CONTRACTS.SIGNED_CONTRACT' | translate }}</span>
+                            <span class="contract-client">{{ tab.contractInfo.clientName }}</span>
+                            <p class="contract-desc" *ngIf="tab.contractInfo.description">
+                                {{ tab.contractInfo.description }}
+                            </p>
+                            <div class="files-list" *ngIf="tab.contractInfo.filesPaths?.length > 0">
+                            <a *ngFor="let f of tab.contractInfo.filesPaths" [href]="getFileUrl(f)" target="_blank" class="file-link">
+                                📄 {{ getFileName(f) }}
+                            </a>
+                            </div>
+                            <div class="summary-section" *ngIf="tab.contractInfo?.summary">
+                                <span class="summary-badge">{{ 'AI.SUMMARY' | translate }}</span>
+                                <markdown class="summary-text" [data]="tab.contractInfo.summary"></markdown>
+                            </div>
+                            <div class="summary-pending"
+                                *ngIf="!tab.contractInfo?.summary && tab.contractInfo?.summaryStatus === 1">
+                                <span>{{ 'AI.SUMMARY_PENDING' | translate }}</span>
+                            </div>
+                            <div class="summary-failed" *ngIf="tab.contractInfo?.summaryStatus === 3">
+                                <span>{{ 'AI.SUMMARY_FAILED' | translate }}</span>
+                                <button class="btn-secondary" (click)="retrySummary(tab.contractInfo.id)" [disabled]="loading">
+                                    {{ 'AI.RETRY_SUMMARY' | translate }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>{{ 'PROJECTS.NAME' | translate }}</label>
+                            <input type="text" [(ngModel)]="tab.projectName" placeholder="e.g. ACP Migration"
+                                class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>{{ 'COMMON.DESCRIPTION' | translate }}</label>
+                            <input type="text" [(ngModel)]="tab.projectDescription"
+                                [placeholder]="'PROJECTS.DESCRIPTION' | translate" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>{{ 'PROJECTS.TARGET_DATE' | translate }}</label>
+                            <input type="date" [(ngModel)]="tab.targetDate" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <div class="label-row">
+                                <label>{{ 'PROJECTS.PORTFOLIO' | translate }}</label>
+                                <button class="btn-add-small"
+                                    (click)="tab.showCreatePortfolio = !tab.showCreatePortfolio">
+                                    {{ 'PROJECTS.NEW_PORTFOLIO' | translate }}
+                                </button>
+                            </div>
+                            <div *ngIf="portfolios.length === 0 && !tab.showCreatePortfolio"
+                                class="alert alert-warning">
+                                {{ 'PROJECTS.NO_PORTFOLIO' | translate }}
+                            </div>
+                            <select *ngIf="portfolios.length > 0" [(ngModel)]="tab.selectedPortfolioId"
+                                class="form-input">
+                                <option value="">{{ 'PROJECTS.SELECT_PORTFOLIO' | translate }}</option>
+                                <option *ngFor="let p of portfolios" [value]="p.id">
+                                    {{ p.name }} — {{ p.director?.fullName || ('PORTFOLIOS.NONE' | translate) }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="portfolio-inline-form" *ngIf="tab.showCreatePortfolio">
+                            <div class="form-group">
+                                <label>{{ 'PORTFOLIOS.PORTFOLIO_NAME' | translate }}</label>
+                                <input type="text" [(ngModel)]="tab.portfolioName" placeholder="e.g. Finance Portfolio"
+                                    class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>{{ 'COMMON.DESCRIPTION' | translate }}</label>
+                                <input type="text" [(ngModel)]="tab.portfolioDescription"
+                                    [placeholder]="'COMMON.DESCRIPTION' | translate" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>{{ 'PORTFOLIOS.DIRECTOR' | translate }}</label>
+                                <select [(ngModel)]="tab.selectedDirectorId" class="form-input">
+                                    <option value="">{{ 'PORTFOLIOS.SELECT_PLACEHOLDER' | translate }}</option>
+                                    <option *ngFor="let d of directors" [value]="d.id">{{ d.fullName }}</option>
+                                </select>
+                            </div>
+                            <button class="btn-secondary" (click)="createPortfolio(tabId)" [disabled]="loading">
+                                {{ 'PORTFOLIOS.CREATE' | translate }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bottom-actions">
+                        <button class="btn-primary" (click)="createProject(tabId)"
+                            [disabled]="loading || !tab.selectedPortfolioId">
+                            {{ loading ? ('PROJECTS.CREATING' | translate) : ('PROJECTS.CREATE' | translate) }}
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </ng-container>
+    </ng-container>
+
+    <!-- EDIT PROJECT TAB -->
+    <ng-container *ngFor="let tabId of getEditTabIds()">
+        <ng-container *ngIf="activeTabId === tabId">
+            <div class="card" *ngIf="getEditTabData(tabId) as tab">
+                <div class="card-header">
+                    <h2>{{ 'PROJECTS.EDIT' | translate }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>{{ 'PROJECTS.NAME' | translate }}</label>
+                            <input type="text" [(ngModel)]="tab.name" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>{{ 'COMMON.DESCRIPTION' | translate }}</label>
+                            <input type="text" [(ngModel)]="tab.description" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>{{ 'PROJECTS.TARGET_DATE' | translate }}</label>
+                            <input type="date" [(ngModel)]="tab.targetDate" class="form-input">
+                        </div>
+                    </div>
+                    <div class="bottom-actions">
+                        <button class="btn-primary" (click)="updateProject(tabId)" [disabled]="loading">
+                            {{ loading ? ('COMMON.LOADING' | translate) : ('PROJECTS.SAVE_CHANGES' | translate) }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+    </ng-container>
+
+    <!-- PORTFOLIOS TAB -->
+    <ng-container *ngIf="activeTabId === 'portfolios-tab'">
+        <app-portfolios-tab [directors]="directors"></app-portfolios-tab>
+    </ng-container>
+
+    <!-- PROJECTS TAB -->
+    <ng-container *ngIf="activeTabId === 'projects-tab'">
+        <app-projects-tab></app-projects-tab>
+    </ng-container>
+
+    <!-- CONTRACTS TAB -->
+    <ng-container *ngIf="activeTabId === 'contracts-tab'">
+        <app-contracts-tab></app-contracts-tab>
+    </ng-container>
+
+</div>

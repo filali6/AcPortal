@@ -1,0 +1,374 @@
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TasksService, Task } from '../../core/services/tasks.service';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { NotificationService } from '../../core/services/notification.service';
+import { PluginBridgeService } from '../../core/services/plugin-bridge.service';
+import { ToastService } from '../../core/services/toast.service';
+import { UtilsService } from '../../core/services/utils.service';
+import { ChartService } from '../../core/services/chart.service';
+import { TabsService } from '../../core/services/tabs.service';
+import { AuthService } from '../../core/services/auth.service';
+import { LucideAngularModule, ChevronRight, Layers,MessageSquare } from 'lucide-angular';
+import { environment } from '../../../environments/environment';
+import { Subscription } from 'rxjs';
+import { Chart, registerables } from 'chart.js';
+import { TeamFilterPipe } from '../../core/pipes/team-filter.pipe';
+Chart.register(...registerables);
+import { ChatPanelComponent } from '../../core/components/chat-panel/chat-panel.component';
+import { KeycloakService } from 'keycloak-angular';
+import { ChatService } from '../../core/services/chat.service';
+import { TranslateModule } from '@ngx-translate/core';
+import { DrawerService } from '../../core/services/drawer.service';
+import { BriefingCardComponent } from '../../core/components/briefing-card/briefing-card.component';
+import { GitService } from '../../core/services/git.service';
+@Component({
+  selector: 'app-consultant',
+  standalone: true,
+  imports: [CommonModule, FormsModule, LucideAngularModule, ChatPanelComponent,TranslateModule,BriefingCardComponent],
+  templateUrl: './consultant.component.html',
+  styleUrl: './consultant.component.scss'
+})
+export class ConsultantComponent implements OnInit, OnDestroy {
+
+  activeTabId: string = 'tasks';
+  currentUserId = '';
+
+  tasks: Task[] = [];
+  myStreams: any[] = [];
+  projects: { id: string, name: string }[] = [];
+  projectNames: Map<string, string> = new Map();
+  availablePlugins: any[] = [];
+
+  selectedIds: Set<string> = new Set();
+  loading = false;
+
+  searchQuery = '';
+  filterStatus = 'all';
+  selectedProjectId = '';
+  filterStreamId = '';
+
+chatTaskStatus: number | null = null;
+chatToolName: string | null = null;
+
+  collapsedGroups: Set<string> = new Set();
+
+//chat 
+  chatOpen = false;
+  chatTaskId: string | null = null;
+  chatTitle = '';
+
+  chatStreamId: string | null = null;
+
+  private donutChart: Chart | null = null;
+  private barChart: Chart | null = null;
+  private subs: Subscription[] = [];
+  private apiUrl = environment.apiUrl;
+  unreadTaskIds: Set<string> = new Set();
+  
+  loadingMock: Set<string> = new Set();
+  taskConfigs: Map<string, any> = new Map();
+
+  statsBottom = {
+    pendingTasks: 0,
+    completionRate: 0,
+    activeStreams: 0,
+    toolsUsed: 0
+  };
+  chatMessagingChannelUrl: string | null = null;
+
+  readonly ChevronRight = ChevronRight;
+  readonly Layers = Layers;
+  readonly MessageSquare=MessageSquare;
+
+  constructor(
+    private tasksService: TasksService,
+    private http: HttpClient,
+    private router: Router,
+    private notificationService: NotificationService,
+    private pluginBridge: PluginBridgeService,
+    private toastService: ToastService,
+    public utils: UtilsService,
+    private chartService: ChartService,
+    public tabsService: TabsService,
+    private authService: AuthService,
+    private keycloak:KeycloakService,
+    private chatService:ChatService,
+    private drawerService:DrawerService,
+    private gitService: GitService
+
+  ) {}
+
+  ngOnInit(): void {
+    const userInfo = this.authService.getUserInfo();
+    this.currentUserId = userInfo?.id || userInfo?.sub || '';
+    this.loadAll();
+
+    this.subs.push(
+      this.notificationService.notifications$.subscribe(() => this.loadTasks()),
+      this.tabsService.activeTabId.subscribe(id => this.activeTabId = id),
+      this.chatService.getUnreadTaskIds().subscribe(ids => {
+        this.unreadTaskIds = ids;
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subs.forEach(s => s.unsubscribe());
+  }
+
+  loadAll(): void {
+    this.loadTasks();
+    this.loadProjectNames();
+    this.pluginBridge.getAllPlugins().subscribe({
+      next: (plugins) => this.availablePlugins = plugins
+    });
+    this.http.get<any[]>(`${this.apiUrl}/streams/my`).subscribe({
+      next: (streams) => {
+        this.myStreams = streams;
+        const token = this.keycloak.getKeycloakInstance().token || '';
+    this.chatService.startConnection(token).then(() => {
+      streams.forEach((s: any) => {
+        this.chatService.joinStreamChat(s.id);
+      });
+       
+    });
+
+       
+        this.statsBottom.activeStreams = streams.length;
+      }
+    });
+  }
+
+  loadTasks(): void {
+  this.loading = true;
+  this.tasksService.getMyTasks().subscribe({
+    next: (tasks) => {
+      this.tasks = tasks;
+      this.loading = false;
+      this.loadProjects();
+      this.computeStats();
+
+      
+      tasks.filter(t => t.stepId).forEach(task => {
+        this.chatService.joinTaskChatSilent(task.id);
+      });
+    },
+    error: () => this.loading = false
+  });
+}
+
+  loadProjects(): void {
+    this.projects = [];
+    const seen = new Set<string>();
+    this.tasks.forEach(t => {
+      if (t.projectId && !seen.has(t.projectId)) {
+        seen.add(t.projectId);
+        const name = this.projectNames.get(t.projectId) || t.projectId;
+        this.projects.push({ id: t.projectId, name });
+      }
+    });
+  }
+
+  loadProjectNames(): void {
+    this.http.get<{ id: string, name: string }[]>(`${this.apiUrl}/projects`).subscribe({
+      next: (projects) => {
+        projects.forEach(p => this.projectNames.set(p.id, p.name));
+        this.loadProjects();
+      }
+    });
+  }
+
+  computeStats(): void {
+    this.statsBottom.pendingTasks = this.tasks.filter(t => t.status === 0).length;
+    this.statsBottom.completionRate = this.tasks.length
+      ? Math.round((this.tasks.filter(t => t.status === 2).length / this.tasks.length) * 100)
+      : 0;
+    this.statsBottom.toolsUsed = new Set(this.tasks.map(t => t.toolName).filter(Boolean)).size;
+    setTimeout(() => this.renderCharts(), 100);
+  }
+
+  renderCharts(): void {
+    this.donutChart = this.chartService.createDoughnut(
+      'consultantDonutChart',
+      ['Pending', 'Blocked', 'Done'],
+      [
+        this.tasks.filter(t => t.status === 0).length,
+        this.tasks.filter(t => t.status === 1).length,
+        this.tasks.filter(t => t.status === 2).length
+      ],
+      ['#f59e0b', '#ef4444', '#10b981'],
+      this.donutChart
+    );
+
+    this.barChart = this.chartService.createBar(
+      'consultantBarChart',
+      this.chartService.getLast6MonthsLabels(),
+      this.chartService.getLast6MonthsData(this.tasks, 'createdAt'),
+      '#3b82f6',
+      this.barChart
+    );
+  }
+
+  // ===== FILTRES =====
+  get filteredProjectIds(): string[] {
+    return this.selectedProjectId
+      ? [this.selectedProjectId]
+      : [...new Set(this.tasks.map(t => t.projectId).filter((id): id is string => !!id))];
+  }
+
+  get filteredStreams(): any[] {
+    if (!this.selectedProjectId) return this.myStreams;
+    return this.myStreams.filter(s => s.projectId === this.selectedProjectId);
+  }
+
+  get availableTools(): string[] {
+    return [...new Set(this.tasks.map(t => t.toolName).filter(Boolean))];
+  }
+
+  onProjectChange(): void {
+    this.filterStreamId = '';
+  }
+
+  getTasksForProject(projectId: string): Task[] {
+    let tasks = this.tasks.filter(t => t.projectId === projectId);
+
+    // if (this.filterStreamId)
+    //   tasks = tasks.filter(t => t.streamId === this.filterStreamId);
+
+    if (this.searchQuery)
+      tasks = tasks.filter(t => t.title.toLowerCase().includes(this.searchQuery.toLowerCase()));
+
+    if (this.filterStatus !== 'all')
+      tasks = tasks.filter(t => t.status === +this.filterStatus);
+
+    // Done en bas
+    return [
+      ...tasks.filter(t => t.status !== 2),
+      ...tasks.filter(t => t.status === 2)
+    ];
+  }
+
+  // ===== TOOLS =====
+ openTool(task: Task): void {
+    if (task.status === 1) return;
+    if (!task.toolName) return;
+
+    const plugin = this.availablePlugins.find(p => p.id === task.toolName);
+    
+    console.log('plugin complet:', JSON.stringify(plugin));
+    console.log('accessUrl:', plugin?.url);
+
+    if (plugin?.url) {
+        window.open(plugin.url, '_blank');
+    } else {
+        this.toastService.show(`No URL configured for ${task.toolName}`, 'error');
+    }
+}
+
+  // ===== STREAMS TAB =====
+  openStreamsTab(): void {
+    this.tabsService.openTab({
+      id: 'my-streams',
+      title: 'My Streams',
+      type: 'create-project'
+    });
+  }
+
+  getStreamTeamType(stream: any): string {
+    // Chercher le TeamType du consultant dans ce stream
+    const member = stream.members?.find((m: any) => m.consultantId === this.currentUserId);
+    return member?.teamType || '—';
+  }
+
+  getProjectName(projectId: string): string {
+    return this.projectNames.get(projectId) || '—';
+  }
+
+  // ===== SELECTION =====
+  toggleSelect(taskId: string): void {
+    if (this.selectedIds.has(taskId)) this.selectedIds.delete(taskId);
+    else this.selectedIds.add(taskId);
+  }
+
+  isSelected(taskId: string): boolean { return this.selectedIds.has(taskId); }
+  get hasSelection(): boolean { return this.selectedIds.size > 0; }
+
+  isBlocked(task: Task): boolean { return task.status === 1; }
+
+  markDone(): void {
+    Array.from(this.selectedIds).forEach(id => {
+      this.tasksService.updateStatus(id, 2).subscribe({
+        next: () => {
+          const task = this.tasks.find(t => t.id === id);
+          if (task) task.status = 2;
+          this.selectedIds.clear();
+          this.computeStats();
+        }
+      });
+    });
+  }
+ openTaskChat(task: any): void {
+    this.chatTaskId = task.id;
+    this.chatTitle = task.title;
+    this.chatTaskStatus = task.status;
+    this.chatToolName = task.toolName || null;
+    this.chatStreamId = task.streamId || null;
+
+    const stream = this.myStreams.find(s => s.id === task.streamId);
+    this.chatMessagingChannelUrl = stream?.messagingChannelUrl || null;
+
+    this.chatOpen = true;
+    this.drawerService.open();
+    this.chatService.markTaskAsRead(task.id);
+}
+
+closeChat(): void {
+    this.chatOpen = false;
+    this.drawerService.close(); // ← add this
+}
+hasUnread(taskId: string): boolean {
+  return this.unreadTaskIds.has(taskId);
+}
+toggleGroup(projectId: string): void {
+    if (this.collapsedGroups.has(projectId)) {
+        this.collapsedGroups.delete(projectId);
+    } else {
+        this.collapsedGroups.add(projectId);
+    }
+}
+
+isGroupCollapsed(projectId: string): boolean {
+    return this.collapsedGroups.has(projectId);
+}
+
+simulateToolOutput(task: Task): void {
+    if (!task.stepId) return;
+    this.loadingMock.add(task.id);
+
+    this.gitService.generateMock(task.stepId).subscribe({
+        next: (result) => {
+            this.taskConfigs.set(task.id, result);
+            this.loadingMock.delete(task.id);
+            this.toastService.show(
+                `✅ ${result.fileName} generated by ${task.toolName}`
+            );
+        },
+        error: () => {
+            this.loadingMock.delete(task.id);
+            this.toastService.show('❌ Failed to generate mock');
+        }
+    });
+}
+
+getTaskConfig(taskId: string): any {
+    return this.taskConfigs.get(taskId);
+}
+
+isLoadingMock(taskId: string): boolean {
+    return this.loadingMock.has(taskId);
+}
+
+}

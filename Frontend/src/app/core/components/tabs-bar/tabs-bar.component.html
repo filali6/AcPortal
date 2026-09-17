@@ -1,0 +1,14 @@
+<div class="tabs-bar">
+
+    <!-- Mon Espace — always visible, home tab -->
+    <div class="tab" [class.active]="activeTabId === 'tasks'" (click)="setActive('tasks')">
+        <span class="tab-title">{{ 'TABS.MY_SPACE' | translate }}</span>
+    </div>
+
+    <!-- Dynamic tabs -->
+    <div *ngFor="let tab of tabs" class="tab" [class.active]="activeTabId === tab.id" (click)="setActive(tab.id)">
+        <span class="tab-title">{{ tab.title }}</span>
+        <button class="tab-close" (click)="close(tab.id, $event)">✕</button>
+    </div>
+
+</div>

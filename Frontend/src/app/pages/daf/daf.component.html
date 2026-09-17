@@ -1,0 +1,184 @@
+<div class="daf-page">
+
+    <ng-container *ngIf="activeTabId === 'tasks'">
+
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ 'CONTRACTS.TITLE' | translate }} ({{ contracts.length }})</h2>
+                <button class="btn-primary" (click)="openNewContractModal()">+ {{ 'CONTRACTS.NEW' | translate
+                    }}</button>
+            </div>
+
+            <div *ngIf="loading" class="empty">{{ 'COMMON.LOADING' | translate }}</div>
+            <div class="table-wrapper" *ngIf="!loading">
+                <table class="tasks-table" *ngIf="contracts.length > 0">
+                    <thead>
+                        <tr>
+                            <th>{{ 'CONTRACTS.CLIENT' | translate }}</th>
+                            <th>{{ 'CONTRACTS.SIGNED' | translate }}</th>
+                            <th>{{ 'CONTRACTS.DAYS' | translate }}</th>
+                            <th>{{ 'CONTRACTS.PROJECT' | translate }}</th>
+                            <th>{{ 'CONTRACTS.DELAY' | translate }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let contract of contracts" class="clickable-row"
+                            (click)="openContractTab(contract)">
+                            <td class="task-title">{{ contract.clientName }}</td>
+                            <td class="text-secondary">{{ contract.createdAt | date:'dd/MM/yyyy' }}</td>
+                            <td class="text-secondary">{{ getDays(contract.createdAt) }} {{ 'CONTRACTS.DAYS_UNIT' | translate }}</td>
+                            <td>
+                                <span class="project-badge" *ngIf="contract.projectId">{{ 'CONTRACTS.PROJECT_CREATED' | translate }}</span>
+                                <span class="project-pending" *ngIf="!contract.projectId">{{ 'CONTRACTS.PENDING' | translate }}</span>
+                            </td>
+                            <td>
+                                <span class="alert-badge" *ngIf="isDelayed(contract)">{{ 'CONTRACTS.DELAYED' | translate }}</span>
+                                <span class="text-secondary" *ngIf="!isDelayed(contract)">—</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty" *ngIf="!loading && contracts.length === 0">{{ 'CONTRACTS.EMPTY' | translate }}</div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>{{ 'CONTRACTS.STATUS_DISTRIBUTION' | translate }}</h2>
+                </div>
+                <div class="card-body chart-body">
+                    <canvas id="donutChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>{{ 'CONTRACTS.PER_MONTH' | translate }}</h2>
+                </div>
+                <div class="card-body chart-body">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>{{ 'CHARTS.STATISTICS' | translate }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="quick-stats">
+                        <div class="qs-item">
+                            <span class="qs-label">{{ 'CONTRACTS.TOTAL' | translate }}</span>
+                            <span class="qs-value">{{ statsBottom.total }}</span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">{{ 'CONTRACTS.CONVERTED' | translate }}</span>
+                            <span class="qs-value">
+                                {{ statsBottom.converted }}
+                                <span class="qs-sub">{{ statsBottom.conversionRate }}%</span>
+                            </span>
+                        </div>
+                        <div class="qs-item">
+                            <span class="qs-label">{{ 'CONTRACTS.AVG_DAYS' | translate }}</span>
+                            <span class="qs-value">{{ statsBottom.avgDays }}{{ 'CONTRACTS.DAYS_UNIT' | translate }}</span>
+                        </div>
+                        <div class="qs-item" [class.qs-alert]="statsBottom.waitingOver7Days > 0">
+                            <span class="qs-label">{{ 'CONTRACTS.WAITING_7_DAYS' | translate }}</span>
+                            <span class="qs-value">{{ statsBottom.waitingOver7Days }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </ng-container>
+
+    <!-- CONTRACT TAB -->
+    <ng-container *ngFor="let tabId of getOpenTabIds()">
+        <ng-container *ngIf="activeTabId === tabId">
+            <div class="card" *ngIf="getTabData(tabId) as tab">
+
+                <div class="card-header">
+                    <div class="header-left">
+                        <h2>{{ tab.contract.clientName }}</h2>
+                        <span class="project-badge" *ngIf="tab.contract.projectId">
+                            {{ 'CONTRACTS.PROJECT_CREATED' | translate }}
+                        </span>
+                        <span class="project-pending" *ngIf="!tab.contract.projectId">
+                            {{ 'CONTRACTS.PENDING' | translate }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>{{ 'CONTRACTS.CLIENT' | translate }}</label>
+                        <input type="text" [value]="tab.contract.clientName" class="form-input" readonly
+                            style="opacity: 0.5; cursor: not-allowed;">
+                    </div>
+                    <div class="form-group">
+                        <label>{{ 'COMMON.DESCRIPTION' | translate }} *</label>
+                        <textarea [(ngModel)]="tab.editData.description" class="form-input form-textarea"
+                            rows="3"></textarea>
+                    </div>
+
+                    <div class="files-section" *ngIf="tab.contract.filesPaths?.length > 0">
+                        <span class="label">{{ 'CONTRACTS.EXISTING_FILES' | translate }}</span>
+                        <div class="files-list">
+                            <div class="file-item" *ngFor="let f of tab.contract.filesPaths">
+                                <a [href]="getFileUrl(f)" target="_blank" class="file-link">
+                                    📄 {{ getFileName(f) }}
+                                </a>
+                                <button class="btn-delete-file" (click)="deleteFile(tabId, f)">✕</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>{{ 'CONTRACTS.ADD_FILES' | translate }}</label>
+                        <input type="file" multiple (change)="onEditFilesSelected($event, tabId)" class="form-input">
+                        <div class="files-preview" *ngIf="tab.editData.newFiles?.length > 0">
+                            <span class="file-tag" *ngFor="let f of tab.editData.newFiles">📄 {{ f.name }}</span>
+                        </div>
+                    </div>
+
+                    <div class="bottom-actions">
+                        <button class="btn-small" (click)="closeContractTab(tabId)">
+                            {{ 'COMMON.CANCEL' | translate }}
+                        </button>
+                        <button class="btn-primary" (click)="saveContract(tabId)">
+                            {{ 'PROJECTS.SAVE_CHANGES' | translate }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+    </ng-container>
+
+    <!-- MODAL NOUVEAU CONTRAT -->
+    <app-modal *ngIf="showNewContractModal" [title]="'CONTRACTS.NEW' | translate" width="480px"
+        (closed)="closeNewContractModal()">
+        <div class="form-group">
+            <label>{{ 'CONTRACTS.CLIENT' | translate }} *</label>
+            <input type="text" [(ngModel)]="newContract.clientName" placeholder="e.g. Axe Finance SA"
+                class="form-input">
+        </div>
+        <div class="form-group">
+            <label>{{ 'COMMON.DESCRIPTION' | translate }} *</label>
+            <textarea [(ngModel)]="newContract.description" class="form-input form-textarea" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+            <label>{{ 'CONTRACTS.FILES' | translate }} *</label>
+            <input type="file" multiple (change)="onNewFilesSelected($event)" class="form-input">
+            <div class="files-preview" *ngIf="newContract.files.length > 0">
+                <span class="file-tag" *ngFor="let f of newContract.files">{{ f.name }}</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-small" (click)="closeNewContractModal()">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button class="btn-primary" (click)="createContract()" [disabled]="newContractLoading">
+                {{ newContractLoading ? ('CONTRACTS.ADDING' | translate) : ('CONTRACTS.ADD' | translate) }}
+            </button>
+        </div>
+    </app-modal>
+
+</div>

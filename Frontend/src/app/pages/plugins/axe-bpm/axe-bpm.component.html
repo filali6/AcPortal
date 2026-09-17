@@ -1,0 +1,42 @@
+<div class="plugin-page">
+
+    <div class="plugin-header">
+        <button class="btn-back" (click)="goBack()">← Retour</button>
+        <div class="plugin-title">
+            <span class="plugin-icon">⚙️</span>
+            <h1>axeBPM</h1>
+        </div>
+        <p class="plugin-subtitle">Gestion des règles métier</p>
+    </div>
+
+    <div class="plugin-card">
+        <h2>Publier un événement</h2>
+
+        <div class="form-group">
+            <label>Projet</label>
+            <select [(ngModel)]="selectedProjectId" class="form-select">
+                <option value="">-- Sélectionner un projet --</option>
+                <option *ngFor="let project of projects" [value]="project.id">
+                    {{ project.name }}
+                </option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Event Type</label>
+            <input type="text" [(ngModel)]="eventType" placeholder="ex: ConfigCompleted..." class="form-select">
+        </div>
+
+        <div *ngIf="successMessage" class="alert alert-success">
+            {{ successMessage }}
+        </div>
+        <div *ngIf="errorMessage" class="alert alert-error">
+            {{ errorMessage }}
+        </div>
+
+        <button class="btn-publish" (click)="publishEvent()" [disabled]="loading">
+            {{ loading ? 'Publication...' : 'Publish Event' }}
+        </button>
+    </div>
+
+</div>

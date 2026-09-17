@@ -1,9 +1,7 @@
 using Confluent.Kafka;
+using Backend.Modules.Events.Services;
 using Backend.Data;
-using Backend.Modules.Events.Models;
-using Backend.Modules.Tasks.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace Backend.Kafka;
 
@@ -30,27 +28,59 @@ public class KafkaConsumerService : BackgroundService
             BootstrapServers = _configuration["Kafka:BootstrapServers"],
             GroupId = _configuration["Kafka:GroupId"],
             AutoOffsetReset = AutoOffsetReset.Earliest,
-            EnableAutoCommit = false
+            EnableAutoCommit = false,
+            AllowAutoCreateTopics = true
         };
 
-        var topic = _configuration["Kafka:TopicName"];
-
-        _logger.LogInformation(" Kafka Consumer démarré — écoute le topic : {Topic}", topic);
-
         using var consumer = new ConsumerBuilder<string, string>(config).Build();
-        consumer.Subscribe(topic);
+
+        
+        await SubscribeToProjectTopics(consumer, stoppingToken);
+
+      
+        var lastRefresh = DateTime.UtcNow;
+
+        _logger.LogInformation("Kafka Consumer démarré — écoute tous les topics project.*");
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
+                if ((DateTime.UtcNow - lastRefresh).TotalSeconds > 30)
+                {
+                    await SubscribeToProjectTopics(consumer, stoppingToken);
+                    lastRefresh = DateTime.UtcNow;
+                }
+
                 var result = consumer.Consume(TimeSpan.FromSeconds(1));
                 if (result == null) continue;
 
-                _logger.LogInformation("Événement reçu : {Message}", result.Message.Value);
+                var topicName = result.Topic;
+                //var projectIdStr = topicName.Replace("project.", "");
+                Guid? projectId = null;
+                if (topicName.StartsWith("project."))
+                {
+                    var projectIdStr = topicName.Replace("project.", "");
+                    projectId = Guid.TryParse(projectIdStr, out var pid) ? pid : null;
 
-                await ProcessEventAsync(result.Message.Value);
+                }
+
+                _logger.LogInformation(
+                    "Message reçu — topic : {Topic} — projectId : {ProjectId}",
+                    topicName, projectId);
+
+                using var scope = _scopeFactory.CreateScope();
+                var processor = scope.ServiceProvider
+                    .GetRequiredService<EventProcessorService>();
+
+                await processor.ProcessAsync(result.Message.Value, projectId);
+
                 consumer.Commit(result);
+            }
+            catch (ConsumeException ex) when (ex.Error.Code == ErrorCode.UnknownTopicOrPart)
+            { 
+                _logger.LogWarning("Topic pas encore disponible — en attente...");
+                await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
             }
             catch (OperationCanceledException)
             {
@@ -61,75 +91,36 @@ public class KafkaConsumerService : BackgroundService
                 _logger.LogError(ex, " Erreur lors de la consommation Kafka");
             }
         }
-
+ 
         consumer.Close();
         _logger.LogInformation(" Kafka Consumer arrêté.");
     }
 
-    private async Task ProcessEventAsync(string messageValue)
+    
+    private async Task SubscribeToProjectTopics(
+        IConsumer<string, string> consumer,
+        CancellationToken stoppingToken)
     {
-        try
-        {
-            // Désérialiser le JSON reçu
-            var eventDto = JsonSerializer.Deserialize<AcpEventDto>(messageValue, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-            if (eventDto == null) return;
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            using var scope = _scopeFactory.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var projectIds = await db.Projects
+            .Select(p => p.Id.ToString())
+            .ToListAsync(stoppingToken);
 
-            // Éviter les doublons
-            var exists = await db.AcpEvents
-                .AnyAsync(e => e.ToolName == eventDto.ToolName &&
-                               e.EventType == eventDto.EventType &&
-                               e.ReceivedAt >= DateTime.UtcNow.AddSeconds(-5));
-            if (exists)
-            {
-                _logger.LogWarning(" Événement doublon ignoré.");
-                return;
-            }
+        
+        var topics = projectIds
+            .Select(id => $"project.{id}")
+            .ToList();
 
-            // Créer l'événement
-            var acpEvent = new AcpEvent
-            {
-                ToolName = eventDto.ToolName,
-                EventType = eventDto.EventType,
-                Payload = eventDto.Payload,
-                ReceivedAt = DateTime.UtcNow
-            };
+       
+        topics.Add("system.events");
 
-            // Créer la tâche automatiquement
-            var acpTask = new AcpTask
-            {
-                Title = $"{eventDto.EventType} — {eventDto.ToolName}",
-                Description = $"Tâche générée automatiquement depuis {eventDto.ToolName}",
-                ToolName = eventDto.ToolName,
-                //Status = AcpTaskStatus.Pending,
-                CreatedAt = DateTime.UtcNow,
-                SourceEventId = acpEvent.Id
-            };
+        consumer.Subscribe(topics);
 
-            acpEvent.GeneratedTaskId = acpTask.Id;
-
-            db.AcpEvents.Add(acpEvent);
-            db.AcpTasks.Add(acpTask);
-            await db.SaveChangesAsync();
-
-            _logger.LogInformation(" Tâche créée : {Title}", acpTask.Title);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, " Erreur lors du traitement de l'événement");
-        }
+        _logger.LogInformation(
+            "Abonné à {Count} topics : {Topics}",
+            topics.Count,
+            string.Join(", ", topics));
     }
-}
-
-// DTO pour désérialiser le JSON reçu de Kafka
-public class AcpEventDto
-{
-    public string ToolName { get; set; } = string.Empty;
-    public string EventType { get; set; } = string.Empty;
-    public string Payload { get; set; } = string.Empty;
 }
