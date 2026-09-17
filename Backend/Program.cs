@@ -178,6 +178,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCors("AllowAngular");
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

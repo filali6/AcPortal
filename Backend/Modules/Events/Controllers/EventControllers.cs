@@ -1,4 +1,5 @@
-using Backend.Kafka;
+using Backend.Data;
+using Backend.Modules.Events.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using Backend.Modules.Events.Services;
@@ -25,7 +26,6 @@ public class EventsController : ControllerBase
         _eventPublisher = eventPublisher;
     }
 
-    // POST api/events/publish
     [HttpPost("publish")]
     public async Task<IActionResult> Publish([FromBody] PublishEventRequest request)
     {

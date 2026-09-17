@@ -88,12 +88,12 @@ public class KafkaConsumerService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, " Erreur lors de la consommation Kafka");
+                _logger.LogError(ex, "Erreur lors de la consommation Kafka.");
             }
         }
  
         consumer.Close();
-        _logger.LogInformation(" Kafka Consumer arrêté.");
+        _logger.LogInformation("Kafka Consumer arrêté.");
     }
 
     

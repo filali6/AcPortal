@@ -158,10 +158,6 @@ namespace Backend.Migrations
                     b.Property<Guid?>("GeneratedTaskId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Payload")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("ReceivedAt")
                         .HasColumnType("timestamp with time zone");
 
