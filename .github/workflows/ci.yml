@@ -2,9 +2,9 @@ name: CI - Backend Tests
 
 on:
   push:
-    branches: [dev]
+    branches: [dev, main]
   pull_request:
-    branches: [dev]
+    branches: [dev, main]
 
 jobs:
   test:
@@ -26,4 +26,64 @@ jobs:
         run: dotnet build Backend.Tests/Backend.Tests.csproj --no-restore --configuration Release
 
       - name: Lancer les tests
-        run: dotnet test Backend.Tests/Backend.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage"
+        run: dotnet test Backend.Tests/Backend.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
+
+      - name: Générer le rapport HTML de coverage
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          reportgenerator -reports:"./TestResults/**/coverage.cobertura.xml" -targetdir:"./CoverageReport" -reporttypes:Html
+
+      - name: Uploader le rapport de coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ./CoverageReport
+
+  sonar-analysis:
+    name: SonarQube Cloud Analysis
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Installer .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Installer Java (requis par le scanner Sonar)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Installer le scanner SonarQube Cloud
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Restaurer les dépendances
+        run: dotnet restore Backend.Tests/Backend.Tests.csproj
+
+      - name: Démarrer l'analyse SonarQube Cloud
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet-sonarscanner begin \
+            /k:"filali6_axeconfigstudio" \
+            /o:"filali6" \
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.cs.cobertura.reportsPaths="**/TestResults/**/coverage.cobertura.xml"
+
+      - name: Build
+        run: dotnet build Backend.Tests/Backend.Tests.csproj --no-restore --configuration Release
+
+      - name: Lancer les tests avec coverage
+        run: dotnet test Backend.Tests/Backend.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
+
+      - name: Terminer l'analyse SonarQube Cloud
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
