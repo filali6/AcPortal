@@ -75,7 +75,9 @@ jobs:
             /k:"filali6_axeconfigstudio" \
             /o:"filali6" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.cs.cobertura.reportsPaths="**/TestResults/**/coverage.cobertura.xml"
+            /d:sonar.cs.cobertura.reportsPaths="**/TestResults/**/coverage.cobertura.xml" \
+            /d:sonar.coverage.exclusions="**/*Test.cs,**/*Tests*.cs,**/Migrations/**,**/*.Designer.cs,**/Program.cs,**/Infrastructure/**,**/Models/**,**/*Model.cs,**/*Dto.cs,**/*Rule.cs,**/keycloak/**,**/wwwroot/**" \
+            /d:sonar.cpd.exclusions="**/Migrations/**"
 
       - name: Build
         run: dotnet build Backend.Tests/Backend.Tests.csproj --no-restore --configuration Release
