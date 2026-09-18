@@ -1,0 +1,9 @@
+bin/
+obj/
+**/bin/
+**/obj/
+uploads/
+keycloak-backup.tar.gz
+*.md
+.vs/
+.vscode/

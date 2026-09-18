@@ -112,18 +112,22 @@ builder.Services.AddControllers().AddDapr().AddJsonOptions(options =>
 });
 
 var keycloakUrl = builder.Configuration["Keycloak:BaseUrl"];
+// PublicBaseUrl lets the backend reach Keycloak over the internal docker network
+// while still validating the issuer claim of tokens minted for the browser (localhost).
+var keycloakPublicUrl = builder.Configuration["Keycloak:PublicBaseUrl"] ?? keycloakUrl;
 var realm = builder.Configuration["Keycloak:Realm"];
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = $"{keycloakUrl}/realms/{realm}";
+        options.MetadataAddress = $"{keycloakUrl}/realms/{realm}/.well-known/openid-configuration";
         options.Audience = builder.Configuration["Keycloak:ClientId"];
         options.RequireHttpsMetadata = false;
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
+            ValidIssuer = $"{keycloakPublicUrl}/realms/{realm}",
             ValidateAudience = false,
             ValidateLifetime = true,
             RoleClaimType = ClaimTypes.Role
