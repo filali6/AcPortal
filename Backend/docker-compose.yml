@@ -71,8 +71,78 @@ services:
     ports:
       - "50006:50006"
 
-  
- 
+  db:
+    image: postgres:16-alpine
+    container_name: acportal-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: acportal
+    volumes:
+      - acportal-db-data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: acp-backend
+    ports:
+      - "5281:5281"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:5281
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=acportal;Username=postgres;Password=postgres"
+      Kafka__BootstrapServers: "kafka:9093"
+      Keycloak__BaseUrl: "http://keycloak:8080"
+      Keycloak__PublicBaseUrl: "http://localhost:8181"
+      Dapr__HttpEndpoint: "http://localhost:3500"
+      Dapr__GrpcEndpoint: "http://localhost:50002"
+    depends_on:
+      - db
+      - kafka
+      - keycloak
+    volumes:
+      - ./uploads:/app/uploads
+      - backend-dp-keys:/root/.aspnet/DataProtection-Keys
+
+  backend-dapr:
+    image: daprio/dapr:1.13.0
+    container_name: backend-dapr
+    command:
+      - "./daprd"
+      - "-app-id"
+      - "acp-backend"
+      - "-app-port"
+      - "5281"
+      - "-dapr-http-port"
+      - "3500"
+      - "-dapr-grpc-port"
+      - "50002"
+      - "-placement-host-address"
+      - "dapr-placement:50006"
+      - "-resources-path"
+      - "/components"
+    volumes:
+      - ./dapr/components-docker:/components
+    network_mode: "service:backend"
+    depends_on:
+      - backend
+      - dapr-placement
+      - kafka
+      - redis
+
+  frontend:
+    build:
+      context: ../Frontend
+      dockerfile: Dockerfile
+    container_name: acp-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
   plugins-db:
     image: postgres:16-alpine
     container_name: plugins-db
@@ -112,6 +182,8 @@ volumes:
   keycloak-data:
   plugins-db-data:
   demo-sso-plugin-keys:
+  acportal-db-data:
+  backend-dp-keys:
    
   
   
