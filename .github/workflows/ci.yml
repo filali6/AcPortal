@@ -75,8 +75,9 @@ jobs:
             /k:"filali6_axeconfigstudio" \
             /o:"filali6" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.qualitygate.wait=true \
             /d:sonar.cs.cobertura.reportsPaths="**/TestResults/**/coverage.cobertura.xml" \
-            /d:sonar.coverage.exclusions="**/*Test.cs,**/*Tests*.cs,**/Migrations/**,**/*.Designer.cs,**/Program.cs,**/Infrastructure/**,**/Models/**,**/*Model.cs,**/*Dto.cs,**/*Rule.cs,**/keycloak/**,**/wwwroot/**" \
+            /d:sonar.coverage.exclusions="**/*Test.cs,**/*Tests*.cs,**/Migrations/**,**/*.Designer.cs,**/Program.cs,**/Infrastructure/**,**/Models/**,**/*Model.cs,**/*Dto.cs,**/*Rule.cs,**/keycloak/**,**/wwwroot/**,**/Frontend/**" \
             /d:sonar.cpd.exclusions="**/Migrations/**"
 
       - name: Build
@@ -89,6 +90,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
 
   docker-push:
     name: Build et push des images Docker

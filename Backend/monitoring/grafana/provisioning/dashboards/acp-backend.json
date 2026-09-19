@@ -1,0 +1,39 @@
+{
+  "title": "ACPortal Backend",
+  "uid": "acp-backend",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1, "title": "Request rate (by status code)", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [{ "expr": "sum(rate(http_request_duration_seconds_count[5m])) by (code)", "legendFormat": "{{code}}" }]
+    },
+    {
+      "id": 2, "title": "P95 latency", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95" }]
+    },
+    {
+      "id": 3, "title": "In-progress requests", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "targets": [{ "expr": "http_requests_in_progress", "legendFormat": "{{method}} {{path}}" }]
+    },
+    {
+      "id": 4, "title": "Process CPU", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "targets": [{ "expr": "rate(process_cpu_seconds_total[1m])", "legendFormat": "cpu" }]
+    },
+    {
+      "id": 5, "title": "Working set memory", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "targets": [{ "expr": "process_working_set_bytes", "legendFormat": "working set" }]
+    },
+    {
+      "id": 6, "title": "GC collections", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [{ "expr": "rate(dotnet_collection_count_total[5m])", "legendFormat": "gen {{generation}}" }]
+    }
+  ]
+}
