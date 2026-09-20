@@ -90,6 +90,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
+
   docker-push:
     name: Build et push des images Docker
     needs: sonar-analysis
