@@ -140,7 +140,9 @@
 
 /* Projects */
 .projects-list {
-    divide-y: 1px solid var(--border);
+    >*+* {
+        border-top: 1px solid var(--border);
+    }
 }
 
 .project-item {

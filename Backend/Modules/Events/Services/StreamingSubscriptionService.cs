@@ -39,12 +39,12 @@ public class StreamingSubscriptionService : IHostedService
 
         _logger.LogInformation("Abonné à {Count} topics projets existants", projects.Count);
     }
-    public async Task WaitForTopicAsync(string topic)
+    public async Task WaitForTopicAsync(string topic,CancellationToken cancellationToken=default)
     {
         var elapsed = 0;
         while (!_readyTopics.Contains(topic) && elapsed < 3000)
         {
-            await Task.Delay(100);
+            await Task.Delay(100,cancellationToken);
             elapsed += 100;
         }
     }
@@ -119,7 +119,7 @@ public class StreamingSubscriptionService : IHostedService
             cancellationToken);
 
         _subscriptions.Add(subscription);
-        await Task.Delay(300);
+        await Task.Delay(300,cancellationToken);
         _readyTopics.Add(topic);
     }
 }
