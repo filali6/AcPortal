@@ -41,7 +41,11 @@ public class CreateMessagingChannelHandlerTests : IDisposable
             NullLogger<CreateMessagingChannelHandler>.Instance);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     
 

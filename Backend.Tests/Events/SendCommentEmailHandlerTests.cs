@@ -27,7 +27,11 @@ public class SendCommentEmailHandlerTests : IDisposable
         _db = new AppDbContext(options);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     private SendCommentEmailHandler CreateHandler(ILogger<SendCommentEmailHandler>? logger = null) =>
         new(_db,

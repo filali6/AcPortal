@@ -61,7 +61,11 @@ public class TaskCommentsServiceTests : IDisposable
             _db, notificationService, teamsNotificationService, messagingCommentSync, emailService, eventPublisher);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     private (ProjectStream stream, AcpTask task) SeedTaskWithStream(
         string? businessLeadKeycloakId = null,

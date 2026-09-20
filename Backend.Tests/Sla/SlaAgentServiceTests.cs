@@ -32,7 +32,11 @@ public class SlaAgentServiceTests : IDisposable
         _db = new AppDbContext(options);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     private static IConfiguration CreateConfig(int maxRetries = 2, int retryDelayMs = 0) =>
         new ConfigurationBuilder()

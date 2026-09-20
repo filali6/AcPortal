@@ -22,7 +22,11 @@ public class PluginRegistryTests : IDisposable
         _registry = new PluginRegistry(_db);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     private static PluginDefinition MakeDefinition(string id, string url = "https://plugin.test") => new()
     {

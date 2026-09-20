@@ -28,7 +28,11 @@ public class AuthServiceTests : IDisposable
         _db = new AppDbContext(options);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     // Routes requests by method + path so a single handler can stand in for the whole Keycloak admin API.
     private class RoutingHttpMessageHandler : HttpMessageHandler

@@ -23,7 +23,11 @@ public class TasksServiceTests : IDisposable
         _service = new TasksService(_db, NullLogger<TasksService>.Instance);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     [Fact]
     public async Task GetAllAsync_ReturnsTasksOrderedByCreatedAtDescending()

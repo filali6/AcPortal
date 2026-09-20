@@ -15,6 +15,10 @@ WORKDIR /app
 COPY --from=build /app/publish .
 RUN mkdir -p uploads/fsd
 
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+RUN chown -R appuser:appgroup /app
+USER appuser
+
 ENV ASPNETCORE_URLS=http://+:5281
 EXPOSE 5281
 

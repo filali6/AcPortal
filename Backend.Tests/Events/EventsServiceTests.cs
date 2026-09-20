@@ -22,7 +22,11 @@ public class EventsServiceTests : IDisposable
         _service = new EventsService(_db, NullLogger<EventsService>.Instance);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     [Fact]
     public async Task GetAllAsync_ReturnsEventsOrderedByReceivedAtDescending()
