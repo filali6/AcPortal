@@ -2,9 +2,8 @@ name: CI - Backend Tests
 
 on:
   push:
-    branches: [dev, main]
-  pull_request:
-    branches: [dev, main]
+    branches: ["main"]
+  
 
 jobs:
   test:
@@ -75,6 +74,7 @@ jobs:
             /k:"filali6_axeconfigstudio" \
             /o:"filali6" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.qualitygate.wait=true \
             /d:sonar.cs.cobertura.reportsPaths="**/TestResults/**/coverage.cobertura.xml" \
             /d:sonar.coverage.exclusions="**/*Test.cs,**/*Tests*.cs,**/Migrations/**,**/*.Designer.cs,**/Program.cs,**/Infrastructure/**,**/Models/**,**/*Model.cs,**/*Dto.cs,**/*Rule.cs,**/keycloak/**,**/wwwroot/**,**/Frontend/**" \
             /d:sonar.cpd.exclusions="**/Migrations/**"
