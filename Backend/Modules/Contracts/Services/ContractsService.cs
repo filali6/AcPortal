@@ -26,7 +26,6 @@ public class ContractsService
             DafUserId = dafUserId
         };
 
-        // Sauvegarde des fichiers
         var uploadsPath = Path.Combine(_env.ContentRootPath, "uploads");
         Directory.CreateDirectory(uploadsPath);
 
@@ -34,7 +33,8 @@ public class ContractsService
         {
             if (file.Length > 0)
             {
-                var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+                var safeOriginalName = Path.GetFileName(file.FileName); // L39 — correction
+                var fileName = $"{Guid.NewGuid()}_{safeOriginalName}";
                 var filePath = Path.Combine(uploadsPath, fileName);
                 using var stream = new FileStream(filePath, FileMode.Create);
                 await file.CopyToAsync(stream);
@@ -72,7 +72,8 @@ public class ContractsService
         {
             if (file.Length > 0)
             {
-                var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+                var safeOriginalName = Path.GetFileName(file.FileName);
+                var fileName = $"{Guid.NewGuid()}_{safeOriginalName}";
                 var filePath = Path.Combine(uploadsPath, fileName);
                 using var stream = new FileStream(filePath, FileMode.Create);
                 await file.CopyToAsync(stream);
@@ -102,6 +103,7 @@ public class ContractsService
             contracts.Count(c => !c.ProjectId.HasValue)
         );
     }
+
     public async Task<Contract?> UpdateAsync(Guid contractId, string clientName, string description, int status, List<IFormFile>? newFiles)
     {
         var contract = await _db.Contracts.FindAsync(contractId);
@@ -120,7 +122,8 @@ public class ContractsService
             {
                 if (file.Length > 0)
                 {
-                    var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+                    var safeOriginalName = Path.GetFileName(file.FileName); // L77 — correction
+                    var fileName = $"{Guid.NewGuid()}_{safeOriginalName}";
                     var filePath = Path.Combine(uploadsPath, fileName);
                     using var stream = new FileStream(filePath, FileMode.Create);
                     await file.CopyToAsync(stream);
@@ -129,7 +132,6 @@ public class ContractsService
             }
         }
 
-        
         var updatedPaths = contract.FilesPaths.ToList();
         contract.FilesPaths = updatedPaths;
         _db.Entry(contract).State = EntityState.Modified;
@@ -143,13 +145,13 @@ public class ContractsService
         var contract = await _db.Contracts.FindAsync(contractId);
         if (contract == null) return null;
 
-        var filePath = Path.Combine(_env.ContentRootPath, "uploads", fileName);
+        var safeFileName = Path.GetFileName(fileName); // L125 — correction
+        var filePath = Path.Combine(_env.ContentRootPath, "uploads", safeFileName);
         if (System.IO.File.Exists(filePath))
             System.IO.File.Delete(filePath);
 
-        contract.FilesPaths.Remove(fileName);
+        contract.FilesPaths.Remove(safeFileName);
 
-        // Forcer EF Core à détecter le changement sur la liste
         var updatedPaths = contract.FilesPaths.ToList();
         contract.FilesPaths = updatedPaths;
         _db.Entry(contract).State = EntityState.Modified;

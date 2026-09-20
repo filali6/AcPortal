@@ -123,15 +123,16 @@ public class ContractsController : ControllerBase
     [HttpGet("files/{fileName}")]
     public IActionResult DownloadFile(string fileName)
     {
-        var filePath = Path.Combine(_env.ContentRootPath, "uploads", fileName);
+        var safeFileName = Path.GetFileName(fileName); // retire tout chemin, garde juste le nom du fichier
+        var filePath = Path.Combine(_env.ContentRootPath, "uploads", safeFileName);
         if (!System.IO.File.Exists(filePath)) return NotFound();
 
         var fileBytes = System.IO.File.ReadAllBytes(filePath);
         var contentType = "application/octet-stream";
-        return File(fileBytes, contentType, fileName);
+        return File(fileBytes, contentType, safeFileName);
     }
 
-     
+
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromForm] UpdateContractRequest request)
     {
