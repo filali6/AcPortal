@@ -26,7 +26,11 @@ public class CreateTasksFromStepsHandlerTests : IDisposable
         _handler = new CreateTasksFromStepsHandler(_db, NullLogger<CreateTasksFromStepsHandler>.Instance);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     private async Task<(Project project, ProjectStream stream)> SeedProjectAndStreamAsync()
     {

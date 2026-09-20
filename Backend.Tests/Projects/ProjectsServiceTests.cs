@@ -23,7 +23,11 @@ public class ProjectsServiceTests : IDisposable
         _service = new ProjectsService(_db, NullLogger<ProjectsService>.Instance);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     [Fact]
     public async Task CreateAsync_WithoutTargetDate_PersistsProject()

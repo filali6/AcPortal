@@ -33,7 +33,11 @@ public class CreateTaskHandlerTests : IDisposable
         _handler = new CreateTaskHandler(_db, new NotificationService(_db, hub.Object), NullLogger<CreateTaskHandler>.Instance);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     [Fact]
     public async Task HandleAsync_ForRoleTarget_CreatesTask_AndReplacesPlaceholders_AndNotifies()

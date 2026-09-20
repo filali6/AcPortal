@@ -27,7 +27,11 @@ public class GitServiceTests : IDisposable
         _service = new GitService(_gitProvider.Object, _db, NullLogger<GitService>.Instance);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     [Fact]
     public async Task InitStreamRepoAsync_StreamNotFound_DoesNotCallProvider()

@@ -24,7 +24,11 @@ public class MessagingCommentSyncServiceTests : IDisposable
             _db, _messaging.Object, NullLogger<MessagingCommentSyncService>.Instance);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     [Fact]
     public async Task SyncCommentToMessagingAsync_CreatesThreadAndPersistsIds_WhenTaskHasChannel()

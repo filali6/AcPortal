@@ -24,7 +24,11 @@ public class SlaCheckerServiceTests : IDisposable
         _service = new SlaCheckerService(_db, NullLogger<SlaCheckerService>.Instance);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     private static AcpTask CreateTask(DateTime? dueDate, AcpTaskStatus status = AcpTaskStatus.Pending) =>
         new()

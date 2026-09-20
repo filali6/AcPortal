@@ -38,7 +38,11 @@ public class SummarizeContractHandlerTests : IDisposable
         _notificationService = new NotificationService(_db, hub.Object);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     private SummarizeContractHandler CreateHandler(IConfiguration? config = null)
     {

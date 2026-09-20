@@ -32,7 +32,11 @@ public class NotificationServiceTests : IDisposable
         _service = new NotificationService(_db, hubContext.Object);
     }
 
-    public void Dispose() => _db.Dispose();
+   public void Dispose()
+{
+    _db.Dispose();
+    GC.SuppressFinalize(this);
+}
 
     [Fact]
     public async Task SendAsync_PersistsNotification()
