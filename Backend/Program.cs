@@ -24,6 +24,9 @@ using Backend.Modules.Sla.Jobs;
 using Backend.Modules.AI.Services;
 using Backend.Modules.Sla.Tools;
 
+using Prometheus;
+
+
 using Backend.Modules.Messaging.Services;
 using Backend.Modules.Sla.Services;
 var builder = WebApplication.CreateBuilder(args);
@@ -182,6 +185,9 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCors("AllowAngular");
+
+app.UseHttpMetrics();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -189,6 +195,7 @@ app.MapControllers();
 app.MapHub<Backend.Hubs.NotificationHub>("/hubs/notifications");
 
 app.MapHub<Backend.Hubs.ChatHub>("/hubs/chat");
+app.MapMetrics();
 
 var workflowRulesService = app.Services.GetRequiredService<WorkflowRulesService>();
 
