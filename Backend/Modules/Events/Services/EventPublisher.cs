@@ -4,7 +4,6 @@ namespace Backend.Modules.Events.Services;
 
 using System.Text.Json;
 using System.Text;
- 
 using System.Net.Http;
 
 public class EventPublisher
@@ -26,9 +25,7 @@ public class EventPublisher
 
         if (projectId.HasValue && !string.IsNullOrEmpty(projectName))
         {
-            var safeName = projectName
-                .ToLower()
-                .Replace(" ", "-");
+            var safeName = SanitizeTopicSegment(projectName);
             topic = $"project.{safeName}";
         }
         else
@@ -36,15 +33,6 @@ public class EventPublisher
             topic = "system.events";
         }
 
-        // var json = JsonSerializer.Serialize(payload);
-        // var content = new StringContent(json, Encoding.UTF8, "application/json");
-        // var httpClient = new HttpClient();
-        // var response = await httpClient.PostAsync(
-        //     $"http://localhost:3500/v1.0/publish/pubsub/{topic}",
-        //     content);
-
-        // _logger.LogInformation("Event publié → topic : {Topic} → {Status}",
-        //     topic, response.StatusCode);
         var maxRetries = _configuration.GetValue<int>("EventPublisher:MaxRetries", 5);
         var delai = _configuration.GetValue<int>("EventPublisher:RetryDelayMs", 500);
         for (int i = 0; i < maxRetries; i++)
@@ -54,8 +42,9 @@ public class EventPublisher
                 var json = JsonSerializer.Serialize(payload);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 using var httpClient = new HttpClient();
+                var encodedTopic = Uri.EscapeDataString(topic);
                 var response = await httpClient.PostAsync(
-                    $"http://localhost:3500/v1.0/publish/pubsub/{topic}",
+                    $"http://localhost:3500/v1.0/publish/pubsub/{encodedTopic}",
                     content);
                 response.EnsureSuccessStatusCode();
                 _logger.LogInformation("Event publié → topic : {Topic}", topic);
@@ -63,14 +52,23 @@ public class EventPublisher
             }
             catch (Exception ex)
             {
-                //_logger.LogWarning("Essai {Essai} échoué sur {Topic}, on réessaie...", i + 1, topic);
-                //_logger.LogWarning("Essai {Essai} échoué sur {Topic} : {Erreur}", i + 1, topic, ex.Message);
                 await Task.Delay(delai);
                 _logger.LogWarning("Essai {Essai} échoué sur {Topic} : {Erreur} | Inner: {Inner}",
-    i + 1, topic, ex.Message, ex.InnerException?.Message ?? "aucune");
+                    i + 1, topic, ex.Message, ex.InnerException?.Message ?? "aucune");
             }
         }
 
         _logger.LogError("Impossible de publier sur {Topic} après {Max} essais", topic, maxRetries);
+    }
+
+    private static string SanitizeTopicSegment(string input)
+    {
+        var cleaned = new string(input
+            .ToLower()
+            .Replace(" ", "-")
+            .Where(c => char.IsLetterOrDigit(c) || c == '-')
+            .ToArray());
+
+        return string.IsNullOrEmpty(cleaned) ? "unknown" : cleaned;
     }
 }
