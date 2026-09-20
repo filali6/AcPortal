@@ -181,7 +181,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
+    await db.Database.EnsureCreatedAsync();
 }
 
 app.UseCors("AllowAngular");
@@ -199,4 +199,4 @@ app.MapMetrics();
 
 var workflowRulesService = app.Services.GetRequiredService<WorkflowRulesService>();
 
-app.Run();
+await app.RunAsync();
