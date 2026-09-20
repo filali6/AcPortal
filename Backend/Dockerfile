@@ -15,7 +15,7 @@ WORKDIR /app
 COPY --from=build /app/publish .
 RUN mkdir -p uploads/fsd
 
-RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+RUN groupadd --system appgroup && useradd --system --gid appgroup appuser
 RUN chown -R appuser:appgroup /app
 USER appuser
 
