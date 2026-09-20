@@ -5,6 +5,7 @@ using Backend.Modules.Events.Services;
 
 namespace Backend.Tests.Workflow;
 
+[Xunit.Collection("WorkflowConfigFile")]
 public class WorkflowRulesServiceTests
 {
     private readonly string _testConfigPath;
