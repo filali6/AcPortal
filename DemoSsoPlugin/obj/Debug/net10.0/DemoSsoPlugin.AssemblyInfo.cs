@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DemoSsoPlugin")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5568bfd60fbfd0564d990f77ce8332709156d6c6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+49eb669a222381595c5fcb8d8cc357962397af53")]
 [assembly: System.Reflection.AssemblyProductAttribute("DemoSsoPlugin")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DemoSsoPlugin")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

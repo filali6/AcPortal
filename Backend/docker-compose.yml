@@ -5,6 +5,9 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    volumes:                                        
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-log:/var/lib/zookeeper/log
 
   kafka:
     image: confluentinc/cp-kafka:7.3.0
@@ -66,7 +69,7 @@ services:
       - "6379:6379"
 
   dapr-placement:
-    image: daprio/dapr:1.13.0
+    image: daprio/dapr:1.17.3
     container_name: dapr-placement
     command: ["./placement", "-port", "50006"]
     ports:
@@ -109,7 +112,7 @@ services:
       - backend-dp-keys:/root/.aspnet/DataProtection-Keys
 
   backend-dapr:
-    image: daprio/dapr:1.13.0
+    image: daprio/dapr:1.17.3
     container_name: backend-dapr
     restart: on-failure
     command:
@@ -212,6 +215,8 @@ services:
 volumes:
   
   kafka-data:
+  zookeeper-data:                                 
+  zookeeper-log:
   keycloak-data:
   plugins-db-data:
   demo-sso-plugin-keys:
