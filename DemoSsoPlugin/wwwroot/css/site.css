@@ -1,0 +1,197 @@
+:root {
+  --primary: #6d28d9;
+  --primary-light: #8b5cf6;
+  --primary-dark: #5b21b6;
+  --bg: #f8f7fc;
+  --card: #ffffff;
+  --border: #e5e0f0;
+  --text: #1f1533;
+  --text-muted: #6b647d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ===== Landing (page d'accueil animée) ===== */
+.landing-body {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+.landing-screen {
+  text-align: center;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.landing-logo {
+  margin-bottom: 24px;
+}
+
+.logo-dot {
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fff;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.landing-title {
+  color: #fff;
+  font-size: 40px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  animation: slideUp 0.6s ease-out 0.1s both;
+}
+
+.landing-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 15px;
+  margin: 0;
+  animation: slideUp 0.6s ease-out 0.25s both;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 0.7;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Layout topbar (Welcome page) ===== */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-brand {
+  font-weight: 700;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: inline-block;
+}
+
+.container {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 64px 24px;
+}
+
+.btn {
+  display: inline-block;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+/* ===== Welcome (page connectée) ===== */
+.welcome-hero {
+  text-align: center;
+  max-width: 480px;
+  margin: 0 auto;
+  animation: slideUp 0.5s ease-out;
+}
+
+.welcome-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-light), var(--primary));
+  color: #fff;
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  box-shadow: 0 8px 24px rgba(109, 40, 217, 0.25);
+}
+
+.welcome-hero h1 {
+  font-size: 32px;
+  margin: 0 0 12px;
+}
+
+.welcome-message {
+  font-size: 16px;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+
+.welcome-hint {
+  font-size: 14px;
+  color: var(--text-muted);
+  background: #f3effc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 20px;
+}
+
+.footer {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 13px;
+}

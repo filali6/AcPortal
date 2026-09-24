@@ -1,0 +1,37 @@
+﻿@{
+    var title = ViewData["Title"] as string ?? "Demo SSO Tool";
+}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@title — Demo SSO Tool</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="topbar-brand">
+            <span class="dot"></span>
+            Demo SSO Tool
+        </div>
+        @if (User?.Identity?.IsAuthenticated == true)
+        {
+            <form method="post" asp-page="/Logout">
+                <button class="btn btn-ghost" type="submit">Se déconnecter</button>
+            </form>
+        }
+    </header>
+
+    <main class="container">
+        @RenderBody()
+    </main>
+
+    <footer class="footer">
+        Outil tiers de démonstration &middot; intégré à ACPortal via SSO (OpenID Connect / Keycloak)
+    </footer>
+</body>
+
+</html>
