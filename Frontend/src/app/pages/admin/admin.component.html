@@ -8,16 +8,21 @@
                 <h2>{{ 'TASKS.TITLE' | translate }} ({{ myTasks.length }})</h2>
             </div>
             <div class="search-bar">
+                <label for="admin-task-search" class="sr-only">Search tasks</label>
                 <input type="text" [(ngModel)]="searchQuery" [placeholder]="'TASKS.SEARCH' | translate"
-                    class="form-input search-input">
+                    class="form-input search-input" id="admin-task-search">
                 <select [(ngModel)]="filterStatus" class="form-input filter-select">
                     <option value="all">{{ 'TASKS.ALL_STATUSES' | translate }}</option>
                     <option value="0">{{ 'TASKS.PENDING' | translate }}</option>
                     <option value="1">{{ 'TASKS.BLOCKED' | translate }}</option>
                     <option value="2">{{ 'TASKS.DONE' | translate }}</option>
                 </select>
-                <input type="date" [(ngModel)]="filterDateFrom" class="form-input date-input" title="From">
-                <input type="date" [(ngModel)]="filterDateTo" class="form-input date-input" title="To">
+                <label for="admin-task-date-from" class="sr-only">Filter tasks from date</label>
+                <input type="date" [(ngModel)]="filterDateFrom" class="form-input date-input" title="From"
+                    id="admin-task-date-from">
+                <label for="admin-task-date-to" class="sr-only">Filter tasks to date</label>
+                <input type="date" [(ngModel)]="filterDateTo" class="form-input date-input" title="To"
+                    id="admin-task-date-to">
                 <button class="btn-reset" (click)="resetFilters()"
                     *ngIf="searchQuery || filterStatus !== 'all' || filterDateFrom || filterDateTo">✕</button>
             </div>
@@ -195,18 +200,20 @@
                     <!-- Form -->
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>{{ 'PROJECTS.NAME' | translate }}</label>
+                            <label [attr.for]="'admin-project-name-' + tabId">{{ 'PROJECTS.NAME' | translate }}</label>
                             <input type="text" [(ngModel)]="tab.projectName" placeholder="e.g. ACP Migration"
-                                class="form-input">
+                                class="form-input" [id]="'admin-project-name-' + tabId">
                         </div>
                         <div class="form-group">
-                            <label>{{ 'COMMON.DESCRIPTION' | translate }}</label>
+                            <label [attr.for]="'admin-project-description-' + tabId">{{ 'COMMON.DESCRIPTION' | translate }}</label>
                             <input type="text" [(ngModel)]="tab.projectDescription"
-                                [placeholder]="'PROJECTS.DESCRIPTION' | translate" class="form-input">
+                                [placeholder]="'PROJECTS.DESCRIPTION' | translate" class="form-input"
+                                [id]="'admin-project-description-' + tabId">
                         </div>
                         <div class="form-group">
-                            <label>{{ 'PROJECTS.TARGET_DATE' | translate }}</label>
-                            <input type="date" [(ngModel)]="tab.targetDate" class="form-input">
+                            <label [attr.for]="'admin-project-target-date-' + tabId">{{ 'PROJECTS.TARGET_DATE' | translate }}</label>
+                            <input type="date" [(ngModel)]="tab.targetDate" class="form-input"
+                                [id]="'admin-project-target-date-' + tabId">
                         </div>
                         <div class="form-group">
                             <div class="label-row">
@@ -230,14 +237,15 @@
                         </div>
                         <div class="portfolio-inline-form" *ngIf="tab.showCreatePortfolio">
                             <div class="form-group">
-                                <label>{{ 'PORTFOLIOS.PORTFOLIO_NAME' | translate }}</label>
+                                <label [attr.for]="'admin-portfolio-name-' + tabId">{{ 'PORTFOLIOS.PORTFOLIO_NAME' | translate }}</label>
                                 <input type="text" [(ngModel)]="tab.portfolioName" placeholder="e.g. Finance Portfolio"
-                                    class="form-input">
+                                    class="form-input" [id]="'admin-portfolio-name-' + tabId">
                             </div>
                             <div class="form-group">
-                                <label>{{ 'COMMON.DESCRIPTION' | translate }}</label>
+                                <label [attr.for]="'admin-portfolio-description-' + tabId">{{ 'COMMON.DESCRIPTION' | translate }}</label>
                                 <input type="text" [(ngModel)]="tab.portfolioDescription"
-                                    [placeholder]="'COMMON.DESCRIPTION' | translate" class="form-input">
+                                    [placeholder]="'COMMON.DESCRIPTION' | translate" class="form-input"
+                                    [id]="'admin-portfolio-description-' + tabId">
                             </div>
                             <div class="form-group">
                                 <label>{{ 'PORTFOLIOS.DIRECTOR' | translate }}</label>
@@ -274,16 +282,19 @@
                 <div class="card-body">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>{{ 'PROJECTS.NAME' | translate }}</label>
-                            <input type="text" [(ngModel)]="tab.name" class="form-input">
+                            <label [attr.for]="'admin-edit-project-name-' + tabId">{{ 'PROJECTS.NAME' | translate }}</label>
+                            <input type="text" [(ngModel)]="tab.name" class="form-input"
+                                [id]="'admin-edit-project-name-' + tabId">
                         </div>
                         <div class="form-group">
-                            <label>{{ 'COMMON.DESCRIPTION' | translate }}</label>
-                            <input type="text" [(ngModel)]="tab.description" class="form-input">
+                            <label [attr.for]="'admin-edit-project-description-' + tabId">{{ 'COMMON.DESCRIPTION' | translate }}</label>
+                            <input type="text" [(ngModel)]="tab.description" class="form-input"
+                                [id]="'admin-edit-project-description-' + tabId">
                         </div>
                         <div class="form-group">
-                            <label>{{ 'PROJECTS.TARGET_DATE' | translate }}</label>
-                            <input type="date" [(ngModel)]="tab.targetDate" class="form-input">
+                            <label [attr.for]="'admin-edit-project-target-date-' + tabId">{{ 'PROJECTS.TARGET_DATE' | translate }}</label>
+                            <input type="date" [(ngModel)]="tab.targetDate" class="form-input"
+                                [id]="'admin-edit-project-target-date-' + tabId">
                         </div>
                     </div>
                     <div class="bottom-actions">
@@ -334,7 +345,7 @@
                         fill="#ECB22E" />
                 </svg>
             </ng-template>
-        
+
             <!-- US77 : Rapport hebdomadaire — bandeau compact, rapport complet déplié à la demande -->
             <div class="card">
                 <div class="card-header">
@@ -352,11 +363,11 @@
                         </button>
                     </div>
                 </div>
-        
+
                 <div class="card-body">
                     <div class="empty" *ngIf="loadingWeeklyReport">{{ 'COMMON.LOADING' | translate }}</div>
                     <div class="empty" *ngIf="!loadingWeeklyReport && !weeklyReport">{{ 'SLA.NO_REPORT_YET' | translate }}</div>
-        
+
                     <!-- Bandeau compact (toujours visible) -->
                     <div class="report-banner" *ngIf="!loadingWeeklyReport && weeklyReport">
                         <div class="report-banner-info">
@@ -378,12 +389,12 @@
                             {{ showWeeklyReport ? ('SLA.HIDE_REPORT' | translate) : ('SLA.VIEW_REPORT' | translate) }}
                         </button>
                     </div>
-        
+
                     <!-- Rapport complet (seulement quand on le demande) -->
                     <div class="report-details" *ngIf="showWeeklyReport && weeklyReport && !loadingWeeklyReport">
-        
+
                         <ng-container *ngIf="weeklyReport.data as d">
-        
+
                             <!-- 1. Chiffres clés + tendance -->
                             <div class="report-kpis">
                                 <div class="report-kpi" *ngFor="let k of reportKpis">
@@ -406,7 +417,7 @@
                                     </span>
                                 </div>
                             </div>
-        
+
                             <!-- 2. Santé par projet -->
                             <h3 class="report-section-title">{{ 'SLA.PROJECT_HEALTH' | translate }}</h3>
                             <div class="table-wrapper sticky-table" *ngIf="d.projects.length">
@@ -436,7 +447,7 @@
                                 </table>
                             </div>
                             <div class="empty" *ngIf="!d.projects.length">—</div>
-        
+
                             <!-- 3. Goulots d'étranglement -->
                             <h3 class="report-section-title">{{ 'SLA.BOTTLENECKS' | translate }}</h3>
                             <div class="table-wrapper sticky-table" *ngIf="d.bottlenecks.length">
@@ -458,17 +469,17 @@
                                 </table>
                             </div>
                             <div class="empty" *ngIf="!d.bottlenecks.length">—</div>
-        
+
                             <!-- 4. Nouveaux retards + retards les plus anciens -->
                             <h3 class="report-section-title">{{ 'SLA.NEW_OVERDUE' | translate }} ({{ d.newOverdue.length }})
                             </h3>
                             <ng-container *ngTemplateOutlet="overdueTable; context: { $implicit: d.newOverdue }"></ng-container>
-        
+
                             <h3 class="report-section-title">{{ 'SLA.LONGEST_OVERDUE' | translate }}</h3>
                             <ng-container
                                 *ngTemplateOutlet="overdueTable; context: { $implicit: d.longestOverdue }"></ng-container>
                         </ng-container>
-        
+
                         <!-- 5. Analyse IA (seule partie écrite par l'IA) -->
                         <h3 class="report-section-title">✨ {{ 'SLA.AI_ANALYSIS' | translate }}</h3>
                         <div class="report-analysis">
@@ -477,7 +488,7 @@
                     </div>
                 </div>
             </div>
-        
+
             <!-- Tableau réutilisé pour les deux listes de retards -->
             <ng-template #overdueTable let-rows>
                 <div class="table-wrapper sticky-table" *ngIf="rows?.length">
@@ -506,7 +517,7 @@
                 </div>
                 <div class="empty" *ngIf="!rows?.length">—</div>
             </ng-template>
-        
+
             <!-- KPI cards -->
             <div class="card" style="min-height:auto; height:auto;">
                 <div class="card-header">
@@ -534,7 +545,7 @@
                     </div>
                 </div>
             </div>
-        
+
             <!-- Tâches en retard / à risque -->
             <div class="card">
                 <div class="card-header">
@@ -594,7 +605,7 @@
                 </div>
                 <div class="empty" *ngIf="!slaDashboard?.tasks?.length">{{ 'SLA.NO_OVERDUE_TASKS' | translate }}</div>
             </div>
-        
+
             <!-- Streams en retard / à risque -->
             <div class="card">
                 <div class="card-header">
@@ -645,7 +656,7 @@
                 </div>
                 <div class="empty" *ngIf="!slaDashboard?.streams?.length">{{ 'SLA.NO_OVERDUE_STREAMS' | translate }}</div>
             </div>
-        
+
         </ng-container>
 
 </div>

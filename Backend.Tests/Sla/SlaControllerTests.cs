@@ -116,6 +116,55 @@ public class SlaControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task SetTaskDueDate_ReturnsBadRequest_WhenDueDateIsMissing()
+    {
+        var task = new AcpTask { Title = "Task", Status = AcpTaskStatus.Pending };
+        _db.AcpTasks.Add(task);
+        await _db.SaveChangesAsync();
+
+        var result = await _controller.SetTaskDueDate(task.Id, new SetDueDateRequest());
+
+        result.Should().BeOfType<BadRequestObjectResult>();
+        (await _db.AcpTasks.FindAsync(task.Id))!.DueDate.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task SetTaskDueDate_ReturnsOk_SetsUtcDateAndClearsRuleLink()
+    {
+        var rule = new SlaRule { Name = "Default", Type = SlaRuleType.Task, SlaDays = 5 };
+        var task = new AcpTask
+        {
+            Title = "Task",
+            Status = AcpTaskStatus.Pending,
+            SlaRuleId = rule.Id
+        };
+        _db.SlaRules.Add(rule);
+        _db.AcpTasks.Add(task);
+        await _db.SaveChangesAsync();
+        var dueDate = new DateTime(2026, 12, 1, 9, 30, 0, DateTimeKind.Unspecified);
+
+        var result = await _controller.SetTaskDueDate(task.Id, new SetDueDateRequest { DueDate = dueDate });
+
+        result.Should().BeOfType<OkObjectResult>();
+        var updated = (await _db.AcpTasks.FindAsync(task.Id))!;
+        updated.DueDate.Should().Be(dueDate);
+        updated.DueDate!.Value.Kind.Should().Be(DateTimeKind.Utc);
+        updated.SlaRuleId.Should().BeNull();
+        updated.UpdatedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task SetTaskDueDate_ReturnsNotFound_WhenTaskIsMissing()
+    {
+        var result = await _controller.SetTaskDueDate(Guid.NewGuid(), new SetDueDateRequest
+        {
+            DueDate = DateTime.UtcNow
+        });
+
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
     public async Task ApplyRules_ReturnsOk_AppliesDefaultRuleToTasksWithoutDueDate()
     {
         _db.SlaRules.Add(new SlaRule { Name = "Default", Type = SlaRuleType.Task, SlaDays = 5 });

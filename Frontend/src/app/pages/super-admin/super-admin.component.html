@@ -308,16 +308,16 @@
                     {{ 'SLA.ADD_RULE' | translate }}
                 </button>
             </div>
-    
+
             <p class="sla-info">ℹ️ {{ 'SLA.AUTO_INFO' | translate }}</p>
-    
+
             <div class="sla-alert" *ngIf="isMissingDefault('Task')">
                 ⚠ {{ 'SLA.MISSING_DEFAULT' | translate }} : Task
             </div>
             <div class="sla-alert" *ngIf="isMissingDefault('Stream')">
                 ⚠ {{ 'SLA.MISSING_DEFAULT' | translate }} : Stream
             </div>
-    
+
             <div class="table-wrapper">
                 <table class="tasks-table">
                     <thead>
@@ -370,16 +370,17 @@
     <app-modal *ngIf="showUserModal" [title]="(editingUser ? ('SA.EDIT_USER' | translate) : ('USERS.ADD' | translate))"
         width="420px" (closed)="showUserModal = false">
         <div class="form-group">
-            <label>{{ 'USERS.FULL_NAME' | translate }} *</label>
-            <input type="text" [(ngModel)]="userForm.fullName" class="form-input">
+            <label for="super-admin-user-full-name">{{ 'USERS.FULL_NAME' | translate }} *</label>
+            <input type="text" [(ngModel)]="userForm.fullName" class="form-input" id="super-admin-user-full-name">
         </div>
         <div class="form-group">
-            <label>{{ 'USERS.EMAIL' | translate }} *</label>
-            <input type="email" [(ngModel)]="userForm.email" class="form-input" [disabled]="!!editingUser">
+            <label for="super-admin-user-email">{{ 'USERS.EMAIL' | translate }} *</label>
+            <input type="email" [(ngModel)]="userForm.email" class="form-input" [disabled]="!!editingUser"
+                id="super-admin-user-email">
         </div>
         <div class="form-group" *ngIf="!editingUser">
-            <label>{{ 'USERS.PASSWORD' | translate }} *</label>
-            <input type="password" [(ngModel)]="userForm.password" class="form-input">
+            <label for="super-admin-user-password">{{ 'USERS.PASSWORD' | translate }} *</label>
+            <input type="password" [(ngModel)]="userForm.password" class="form-input" id="super-admin-user-password">
         </div>
         <div class="form-group">
             <label>{{ 'USERS.ROLE' | translate }} *</label>
@@ -407,20 +408,23 @@
     <app-modal *ngIf="showToolModal" [title]="(editingTool ? ('TOOLS.EDIT' | translate) : ('SA.ADD_TOOL' | translate))"
         width="480px" (closed)="showToolModal = false">
         <div class="form-group" *ngIf="!editingTool">
-            <label>ID * (unique, ex: axe-iam)</label>
-            <input type="text" [(ngModel)]="toolForm.id" class="form-input" placeholder="axe-iam">
+            <label for="super-admin-tool-id">ID * (unique, ex: axe-iam)</label>
+            <input type="text" [(ngModel)]="toolForm.id" class="form-input" placeholder="axe-iam"
+                id="super-admin-tool-id">
         </div>
         <div class="form-group">
-            <label>{{ 'COMMON.NAME' | translate }} *</label>
-            <input type="text" [(ngModel)]="toolForm.name" class="form-input">
+            <label for="super-admin-tool-name">{{ 'COMMON.NAME' | translate }} *</label>
+            <input type="text" [(ngModel)]="toolForm.name" class="form-input" id="super-admin-tool-name">
         </div>
         <div class="form-group">
-            <label>{{ 'COMMON.DESCRIPTION' | translate }}</label>
-            <input type="text" [(ngModel)]="toolForm.description" class="form-input">
+            <label for="super-admin-tool-description">{{ 'COMMON.DESCRIPTION' | translate }}</label>
+            <input type="text" [(ngModel)]="toolForm.description" class="form-input"
+                id="super-admin-tool-description">
         </div>
         <div class="form-group">
-            <label>{{ 'SA.CATEGORY' | translate }}</label>
-            <input type="text" [(ngModel)]="toolForm.category" class="form-input" placeholder="issues, docs, git...">
+            <label for="super-admin-tool-category">{{ 'SA.CATEGORY' | translate }}</label>
+            <input type="text" [(ngModel)]="toolForm.category" class="form-input" placeholder="issues, docs, git..."
+                id="super-admin-tool-category">
         </div>
         <div class="form-group">
             <label>Functional Domain</label>
@@ -434,13 +438,14 @@
             </select>
         </div>
         <div class="form-group">
-            <label>URL *</label>
-            <input type="text" [(ngModel)]="toolForm.url" class="form-input" placeholder="http://192.168.X.X:XXXX">
+            <label for="super-admin-tool-url">URL *</label>
+            <input type="text" [(ngModel)]="toolForm.url" class="form-input" placeholder="http://192.168.X.X:XXXX"
+                id="super-admin-tool-url">
         </div>
         <div class="form-group">
-            <label>{{ 'SA.ICON' | translate }}</label>
+            <label for="super-admin-tool-icon">{{ 'SA.ICON' | translate }}</label>
             <input type="text" [(ngModel)]="toolForm.icon" class="form-input"
-                placeholder="assets/logos/axe-brm.png ou https://...">
+                placeholder="assets/logos/axe-brm.png ou https://..." id="super-admin-tool-icon">
             <div *ngIf="toolForm.icon" style="margin-top:8px; display:flex; align-items:center; gap:8px">
                 <img [src]="toolForm.icon" alt="preview"
                     style="width:36px; height:36px; border-radius:8px; object-fit:contain; border:1px solid var(--border); background:#fafafa"
@@ -451,15 +456,15 @@
         <div class="form-group">
             <label>{{ 'COMMON.STATUS' | translate }}</label>
             <div style="display:flex; align-items:center; gap:10px">
-                <input type="checkbox" [(ngModel)]="toolForm.isActive" id="isActive">
-                <label for="isActive" style="margin:0; font-size:13px">{{ 'TOOLS.ACTIVE' | translate }}</label>
+                <input type="checkbox" [(ngModel)]="toolForm.isActive" id="super-admin-tool-active">
+                <label for="super-admin-tool-active" style="margin:0; font-size:13px">{{ 'TOOLS.ACTIVE' | translate }}</label>
             </div>
         </div>
         <div class="form-group">
             <label>SSO</label>
             <div style="display:flex; align-items:center; gap:10px">
-                <input type="checkbox" [(ngModel)]="toolForm.ssoEnabled" id="ssoEnabled">
-                <label for="ssoEnabled" style="margin:0; font-size:13px">
+                <input type="checkbox" [(ngModel)]="toolForm.ssoEnabled" id="super-admin-tool-sso-enabled">
+                <label for="super-admin-tool-sso-enabled" style="margin:0; font-size:13px">
                     Authentification SSO active (OIDC/Keycloak)
                 </label>
             </div>
@@ -467,9 +472,11 @@
         <div class="form-group">
             <label>{{ 'TOOLS.ALLOWED_ROLES' | translate }}</label>
             <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px">
-                <label *ngFor="let role of availableRoles"
+                <label *ngFor="let role of availableRoles; let i = index"
+                    [attr.for]="'super-admin-tool-role-' + i"
                     style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer">
-                    <input type="checkbox" [checked]="toolForm.allowedRoles.includes(role)" (change)="toggleRole(role)">
+                    <input type="checkbox" [id]="'super-admin-tool-role-' + i"
+                        [checked]="toolForm.allowedRoles.includes(role)" (change)="toggleRole(role)">
                     {{ role }}
                 </label>
             </div>
@@ -486,8 +493,9 @@
     <app-modal *ngIf="showRuleModal" [title]="'SA.EDIT_RULE' | translate" width="480px"
         (closed)="showRuleModal = false">
         <div class="form-group">
-            <label>{{ 'WORKFLOW.EVENT' | translate }}</label>
-            <input type="text" [(ngModel)]="ruleForm.eventCode" class="form-input" disabled>
+            <label for="super-admin-edit-rule-event">{{ 'WORKFLOW.EVENT' | translate }}</label>
+            <input type="text" [(ngModel)]="ruleForm.eventCode" class="form-input" disabled
+                id="super-admin-edit-rule-event">
         </div>
         <div class="form-group">
             <label>{{ 'WORKFLOW.ACTION' | translate }}</label>
@@ -496,12 +504,14 @@
             </select>
         </div>
         <div class="form-group">
-            <label>{{ 'WORKFLOW.TASK_TITLE' | translate }}</label>
-            <input type="text" [(ngModel)]="ruleForm.taskTitle" class="form-input">
+            <label for="super-admin-edit-rule-task-title">{{ 'WORKFLOW.TASK_TITLE' | translate }}</label>
+            <input type="text" [(ngModel)]="ruleForm.taskTitle" class="form-input"
+                id="super-admin-edit-rule-task-title">
         </div>
         <div class="form-group">
-            <label>{{ 'SA.TASK_DESCRIPTION' | translate }}</label>
-            <input type="text" [(ngModel)]="ruleForm.taskDescription" class="form-input">
+            <label for="super-admin-edit-rule-task-description">{{ 'SA.TASK_DESCRIPTION' | translate }}</label>
+            <input type="text" [(ngModel)]="ruleForm.taskDescription" class="form-input"
+                id="super-admin-edit-rule-task-description">
         </div>
         <div class="form-group">
             <label>{{ 'WORKFLOW.TARGET_TYPE' | translate }}</label>
@@ -510,7 +520,7 @@
             </select>
         </div>
         <div class="form-group">
-            <label>{{ 'WORKFLOW.TARGET_VALUES' | translate }}</label>
+            <label for="super-admin-edit-rule-target-value">{{ 'WORKFLOW.TARGET_VALUES' | translate }}</label>
             <div class="target-values">
                 <span class="target-chip" *ngFor="let v of ruleForm.targetValues; let i = index">
                     {{ v }}
@@ -519,7 +529,7 @@
             </div>
             <div class="target-input">
                 <input type="text" [(ngModel)]="newTargetValue" [placeholder]="'SA.ADD_VALUE' | translate"
-                    class="form-input">
+                    class="form-input" id="super-admin-edit-rule-target-value">
                 <button class="btn-small" (click)="addTargetValue(ruleForm)">{{ 'COMMON.ADD' | translate }}</button>
             </div>
         </div>
@@ -542,9 +552,9 @@
     <app-modal *ngIf="showAddRuleModal" [title]="'WORKFLOW.ADD_RULE' | translate" width="480px"
         (closed)="showAddRuleModal = false">
         <div class="form-group">
-            <label>{{ 'WORKFLOW.EVENT' | translate }} *</label>
+            <label for="super-admin-new-rule-event">{{ 'WORKFLOW.EVENT' | translate }} *</label>
             <input type="text" [(ngModel)]="newRuleForm.eventCode" class="form-input"
-                placeholder="e.g. NouvelEvenement">
+                placeholder="e.g. NouvelEvenement" id="super-admin-new-rule-event">
         </div>
         <div class="form-group">
             <label>{{ 'WORKFLOW.ACTION' | translate }} *</label>
@@ -553,12 +563,14 @@
             </select>
         </div>
         <div class="form-group">
-            <label>{{ 'WORKFLOW.TASK_TITLE' | translate }}</label>
-            <input type="text" [(ngModel)]="newRuleForm.taskTitle" class="form-input">
+            <label for="super-admin-new-rule-task-title">{{ 'WORKFLOW.TASK_TITLE' | translate }}</label>
+            <input type="text" [(ngModel)]="newRuleForm.taskTitle" class="form-input"
+                id="super-admin-new-rule-task-title">
         </div>
         <div class="form-group">
-            <label>{{ 'SA.TASK_DESCRIPTION' | translate }}</label>
-            <input type="text" [(ngModel)]="newRuleForm.taskDescription" class="form-input">
+            <label for="super-admin-new-rule-task-description">{{ 'SA.TASK_DESCRIPTION' | translate }}</label>
+            <input type="text" [(ngModel)]="newRuleForm.taskDescription" class="form-input"
+                id="super-admin-new-rule-task-description">
         </div>
         <div class="form-group">
             <label>{{ 'WORKFLOW.TARGET_TYPE' | translate }}</label>
@@ -567,7 +579,7 @@
             </select>
         </div>
         <div class="form-group">
-            <label>{{ 'WORKFLOW.TARGET_VALUES' | translate }}</label>
+            <label for="super-admin-new-rule-target-value">{{ 'WORKFLOW.TARGET_VALUES' | translate }}</label>
             <div class="target-values">
                 <span class="target-chip" *ngFor="let v of newRuleForm.targetValues; let i = index">
                     {{ v }}
@@ -576,7 +588,7 @@
             </div>
             <div class="target-input">
                 <input type="text" [(ngModel)]="newTargetValue" [placeholder]="'SA.ADD_VALUE' | translate"
-                    class="form-input">
+                    class="form-input" id="super-admin-new-rule-target-value">
                 <button class="btn-small" (click)="addTargetValue(newRuleForm)">{{ 'COMMON.ADD' | translate }}</button>
             </div>
         </div>
@@ -594,12 +606,14 @@
         [title]="(editingSlaRule ? ('SLA.EDIT_RULE' | translate) : ('SLA.ADD_RULE' | translate))" width="420px"
         (closed)="showSlaRuleModal = false">
         <div class="form-group">
-            <label>{{ 'COMMON.NAME' | translate }} *</label>
-            <input type="text" [(ngModel)]="slaRuleForm.name" class="form-input" placeholder="Standard 5j">
+            <label for="super-admin-sla-name">{{ 'COMMON.NAME' | translate }} *</label>
+            <input type="text" [(ngModel)]="slaRuleForm.name" class="form-input" placeholder="Standard 5j"
+                id="super-admin-sla-name">
         </div>
         <div class="form-group">
-            <label>{{ 'COMMON.DESCRIPTION' | translate }}</label>
-            <input type="text" [(ngModel)]="slaRuleForm.description" class="form-input">
+            <label for="super-admin-sla-description">{{ 'COMMON.DESCRIPTION' | translate }}</label>
+            <input type="text" [(ngModel)]="slaRuleForm.description" class="form-input"
+                id="super-admin-sla-description">
         </div>
         <div class="form-group">
             <label>{{ 'SLA.TYPE' | translate }} *</label>
@@ -617,8 +631,9 @@
             <p class="text-secondary" style="font-size:12px; margin-top:4px">{{ 'SLA.DOMAIN_HINT' | translate }}</p>
         </div>
         <div class="form-group">
-            <label>{{ 'SLA.DAYS' | translate }} *</label>
-            <input type="number" min="1" [(ngModel)]="slaRuleForm.slaDays" class="form-input">
+            <label for="super-admin-sla-days">{{ 'SLA.DAYS' | translate }} *</label>
+            <input type="number" min="1" [(ngModel)]="slaRuleForm.slaDays" class="form-input"
+                id="super-admin-sla-days">
         </div>
         <div class="modal-footer">
             <button class="btn-small" (click)="showSlaRuleModal = false">{{ 'COMMON.CANCEL' | translate }}</button>
