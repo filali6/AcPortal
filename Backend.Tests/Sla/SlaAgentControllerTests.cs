@@ -6,6 +6,8 @@ using Backend.Modules.Sla.Controllers;
 using Backend.Modules.Sla.Models;
 using Backend.Modules.Sla.Services;
 using Backend.Modules.Sla.Tools;
+using Backend.Modules.Projects.Services;
+using Backend.Modules.Tools.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -69,7 +71,9 @@ public class SlaAgentControllerTests : IDisposable
 
     private SlaAgentController CreateController(Kernel kernel, IConfiguration? config = null)
     {
-        var slaChecker = new SlaCheckerService(_db, NullLogger<SlaCheckerService>.Instance);
+        var slaChecker = new SlaCheckerService(
+            _db, new PluginRegistry(_db), new ProjectStatusService(_db),
+            NullLogger<SlaCheckerService>.Instance);
         var tools = new SlaAgentTools(_db, slaChecker);
         var invocationHelper = new KernelInvocationHelper(config ?? CreateConfig(), NullLogger<KernelInvocationHelper>.Instance);
         var agent = new SlaAgentService(
@@ -150,6 +154,6 @@ public class SlaAgentControllerTests : IDisposable
         var result = await controller.GetLatestWeeklyReport();
 
         var ok = result.Should().BeOfType<OkObjectResult>().Subject;
-        ((SlaWeeklyReport)ok.Value!).Content.Should().Be("New");
+        ok.Value!.GetType().GetProperty("Content")!.GetValue(ok.Value).Should().Be("New");
     }
 }

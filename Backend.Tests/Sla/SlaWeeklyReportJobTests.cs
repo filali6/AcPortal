@@ -1,5 +1,6 @@
 using Backend.Modules.Sla.Jobs;
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -13,7 +14,9 @@ public class SlaWeeklyReportJobTests
     [Fact]
     public async Task StopAsync_ShouldCompleteGracefully_WhenCancelledDuringInitialDelay()
     {
-        var job = new SlaWeeklyReportJob(Mock.Of<IServiceProvider>(), NullLogger<SlaWeeklyReportJob>.Instance);
+        var job = new SlaWeeklyReportJob(
+            Mock.Of<IServiceProvider>(), new ConfigurationBuilder().Build(),
+            NullLogger<SlaWeeklyReportJob>.Instance);
 
         await job.StartAsync(CancellationToken.None);
         await job.StopAsync(CancellationToken.None);
@@ -25,7 +28,9 @@ public class SlaWeeklyReportJobTests
     [Fact]
     public async Task StopAsync_ShouldNotThrow_EvenThoughInitialDelayIsCancelled()
     {
-        var job = new SlaWeeklyReportJob(Mock.Of<IServiceProvider>(), NullLogger<SlaWeeklyReportJob>.Instance);
+        var job = new SlaWeeklyReportJob(
+            Mock.Of<IServiceProvider>(), new ConfigurationBuilder().Build(),
+            NullLogger<SlaWeeklyReportJob>.Instance);
 
         await job.StartAsync(CancellationToken.None);
 

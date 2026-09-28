@@ -1,10 +1,12 @@
 using System.Security.Claims;
 using Backend.Data;
 using Backend.Modules.Projects.Models;
+using Backend.Modules.Projects.Services;
 using Backend.Modules.Sla.Controllers;
 using Backend.Modules.Sla.Models;
 using Backend.Modules.Sla.Services;
 using Backend.Modules.Tasks.Models;
+using Backend.Modules.Tools.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +28,9 @@ public class SlaControllerTests : IDisposable
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _db = new AppDbContext(options);
-        var slaChecker = new SlaCheckerService(_db, NullLogger<SlaCheckerService>.Instance);
+        var slaChecker = new SlaCheckerService(
+            _db, new PluginRegistry(_db), new ProjectStatusService(_db),
+            NullLogger<SlaCheckerService>.Instance);
         _controller = new SlaController(_db, slaChecker);
     }
 

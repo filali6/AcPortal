@@ -12,6 +12,7 @@ using Backend.Modules.Planning.Models;
 using Backend.Modules.Planning.Services;
 using Backend.Modules.Planning.Tools;
 using Backend.Modules.Projects.Models;
+using Backend.Modules.Projects.Services;
 using Backend.Modules.Tools.Models;
 using Backend.Modules.Tools.Services;
 using Dapr.Client;
@@ -75,7 +76,7 @@ public class PlanningControllerTests
         builder.Services.AddSingleton(chatMock.Object);
         var kernel = builder.Build();
 
-        var tools = new PlanningTools(db, new PluginRegistry(db));
+        var tools = new PlanningTools(db, new PluginRegistry(db), new ProjectStatusService(db));
         var config = CreateConfig(new Dictionary<string, string?>
         {
             ["Planning:MaxRetries"] = maxRetries.ToString(),
@@ -108,7 +109,7 @@ public class PlanningControllerTests
         var controller = new PlanningController(
             db, planningService, extractorMock.Object, publisher,
             gitService, envMock.Object, effectiveConfig,
-            NullLogger<PlanningController>.Instance, plugins);
+            NullLogger<PlanningController>.Instance, plugins, new ProjectStatusService(db));
 
         return (controller, extractorMock, gitProviderMock);
     }
