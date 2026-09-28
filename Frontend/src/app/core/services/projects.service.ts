@@ -104,4 +104,7 @@ updatePortfolio(id: string, name: string, description: string): Observable<any> 
 deletePortfolio(id: string): Observable<any> {
   return this.http.delete(`${this.apiUrl}/portfolios/${id}`);
 }
+setStartDate(projectId: string, startDate: string | null): Observable<any> {
+  return this.http.patch(`${this.apiUrl}/projects/${projectId}/start-date`, { startDate });
+}
 }

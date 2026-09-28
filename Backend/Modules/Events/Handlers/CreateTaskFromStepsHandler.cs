@@ -3,19 +3,25 @@ using Backend.Modules.Events.Models;
 using Backend.Modules.Projects.Models;
 using Microsoft.EntityFrameworkCore;
 using Backend.Modules.Tasks.Models;
+using Backend.Modules.Sla.Services;
 
 namespace Backend.Modules.Events.Handlers;
 
-public class CreateTasksFromStepsHandler: IActionHandler
+public class CreateTasksFromStepsHandler : IActionHandler
 {
-    public string ActionType=>"CREATE_TASKS_FROM_STEPS";
+    public string ActionType => "CREATE_TASKS_FROM_STEPS";
     private readonly AppDbContext _db;
     private readonly ILogger<CreateTasksFromStepsHandler> _logger;
+    private readonly SlaCheckerService _slaChecker;
 
-    public CreateTasksFromStepsHandler(AppDbContext db, ILogger<CreateTasksFromStepsHandler> logger)
+    public CreateTasksFromStepsHandler(
+        AppDbContext db,
+        ILogger<CreateTasksFromStepsHandler> logger,
+        SlaCheckerService slaChecker)
     {
         _db = db;
         _logger = logger;
+        _slaChecker = slaChecker;
     }
 
     public async Task HandleAsync(WorkflowRule rule, AcpEventDto eventDto, Guid? projectId)
@@ -44,6 +50,16 @@ public class CreateTasksFromStepsHandler: IActionHandler
 
         var stream = await _db.Streams.FindAsync(streamId);
 
+        // Point de départ du calendrier : maintenant, ou la StartDate du projet si elle est dans le futur
+        var now = DateTime.UtcNow;
+        var projectStart = await _db.Projects
+            .Where(p => p.Id == projectId.Value)
+            .Select(p => p.StartDate)
+            .FirstOrDefaultAsync();
+        var scheduleOrigin = projectStart.HasValue && projectStart.Value > now
+            ? projectStart.Value
+            : now;
+
         foreach (var step in steps)
         {
             var stepTeamType = step.TeamType ?? teamType;
@@ -58,6 +74,14 @@ public class CreateTasksFromStepsHandler: IActionHandler
                 continue;
             }
 
+            // Avec estimation → DueDate fixée ici, la règle SLA générique ne la touchera pas
+            //   (ApplySlaRulesToTasksAsync ne traite que DueDate == null).
+            // Sans estimation → DueDate reste null, comportement actuel inchangé.
+            // Chaque tâche est indépendante : pas de cumul entre steps.
+            DateTime? dueDate = step.EstimatedDays is int days && days > 0
+                ? scheduleOrigin.AddDays(days)
+                : null;
+
             _db.AcpTasks.Add(new AcpTask
             {
                 Title = step.StepName,
@@ -66,14 +90,21 @@ public class CreateTasksFromStepsHandler: IActionHandler
                 StreamId = stream?.Id,
                 ProjectId = projectId.Value,
                 StepId = step.Id,
-                Status = 0
+                Status = 0,
+                CreatedAt = now,
+                DueDate = dueDate
             });
 
-            _logger.LogInformation("Tâche créée : {StepName} → {Consultant} (TeamType: {TeamType})",
-                step.StepName, assignedKeycloakId, stepTeamType);
+            _logger.LogInformation(
+                "Tâche créée : {StepName} → {Consultant} (TeamType: {TeamType}, DueDate: {DueDate})",
+                step.StepName, assignedKeycloakId, stepTeamType,
+                dueDate?.ToString("yyyy-MM-dd") ?? "SLA générique");
         }
 
         await _db.SaveChangesAsync();
+
+        // Tâches sans estimation → règle SLA appliquée tout de suite (plus besoin de "Apply rules")
+        await _slaChecker.ApplySlaRulesAsync();
     }
 
     private async Task<string?> FindBestConsultantKeycloakIdAsync(

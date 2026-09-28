@@ -15,7 +15,7 @@ import { ProjectsService } from '../../core/services/projects.service';
 import { TasksService } from '../../core/services/tasks.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Chart } from 'chart.js';
-import { SlaService, SlaRule } from '../../core/services/sla.service';
+import { SlaService, SlaRule ,SlaRuleRequest} from '../../core/services/sla.service';
 
 @Component({
   selector: 'app-super-admin',
@@ -66,13 +66,15 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
   };
 
   // SLA Rules (US59 / US60 / US61)
+    // SLA Rules (US59 / US60 / US61) — la règle SANS domaine = règle par défaut de son type
   slaRules: SlaRule[] = [];
+  slaDomains: string[] = [];
   showSlaRuleModal = false;
   editingSlaRule: SlaRule | null = null;
-  slaRuleForm: { name: string; description: string; type: number; slaDays: number } = {
-    name: '', description: '', type: 1, slaDays: 5
-  };
-  applyingSlaRules = false;
+  slaRuleForm: {
+    name: string; description: string; type: 'Task' | 'Stream';
+    slaDays: number; functionalDomain: string;
+  } = { name: '', description: '', type: 'Task', slaDays: 5, functionalDomain: '' };
 
 
   // Stats
@@ -452,16 +454,19 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
   // SLA Rules — US59 (créer) / US60 (modifier) / US61 (supprimer)
   // ─────────────────────────────────────────────────────────────
 
-  loadSlaRules(): void {
+    loadSlaRules(): void {
     this.slaService.getAllRules().subscribe({
       next: (rules) => { this.slaRules = rules; this.computeStats(); },
       error: () => this.toastService.show('Error loading SLA rules', 'error')
+    });
+    this.slaService.getPluginDomains().subscribe({
+      next: (res) => this.slaDomains = res?.domains || []
     });
   }
 
   openCreateSlaRuleModal(): void {
     this.editingSlaRule = null;
-    this.slaRuleForm = { name: '', description: '', type: 1, slaDays: 5 };
+    this.slaRuleForm = { name: '', description: '', type: 'Task', slaDays: 5, functionalDomain: '' };
     this.showSlaRuleModal = true;
   }
 
@@ -471,49 +476,51 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
       name: rule.name,
       description: rule.description || '',
       type: rule.type,
-      slaDays: rule.slaDays
+      slaDays: rule.slaDays,
+      functionalDomain: rule.functionalDomain || ''
     };
     this.showSlaRuleModal = true;
   }
 
+  // Le domaine ne concerne que les règles Task
+  onSlaTypeChange(): void {
+    if (this.slaRuleForm.type === 'Stream') this.slaRuleForm.functionalDomain = '';
+  }
+
   saveSlaRule(): void {
-    if (!this.slaRuleForm.name || !this.slaRuleForm.slaDays || this.slaRuleForm.slaDays < 1) {
+    if (!this.slaRuleForm.name.trim() || !this.slaRuleForm.slaDays || this.slaRuleForm.slaDays < 1) {
       this.toastService.show('Name and a valid number of SLA days are required', 'error');
       return;
     }
-    this.loading = true;
 
-    if (this.editingSlaRule) {
-      this.slaService.updateRule(this.editingSlaRule.id, {
-        name: this.slaRuleForm.name,
-        description: this.slaRuleForm.description || undefined,
-        type: this.slaRuleForm.type,
-        slaDays: this.slaRuleForm.slaDays
-      }).subscribe({
-        next: () => {
-          this.toastService.show('SLA rule updated!', 'success');
-          this.loading = false;
-          this.showSlaRuleModal = false;
-          this.loadSlaRules();
-        },
-        error: () => { this.toastService.show('Error updating SLA rule', 'error'); this.loading = false; }
-      });
-    } else {
-      this.slaService.createRule({
-        name: this.slaRuleForm.name,
-        description: this.slaRuleForm.description || undefined,
-        type: this.slaRuleForm.type,
-        slaDays: this.slaRuleForm.slaDays
-      }).subscribe({
-        next: () => {
-          this.toastService.show('SLA rule created!', 'success');
-          this.loading = false;
-          this.showSlaRuleModal = false;
-          this.loadSlaRules();
-        },
-        error: () => { this.toastService.show('Error creating SLA rule', 'error'); this.loading = false; }
-      });
-    }
+    const payload: SlaRuleRequest = {
+      name: this.slaRuleForm.name.trim(),
+      description: this.slaRuleForm.description || undefined,
+      type: this.slaRuleForm.type,
+      slaDays: this.slaRuleForm.slaDays,
+      functionalDomain: this.slaRuleForm.type === 'Task' && this.slaRuleForm.functionalDomain
+        ? this.slaRuleForm.functionalDomain
+        : null
+    };
+
+    const request$ = this.editingSlaRule
+      ? this.slaService.updateRule(this.editingSlaRule.id, payload)
+      : this.slaService.createRule(payload);
+
+    this.loading = true;
+    request$.subscribe({
+      next: () => {
+        this.toastService.show(this.editingSlaRule ? 'SLA rule updated!' : 'SLA rule created!', 'success');
+        this.loading = false;
+        this.showSlaRuleModal = false;
+        this.loadSlaRules();
+      },
+      error: (err) => {
+        // Le backend explique le refus (ex : "A default Task rule already exists")
+        this.toastService.show(err?.error?.message || 'Error saving SLA rule', 'error');
+        this.loading = false;
+      }
+    });
   }
 
   deleteSlaRule(rule: SlaRule): void {
@@ -525,22 +532,8 @@ export class SuperAdminComponent implements OnInit, OnDestroy {
     });
   }
 
-  applySlaRules(): void {
-    this.applyingSlaRules = true;
-    this.slaService.applyRules().subscribe({
-      next: () => {
-        this.toastService.show('SLA rules applied to all tasks!', 'success');
-        this.applyingSlaRules = false;
-      },
-      error: () => {
-        this.toastService.show('Error applying SLA rules', 'error');
-        this.applyingSlaRules = false;
-      }
-    });
-  }
-
-  getSlaTypeLabel(type: number): string {
-    return type === 0 ? 'Stream' : 'Task';
+  isMissingDefault(type: 'Task' | 'Stream'): boolean {
+    return !this.slaRules.some(r => r.type === type && r.isDefault);
   }
 
   getRoleColor(role: string): string {

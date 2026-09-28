@@ -311,148 +311,341 @@
         <app-contracts-tab></app-contracts-tab>
     </ng-container>
 
-    <!-- SLA DASHBOARD TAB (US64) -->
-    <ng-container *ngIf="activeTabId === 'sla-tab'">
-
-        <!-- US77 : Rapport hebdomadaire généré par l'agent IA -->
-        <div class="card">
-            <div class="card-header">
-                <h2>{{ 'SLA.WEEKLY_REPORT_TITLE' | translate }}</h2>
-                <button class="btn-small" (click)="generateWeeklyReport()" [disabled]="generatingWeeklyReport">
-                    {{ generatingWeeklyReport ? ('COMMON.LOADING' | translate) : ('SLA.GENERATE_NOW' | translate) }}
-                </button>
-            </div>
-            <div class="card-body">
-                <div class="empty" *ngIf="loadingWeeklyReport">{{ 'COMMON.LOADING' | translate }}</div>
-                <div class="empty" *ngIf="!loadingWeeklyReport && !weeklyReport">
-                    {{ 'SLA.NO_REPORT_YET' | translate }}
+        <!-- SLA DASHBOARD TAB (US64) -->
+        <ng-container *ngIf="activeTabId === 'sla-tab'">
+            <ng-template #slackIcon>
+                <svg width="14" height="14" viewBox="0 0 122.8 122.8" fill="none">
+                    <path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9z" fill="#E01E5A" />
+                    <path
+                        d="M32.3 77.6c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z"
+                        fill="#E01E5A" />
+                    <path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2z" fill="#36C5F0" />
+                    <path
+                        d="M45.2 32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z"
+                        fill="#36C5F0" />
+                    <path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2z" fill="#2EB67D" />
+                    <path
+                        d="M90.5 45.2c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z"
+                        fill="#2EB67D" />
+                    <path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9z"
+                        fill="#ECB22E" />
+                    <path
+                        d="M77.6 90.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z"
+                        fill="#ECB22E" />
+                </svg>
+            </ng-template>
+        
+            <!-- US77 : Rapport hebdomadaire — bandeau compact, rapport complet déplié à la demande -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>{{ 'SLA.WEEKLY_REPORT_TITLE' | translate }}</h2>
+                    <div class="row-actions">
+                        <select class="form-input report-history-select" *ngIf="reportHistory.length > 1"
+                            [ngModel]="weeklyReport?.id" (ngModelChange)="selectReport($event)"
+                            [title]="'SLA.HISTORY' | translate">
+                            <option *ngFor="let r of reportHistory" [value]="r.id">
+                                {{ r.weekStart | date:'dd/MM/yyyy' }}{{ r.isManual ? ' · ' + ('SLA.MANUAL' | translate) : '' }}
+                            </option>
+                        </select>
+                        <button class="btn-small" (click)="generateWeeklyReport()" [disabled]="generatingWeeklyReport">
+                            {{ generatingWeeklyReport ? ('COMMON.LOADING' | translate) : ('SLA.GENERATE_NOW' | translate) }}
+                        </button>
+                    </div>
                 </div>
-                <div *ngIf="!loadingWeeklyReport && weeklyReport">
-                    <span class="text-secondary" style="font-size:12px;">
-                        {{ 'SLA.GENERATED_ON' | translate }} {{ weeklyReport.generatedAt | date:'dd/MM/yyyy HH:mm' }}
-                    </span>
-                    <markdown [data]="weeklyReport.content" style="display:block; margin-top:8px; font-size:13px;">
-                    </markdown>
+        
+                <div class="card-body">
+                    <div class="empty" *ngIf="loadingWeeklyReport">{{ 'COMMON.LOADING' | translate }}</div>
+                    <div class="empty" *ngIf="!loadingWeeklyReport && !weeklyReport">{{ 'SLA.NO_REPORT_YET' | translate }}</div>
+        
+                    <!-- Bandeau compact (toujours visible) -->
+                    <div class="report-banner" *ngIf="!loadingWeeklyReport && weeklyReport">
+                        <div class="report-banner-info">
+                            <span class="report-week">
+                                {{ 'SLA.REPORT_OF_WEEK' | translate }} {{ weeklyReport.weekStart | date:'dd/MM/yyyy' }}
+                            </span>
+                            <span class="report-chip chip-danger">
+                                {{ weeklyReport.overdueTasksCount }} {{ 'SLA.OVERDUE_TASKS' | translate | lowercase }}
+                                <span [ngClass]="trendClass('overdueTasks')">{{ trendText('overdueTasks') }}</span>
+                            </span>
+                            <span class="report-chip" *ngIf="weeklyReport.data?.compliance?.onTimeRatePercent != null">
+                                {{ weeklyReport.data?.compliance?.onTimeRatePercent }}% {{ 'SLA.ON_TIME' | translate }}
+                            </span>
+                            <span class="text-secondary report-date">
+                                {{ 'SLA.GENERATED_ON' | translate }} {{ weeklyReport.generatedAt | date:'dd/MM/yyyy HH:mm' }}
+                            </span>
+                        </div>
+                        <button class="btn-primary" (click)="toggleWeeklyReport()">
+                            {{ showWeeklyReport ? ('SLA.HIDE_REPORT' | translate) : ('SLA.VIEW_REPORT' | translate) }}
+                        </button>
+                    </div>
+        
+                    <!-- Rapport complet (seulement quand on le demande) -->
+                    <div class="report-details" *ngIf="showWeeklyReport && weeklyReport && !loadingWeeklyReport">
+        
+                        <ng-container *ngIf="weeklyReport.data as d">
+        
+                            <!-- 1. Chiffres clés + tendance -->
+                            <div class="report-kpis">
+                                <div class="report-kpi" *ngFor="let k of reportKpis">
+                                    <span class="qs-label">{{ k.label | translate }}</span>
+                                    <span class="qs-value">{{ d.kpis[k.key] }}</span>
+                                    <span class="report-trend" [ngClass]="trendClass(k.key)" *ngIf="d.previous">
+                                        {{ trendText(k.key) }} {{ 'SLA.VS_LAST_WEEK' | translate }}
+                                    </span>
+                                </div>
+                                <div class="report-kpi">
+                                    <span class="qs-label">{{ 'SLA.ON_TIME_RATE' | translate }}</span>
+                                    <span class="qs-value">
+                                        {{ d.compliance.onTimeRatePercent != null ? d.compliance.onTimeRatePercent + '%' : '—'
+                                        }}
+                                    </span>
+                                    <span class="report-trend trend-flat">
+                                        {{ d.compliance.completedWithDueDate
+                                        ? d.compliance.completedOnTime + '/' + d.compliance.completedWithDueDate
+                                        : ('SLA.NO_COMPLIANCE_DATA' | translate) }}
+                                    </span>
+                                </div>
+                            </div>
+        
+                            <!-- 2. Santé par projet -->
+                            <h3 class="report-section-title">{{ 'SLA.PROJECT_HEALTH' | translate }}</h3>
+                            <div class="table-wrapper sticky-table" *ngIf="d.projects.length">
+                                <table class="tasks-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:32px"></th>
+                                            <th>{{ 'CONTRACTS.PROJECT' | translate }}</th>
+                                            <th>{{ 'SLA.OPEN_TASKS' | translate }}</th>
+                                            <th>{{ 'SLA.OVERDUE_TASKS' | translate }}</th>
+                                            <th>{{ 'SLA.AT_RISK_TASKS' | translate }}</th>
+                                            <th>{{ 'SLA.OVERDUE_STREAMS' | translate }}</th>
+                                            <th>{{ 'SLA.WORST_DELAY' | translate }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr *ngFor="let p of d.projects">
+                                            <td>{{ getHealthIcon(p.health) }}</td>
+                                            <td class="task-title">{{ p.projectName }}</td>
+                                            <td>{{ p.openTasks }}</td>
+                                            <td [class.cell-alert]="p.overdueTasks > 0">{{ p.overdueTasks }}</td>
+                                            <td>{{ p.atRiskTasks }}</td>
+                                            <td [class.cell-alert]="p.overdueStreams > 0">{{ p.overdueStreams }}</td>
+                                            <td>{{ p.worstDelayDays ? p.worstDelayDays + ' j' : '—' }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="empty" *ngIf="!d.projects.length">—</div>
+        
+                            <!-- 3. Goulots d'étranglement -->
+                            <h3 class="report-section-title">{{ 'SLA.BOTTLENECKS' | translate }}</h3>
+                            <div class="table-wrapper sticky-table" *ngIf="d.bottlenecks.length">
+                                <table class="tasks-table">
+                                    <thead>
+                                        <tr>
+                                            <th>{{ 'COMMON.NAME' | translate }}</th>
+                                            <th>{{ 'SLA.OPEN_TASKS' | translate }}</th>
+                                            <th>{{ 'SLA.OVERDUE_TASKS' | translate }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr *ngFor="let b of d.bottlenecks">
+                                            <td class="task-title">{{ b.name }}</td>
+                                            <td>{{ b.openTasks }}</td>
+                                            <td [class.cell-alert]="b.overdueTasks > 0">{{ b.overdueTasks }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="empty" *ngIf="!d.bottlenecks.length">—</div>
+        
+                            <!-- 4. Nouveaux retards + retards les plus anciens -->
+                            <h3 class="report-section-title">{{ 'SLA.NEW_OVERDUE' | translate }} ({{ d.newOverdue.length }})
+                            </h3>
+                            <ng-container *ngTemplateOutlet="overdueTable; context: { $implicit: d.newOverdue }"></ng-container>
+        
+                            <h3 class="report-section-title">{{ 'SLA.LONGEST_OVERDUE' | translate }}</h3>
+                            <ng-container
+                                *ngTemplateOutlet="overdueTable; context: { $implicit: d.longestOverdue }"></ng-container>
+                        </ng-container>
+        
+                        <!-- 5. Analyse IA (seule partie écrite par l'IA) -->
+                        <h3 class="report-section-title">✨ {{ 'SLA.AI_ANALYSIS' | translate }}</h3>
+                        <div class="report-analysis">
+                            <markdown [data]="weeklyReport.content"></markdown>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <!-- KPI cards : grid CSS inline (4 colonnes) pour garantir l'alignement horizontal,
-             indépendamment des classes .stats-grid / .quick-stats existantes -->
-        <div class="card" style="min-height:auto; height:auto;">
-            <div class="card-header">
-                <h2>{{ 'SLA.DASHBOARD_TITLE' | translate }}</h2>
-            </div>
-            <div class="card-body"
-                style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px; min-height:auto; height:auto; padding-bottom: 20px;">
-                <div class="qs-item" [class.qs-alert]="(slaDashboard?.summary?.totalOverdueTasks || 0) > 0"
-                    style="display:flex; flex-direction:column; gap:4px;">
-                    <span class="qs-label">{{ 'SLA.OVERDUE_TASKS' | translate }}</span>
-                    <span class="qs-value">{{ slaDashboard?.summary?.totalOverdueTasks || 0 }}</span>
+        
+            <!-- Tableau réutilisé pour les deux listes de retards -->
+            <ng-template #overdueTable let-rows>
+                <div class="table-wrapper sticky-table" *ngIf="rows?.length">
+                    <table class="tasks-table">
+                        <thead>
+                            <tr>
+                                <th>{{ 'COMMON.NAME' | translate }}</th>
+                                <th>{{ 'CONTRACTS.PROJECT' | translate }}</th>
+                                <th>{{ 'TASKS.STREAM' | translate }}</th>
+                                <th>{{ 'SLA.ASSIGNED_TO' | translate }}</th>
+                                <th>{{ 'COMMON.DEADLINE' | translate }}</th>
+                                <th>{{ 'SLA.DAYS_LATE' | translate }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let t of rows">
+                                <td class="task-title">{{ t.title }}</td>
+                                <td class="text-secondary">{{ t.projectName || '—' }}</td>
+                                <td class="text-secondary">{{ t.streamName || '—' }}</td>
+                                <td>{{ t.assignedToName || '—' }}</td>
+                                <td class="text-secondary">{{ t.dueDate | date:'dd/MM/yyyy' }}</td>
+                                <td class="cell-alert">{{ t.daysLate }} j</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="qs-item" style="display:flex; flex-direction:column; gap:4px;">
-                    <span class="qs-label">{{ 'SLA.AT_RISK_TASKS' | translate }}</span>
-                    <span class="qs-value">{{ slaDashboard?.summary?.totalAtRiskTasks || 0 }}</span>
+                <div class="empty" *ngIf="!rows?.length">—</div>
+            </ng-template>
+        
+            <!-- KPI cards -->
+            <div class="card" style="min-height:auto; height:auto;">
+                <div class="card-header">
+                    <h2>{{ 'SLA.DASHBOARD_TITLE' | translate }}</h2>
                 </div>
-                <div class="qs-item" [class.qs-alert]="(slaDashboard?.summary?.totalOverdueStreams || 0) > 0"
-                    style="display:flex; flex-direction:column; gap:4px;">
-                    <span class="qs-label">{{ 'SLA.OVERDUE_STREAMS' | translate }}</span>
-                    <span class="qs-value">{{ slaDashboard?.summary?.totalOverdueStreams || 0 }}</span>
+                <div class="card-body"
+                    style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px; min-height:auto; height:auto; padding-bottom: 20px;">
+                    <div class="qs-item" [class.qs-alert]="(slaDashboard?.summary?.totalOverdueTasks || 0) > 0"
+                        style="display:flex; flex-direction:column; gap:4px;">
+                        <span class="qs-label">{{ 'SLA.OVERDUE_TASKS' | translate }}</span>
+                        <span class="qs-value">{{ slaDashboard?.summary?.totalOverdueTasks || 0 }}</span>
+                    </div>
+                    <div class="qs-item" style="display:flex; flex-direction:column; gap:4px;">
+                        <span class="qs-label">{{ 'SLA.AT_RISK_TASKS' | translate }}</span>
+                        <span class="qs-value">{{ slaDashboard?.summary?.totalAtRiskTasks || 0 }}</span>
+                    </div>
+                    <div class="qs-item" [class.qs-alert]="(slaDashboard?.summary?.totalOverdueStreams || 0) > 0"
+                        style="display:flex; flex-direction:column; gap:4px;">
+                        <span class="qs-label">{{ 'SLA.OVERDUE_STREAMS' | translate }}</span>
+                        <span class="qs-value">{{ slaDashboard?.summary?.totalOverdueStreams || 0 }}</span>
+                    </div>
+                    <div class="qs-item" style="display:flex; flex-direction:column; gap:4px;">
+                        <span class="qs-label">{{ 'SLA.AT_RISK_STREAMS' | translate }}</span>
+                        <span class="qs-value">{{ slaDashboard?.summary?.totalAtRiskStreams || 0 }}</span>
+                    </div>
                 </div>
-                <div class="qs-item" style="display:flex; flex-direction:column; gap:4px;">
-                    <span class="qs-label">{{ 'SLA.AT_RISK_STREAMS' | translate }}</span>
-                    <span class="qs-value">{{ slaDashboard?.summary?.totalAtRiskStreams || 0 }}</span>
+            </div>
+        
+            <!-- Tâches en retard / à risque -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>{{ 'SLA.TASKS_TITLE' | translate }} ({{ slaDashboard?.tasks?.length || 0 }})</h2>
+                    <button class="btn-small" (click)="loadSlaDashboard()" [disabled]="loadingSlaDashboard">
+                        {{ loadingSlaDashboard ? ('COMMON.LOADING' | translate) : ('COMMON.REFRESH' | translate) }}
+                    </button>
                 </div>
+                <div class="table-wrapper sticky-table">
+                    <table class="tasks-table">
+                        <thead>
+                            <tr>
+                                <th>{{ 'COMMON.NAME' | translate }}</th>
+                                <th>{{ 'CONTRACTS.PROJECT' | translate }}</th>
+                                <th>{{ 'TASKS.STREAM' | translate }}</th>
+                                <th>{{ 'SLA.ASSIGNED_TO' | translate }}</th>
+                                <th>{{ 'COMMON.STATUS' | translate }}</th>
+                                <th>{{ 'COMMON.DEADLINE' | translate }}</th>
+                                <th>SLA</th>
+                                <th>Slack</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let t of slaDashboard?.tasks">
+                                <td class="task-title">{{ t.title }}</td>
+                                <td class="text-secondary">{{ t.projectName || '—' }}</td>
+                                <td class="text-secondary">{{ t.streamName || '—' }}</td>
+                                <td>{{ t.assignedToName || '—' }}</td>
+                                <td>
+                                    <span class="status-badge" [ngClass]="utils.getTaskStatusClass(t.status)">
+                                        {{ utils.getTaskStatusLabel(t.status) }}
+                                    </span>
+                                </td>
+                                <td class="text-secondary">{{ t.dueDate ? (t.dueDate | date:'dd/MM/yyyy') : '—' }}</td>
+                                <td>
+                                    <span class="sla-badge" [ngClass]="getSlaBadgeClass(t.slaStatus)">
+                                        <ng-container *ngIf="getSlaStatusLabel(t.slaStatus) === 'Overdue'">
+                                            {{ 'SLA.OVERDUE_BY' | translate: { days: -t.daysRemaining } }}
+                                        </ng-container>
+                                        <ng-container *ngIf="getSlaStatusLabel(t.slaStatus) !== 'Overdue'">
+                                            {{ t.daysRemaining > 0
+                                            ? ('SLA.DAYS_REMAINING' | translate: { days: t.daysRemaining })
+                                            : ('SLA.DUE_TODAY' | translate) }}
+                                        </ng-container>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn-slack-link" *ngIf="t.taskThreadUrl || t.streamChannelUrl"
+                                        (click)="openExternalLink(t.taskThreadUrl || t.streamChannelUrl)">
+                                        <ng-container *ngTemplateOutlet="slackIcon"></ng-container> Slack
+                                    </button>
+                                    <span class="text-secondary" *ngIf="!t.taskThreadUrl && !t.streamChannelUrl">—</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty" *ngIf="!slaDashboard?.tasks?.length">{{ 'SLA.NO_OVERDUE_TASKS' | translate }}</div>
             </div>
-        </div>
-
-        <!-- Tâches en retard / à risque -->
-        <div class="card">
-            <div class="card-header">
-                <h2>{{ 'SLA.TASKS_TITLE' | translate }} ({{ slaDashboard?.tasks?.length || 0 }})</h2>
-                <button class="btn-small" (click)="loadSlaDashboard()" [disabled]="loadingSlaDashboard">
-                    {{ loadingSlaDashboard ? ('COMMON.LOADING' | translate) : ('COMMON.REFRESH' | translate) }}
-                </button>
+        
+            <!-- Streams en retard / à risque -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>{{ 'SLA.STREAMS_TITLE' | translate }} ({{ slaDashboard?.streams?.length || 0 }})</h2>
+                </div>
+                <div class="table-wrapper sticky-table">
+                    <table class="tasks-table">
+                        <thead>
+                            <tr>
+                                <th>{{ 'COMMON.NAME' | translate }}</th>
+                                <th>{{ 'CONTRACTS.PROJECT' | translate }}</th>
+                                <th>{{ 'PM.BIZ_LEAD' | translate }}</th>
+                                <th>{{ 'PM.TECH_LEAD' | translate }}</th>
+                                <th>{{ 'COMMON.DEADLINE' | translate }}</th>
+                                <th>SLA</th>
+                                <th>Slack</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let s of slaDashboard?.streams">
+                                <td class="task-title">{{ s.name }}</td>
+                                <td class="text-secondary">{{ s.projectName }}</td>
+                                <td>{{ s.businessLeadName || '—' }}</td>
+                                <td>{{ s.technicalLeadName || '—' }}</td>
+                                <td class="text-secondary">{{ s.dueDate ? (s.dueDate | date:'dd/MM/yyyy') : '—' }}</td>
+                                <td>
+                                    <span class="sla-badge" [ngClass]="getSlaBadgeClass(s.slaStatus)">
+                                        <ng-container *ngIf="getSlaStatusLabel(s.slaStatus) === 'Overdue'">
+                                            {{ 'SLA.OVERDUE_BY' | translate: { days: -s.daysRemaining } }}
+                                        </ng-container>
+                                        <ng-container *ngIf="getSlaStatusLabel(s.slaStatus) !== 'Overdue'">
+                                            {{ s.daysRemaining > 0
+                                            ? ('SLA.DAYS_REMAINING' | translate: { days: s.daysRemaining })
+                                            : ('SLA.DUE_TODAY' | translate) }}
+                                        </ng-container>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn-slack-link" *ngIf="s.messagingChannelUrl"
+                                        (click)="openExternalLink(s.messagingChannelUrl)">
+                                        <ng-container *ngTemplateOutlet="slackIcon"></ng-container> Slack
+                                    </button>
+                                    <span class="text-secondary" *ngIf="!s.messagingChannelUrl">—</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty" *ngIf="!slaDashboard?.streams?.length">{{ 'SLA.NO_OVERDUE_STREAMS' | translate }}</div>
             </div>
-            <div class="table-wrapper">
-                <table class="tasks-table">
-                    <thead>
-                        <tr>
-                            <th>{{ 'COMMON.NAME' | translate }}</th>
-                            <th>{{ 'COMMON.STATUS' | translate }}</th>
-                            <th>{{ 'COMMON.DEADLINE' | translate }}</th>
-                            <th>SLA</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let t of slaDashboard?.tasks">
-                            <td class="task-title">{{ t.title }}</td>
-                            <td>
-                                <span class="status-badge" [ngClass]="utils.getTaskStatusClass(t.status)">
-                                    {{ utils.getTaskStatusLabel(t.status) }}
-                                </span>
-                            </td>
-                            <td class="text-secondary">{{ t.dueDate ? (t.dueDate | date:'dd/MM/yyyy') : '—' }}</td>
-                            <td>
-                                <span class="sla-badge" [ngClass]="getSlaBadgeClass(t.slaStatus)">
-                                    <ng-container *ngIf="getSlaStatusLabel(t.slaStatus) === 'Overdue'">
-                                        {{ 'SLA.OVERDUE_BY' | translate: { days: (t.daysRemaining < 0 ? -t.daysRemaining
-                                            : t.daysRemaining) } }} </ng-container>
-                                            <ng-container *ngIf="getSlaStatusLabel(t.slaStatus) === 'AtRisk'">
-                                                {{ 'SLA.DUE_TODAY' | translate }}
-                                            </ng-container>
-                                            <ng-container *ngIf="getSlaStatusLabel(t.slaStatus) === 'OnTrack'">
-                                                {{ 'SLA.DAYS_REMAINING' | translate: { days: t.daysRemaining } }}
-                                            </ng-container>
-                                </span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="empty" *ngIf="!slaDashboard?.tasks?.length">{{ 'SLA.NO_OVERDUE_TASKS' | translate }}</div>
-        </div>
-
-        <!-- Streams en retard / à risque -->
-        <div class="card">
-            <div class="card-header">
-                <h2>{{ 'SLA.STREAMS_TITLE' | translate }} ({{ slaDashboard?.streams?.length || 0 }})</h2>
-            </div>
-            <div class="table-wrapper">
-                <table class="tasks-table">
-                    <thead>
-                        <tr>
-                            <th>{{ 'COMMON.NAME' | translate }}</th>
-                            <th>{{ 'PROJECTS.TITLE' | translate }}</th>
-                            <th>{{ 'COMMON.DEADLINE' | translate }}</th>
-                            <th>SLA</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let s of slaDashboard?.streams">
-                            <td class="task-title">{{ s.name }}</td>
-                            <td class="text-secondary">{{ s.projectName }}</td>
-                            <td class="text-secondary">{{ s.dueDate ? (s.dueDate | date:'dd/MM/yyyy') : '—' }}</td>
-                            <td>
-                                <span class="sla-badge" [ngClass]="getSlaBadgeClass(s.slaStatus)">
-                                    <ng-container *ngIf="getSlaStatusLabel(s.slaStatus) === 'Overdue'">
-                                        {{ 'SLA.OVERDUE_BY' | translate: { days: (s.daysRemaining < 0 ? -s.daysRemaining
-                                            : s.daysRemaining) } }} </ng-container>
-                                            <ng-container *ngIf="getSlaStatusLabel(s.slaStatus) === 'AtRisk'">
-                                                {{ 'SLA.DUE_TODAY' | translate }}
-                                            </ng-container>
-                                            <ng-container *ngIf="getSlaStatusLabel(s.slaStatus) === 'OnTrack'">
-                                                {{ 'SLA.DAYS_REMAINING' | translate: { days: s.daysRemaining } }}
-                                            </ng-container>
-                                </span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="empty" *ngIf="!slaDashboard?.streams?.length">{{ 'SLA.NO_OVERDUE_STREAMS' | translate }}</div>
-        </div>
-
-    </ng-container>
+        
+        </ng-container>
 
 </div>

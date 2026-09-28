@@ -6,6 +6,7 @@ using Backend.Modules.Git.Services;
 using Backend.Modules.Planning.Models;
 using Backend.Modules.Planning.Services;
 using Backend.Modules.Projects.Models;
+using Backend.Modules.Projects.Services;
 using Backend.Modules.Tools.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,6 +30,7 @@ public class PlanningController : ControllerBase
     private readonly IConfiguration _config;
     private readonly ILogger<PlanningController> _logger;
     private readonly PluginRegistry _plugins;
+    private readonly ProjectStatusService _projectStatus;
 
     private static readonly JsonSerializerOptions JsonOpts =
         new() { PropertyNameCaseInsensitive = true };
@@ -37,12 +39,14 @@ public class PlanningController : ControllerBase
         AppDbContext db, FsdPlanningService planning,
         IPdfTextExtractor extractor, EventPublisher publisher,
         GitService gitService, IWebHostEnvironment env,
-        IConfiguration config, ILogger<PlanningController> logger,PluginRegistry plugins)
+        IConfiguration config, ILogger<PlanningController> logger, PluginRegistry plugins,
+        ProjectStatusService projectStatus)
     {
         _db = db; _planning = planning; _extractor = extractor;
         _publisher = publisher; _gitService = gitService;
         _env = env; _config = config; _logger = logger;
-        _plugins=plugins;
+        _plugins = plugins;
+        _projectStatus = projectStatus;
     }
 
     // POST /api/planning/generate
@@ -78,8 +82,8 @@ public class PlanningController : ControllerBase
             ? $"Maximum {_config.GetValue("Planning:DefaultMaxStreams", 5)} streams. Maximum {_config.GetValue("Planning:DefaultMaxConsultantsPerStream", 3)} consultants per stream."
             : guidelines;
 
-        // Appeler l'agent (avec ses tools)
-        var planJson = await _planning.GenerateAsync(fsdText, effectiveGuidelines);
+        // Appeler l'agent (avec ses tools) — projectId transmis pour le contexte StartDate/TargetDate
+        var planJson = await _planning.GenerateAsync(fsdText, effectiveGuidelines, projectId);
         if (planJson == null)
             return StatusCode(500, new { message = "AI planning failed. Please try again." });
 
@@ -148,36 +152,43 @@ public class PlanningController : ControllerBase
         return Ok(new { plan = JsonSerializer.Deserialize<object>(updatedJson, JsonOpts) });
     }
 
-    // Helper — construit le contexte des personnes
+    // Helper — construit le contexte des personnes (avec leur charge réelle)
     private async Task<string> BuildPeopleContextAsync()
     {
-        var bizLeads = await _db.Users
-            .Where(u => u.Role == GlobalRole.BusinessTeamLead)
-            .Select(u => $"{u.FullName} (ID:{u.Id})")
+        var load = await _projectStatus.GetActiveStreamCountByUserAsync();
+
+        var users = await _db.Users
+            .AsNoTracking()
+            .Where(u => u.Role == GlobalRole.BusinessTeamLead
+                     || u.Role == GlobalRole.TechnicalTeamLead
+                     || u.Role == GlobalRole.Consultant)
+            .Select(u => new { u.Id, u.FullName, u.Role, u.ConsultantType })
             .ToListAsync();
 
-        var techLeads = await _db.Users
-            .Where(u => u.Role == GlobalRole.TechnicalTeamLead)
-            .Select(u => $"{u.FullName} (ID:{u.Id})")
-            .ToListAsync();
+        string Format(IEnumerable<Guid> ids) => string.Join(", ",
+            users.Where(u => ids.Contains(u.Id))
+                 .Select(u => $"{u.FullName} (ID:{u.Id}, {(load.TryGetValue(u.Id, out var n) ? n : 0)} active streams)"));
 
-        var bizCons = await _db.Users
-            .Where(u => u.Role == GlobalRole.Consultant && u.ConsultantType == ConsultantType.Business)
-            .Select(u => $"{u.FullName} (ID:{u.Id})")
-            .ToListAsync();
-
-        var techCons = await _db.Users
-            .Where(u => u.Role == GlobalRole.Consultant && u.ConsultantType == ConsultantType.Technical)
-            .Select(u => $"{u.FullName} (ID:{u.Id})")
-            .ToListAsync();
+        var bizLeads = users.Where(u => u.Role == GlobalRole.BusinessTeamLead).Select(u => u.Id);
+        var techLeads = users.Where(u => u.Role == GlobalRole.TechnicalTeamLead).Select(u => u.Id);
+        var bizCons = users.Where(u => u.Role == GlobalRole.Consultant && u.ConsultantType == ConsultantType.Business).Select(u => u.Id);
+        var techCons = users.Where(u => u.Role == GlobalRole.Consultant && u.ConsultantType == ConsultantType.Technical).Select(u => u.Id);
 
         return $"""
         AVAILABLE PEOPLE (use exact IDs when assigning):
-        Business Leads: {string.Join(", ", bizLeads)}
-        Technical Leads: {string.Join(", ", techLeads)}
-        Business Consultants: {string.Join(", ", bizCons)}
-        Technical Consultants: {string.Join(", ", techCons)}
+        Business Leads: {Format(bizLeads)}
+        Technical Leads: {Format(techLeads)}
+        Business Consultants: {Format(bizCons)}
+        Technical Consultants: {Format(techCons)}
         """;
+    }
+
+    // GET /api/planning/workload — charge de chaque personne (badges de l'écran de review)
+    [HttpGet("workload")]
+    public async Task<IActionResult> GetWorkload()
+    {
+        var load = await _projectStatus.GetActiveStreamCountByUserAsync();
+        return Ok(load.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value));
     }
 
     // POST /api/planning/{id}/approve
@@ -197,14 +208,45 @@ public class PlanningController : ControllerBase
         var plan = JsonSerializer.Deserialize<JsonElement>(planJson);
         var streams = plan.GetProperty("streams").EnumerateArray().ToList();
 
+        // Départ du calendrier : même règle que CreateTasksFromStepsHandler
+        var now = DateTime.UtcNow;
+        var scheduleOrigin = project.StartDate.HasValue && project.StartDate.Value > now
+            ? project.StartDate.Value
+            : now;
+        var warnings = new List<string>();
+
         foreach (var streamEl in streams)
         {
+            var streamName = streamEl.GetProperty("name").GetString() ?? "Unnamed Stream";
+
+            // Durée du stream = sa tâche la plus longue (tâches indépendantes, en parallèle)
+            var maxDays = streamEl.TryGetProperty("steps", out var stepsForDuration)
+                ? stepsForDuration.EnumerateArray()
+                    .Select(st => GetPositiveInt(st, "estimatedDays"))
+                    .Where(d => d.HasValue)
+                    .Select(d => d!.Value)
+                    .DefaultIfEmpty(0)
+                    .Max()
+                : 0;
+
+            // Pas d'estimation → null → règle Stream par défaut appliquée automatiquement (étape 1)
+            DateTime? streamDueDate = maxDays > 0 ? scheduleOrigin.AddDays(maxDays) : null;
+
+            // Avertissement (non bloquant) si le stream dépasse la date cible du projet
+            if (streamDueDate.HasValue && project.TargetDate.HasValue
+                && streamDueDate.Value.Date > project.TargetDate.Value.Date)
+            {
+                warnings.Add($"Stream '{streamName}' ends on {streamDueDate:yyyy-MM-dd}, after the project target date {project.TargetDate:yyyy-MM-dd}.");
+                _logger.LogWarning("Stream {Stream} exceeds project target date", streamName);
+            }
+
             var stream = new Backend.Modules.Projects.Models.Stream
             {
-                Name = streamEl.GetProperty("name").GetString() ?? "Unnamed Stream",
+                Name = streamName,
                 ProjectId = proposal.ProjectId,
                 BusinessTeamLeadId = GetGuid(streamEl, "businessLeadId"),
-                TechnicalTeamLeadId = GetGuid(streamEl, "technicalLeadId")
+                TechnicalTeamLeadId = GetGuid(streamEl, "technicalLeadId"),
+                DueDate = streamDueDate
             };
 
             _db.Streams.Add(stream);
@@ -234,7 +276,7 @@ public class PlanningController : ControllerBase
 
             await _db.SaveChangesAsync();
 
-            // Steps avec TeamType
+            // Steps avec TeamType + EstimatedDays
             if (streamEl.TryGetProperty("steps", out var stepsEl))
             {
                 foreach (var stepEl in stepsEl.EnumerateArray())
@@ -249,7 +291,8 @@ public class PlanningController : ControllerBase
                         StepName = stepEl.TryGetProperty("stepName", out var sn) ? sn.GetString() ?? "" : "",
                         ToolName = stepEl.TryGetProperty("pluginId", out var pid) ? pid.GetString() ?? "" : "",
                         Order = stepEl.TryGetProperty("order", out var ord) ? ord.GetInt32() : 1,
-                        TeamType = teamTypeStr == "Technical" ? TeamType.Technical : TeamType.Business
+                        TeamType = teamTypeStr == "Technical" ? TeamType.Technical : TeamType.Business,
+                        EstimatedDays = GetPositiveInt(stepEl, "estimatedDays")
                     });
                 }
                 await _db.SaveChangesAsync();
@@ -274,7 +317,11 @@ public class PlanningController : ControllerBase
         proposal.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = $"Plan approved. {streams.Count} streams triggered." });
+        return Ok(new
+        {
+            message = $"Plan approved. {streams.Count} streams triggered.",
+            warnings
+        });
     }
 
     // POST /api/planning/{id}/reject
@@ -288,28 +335,6 @@ public class PlanningController : ControllerBase
         await _db.SaveChangesAsync();
         return Ok(new { message = "Proposal rejected" });
     }
-
-    // // GET /api/planning/project/{projectId}
-    // [HttpGet("project/{projectId:guid}")]
-    // public async Task<IActionResult> GetByProject(Guid projectId)
-    // {
-    //     var proposals = await _db.PlanningProposals
-    //         .Where(p => p.ProjectId == projectId)
-    //         .OrderByDescending(p => p.CreatedAt)
-    //         .ToListAsync();
-
-    //     return Ok(proposals.Select(p => new
-    //     {
-    //         p.Id,
-    //         p.Status,
-    //         p.Guidelines,
-    //         p.CreatedAt,
-    //         p.UpdatedAt,
-    //         plan = JsonSerializer.Deserialize<object>(p.ProposalJson, JsonOpts)
-    //     }));
-    // }
-
-
 
     // GET /api/planning/project/{projectId}
     [HttpGet("project/{projectId:guid}")]
@@ -344,8 +369,6 @@ public class PlanningController : ControllerBase
         }
     }
 
-
-
     [HttpGet("streams/{streamId:guid}/steps")]
     [Authorize(Roles = "BusinessTeamLead,TechnicalTeamLead,HeadOfCDS")]
     public async Task<IActionResult> GetStreamSteps(Guid streamId)
@@ -360,7 +383,9 @@ public class PlanningController : ControllerBase
                 s.ToolName,
                 s.Order,
                 s.CanBeParallel,
-                s.DependsOnStepId
+                s.DependsOnStepId,
+                s.TeamType,
+                s.EstimatedDays
             })
             .ToListAsync();
 
@@ -379,12 +404,23 @@ public class PlanningController : ControllerBase
         // Si le Team Lead a modifié les steps, on remplace les anciens
         if (request.Steps != null && request.Steps.Any())
         {
-            var existingSteps = _db.ProjectSteps.Where(s => s.StreamId == streamId);
+            var existingSteps = await _db.ProjectSteps
+                .Where(s => s.StreamId == streamId)
+                .ToListAsync();
+
+            // Mémorise TeamType / EstimatedDays des anciens steps, pour ne pas les perdre
+            // si le frontend du Team Lead ne les renvoie pas
+            var previous = existingSteps
+                .GroupBy(s => (s.ToolName, s.StepName))
+                .ToDictionary(g => g.Key, g => g.First());
+
             _db.ProjectSteps.RemoveRange(existingSteps);
             await _db.SaveChangesAsync();
 
             foreach (var stepDto in request.Steps.OrderBy(s => s.Order))
             {
+                previous.TryGetValue((stepDto.ToolName, stepDto.StepName), out var old);
+
                 _db.ProjectSteps.Add(new ProjectStep
                 {
                     ProjectId = stream.ProjectId,
@@ -392,7 +428,11 @@ public class PlanningController : ControllerBase
                     StepName = stepDto.StepName,
                     ToolName = stepDto.ToolName,
                     Order = stepDto.Order,
-                    CanBeParallel = stepDto.CanBeParallel
+                    CanBeParallel = stepDto.CanBeParallel,
+                    TeamType = old?.TeamType,
+                    EstimatedDays = stepDto.EstimatedDays is > 0
+                        ? stepDto.EstimatedDays
+                        : old?.EstimatedDays
                 });
             }
             await _db.SaveChangesAsync();
@@ -425,6 +465,10 @@ public class PlanningController : ControllerBase
     private static Guid? GetGuid(JsonElement el, string prop) =>
         el.TryGetProperty(prop, out var v) && v.ValueKind != JsonValueKind.Null
         && Guid.TryParse(v.GetString(), out var g) ? g : null;
+
+    private static int? GetPositiveInt(JsonElement el, string prop) =>
+        el.TryGetProperty(prop, out var v) && v.ValueKind == JsonValueKind.Number
+        && v.TryGetInt32(out var i) && i > 0 ? i : null;
 
     public class RefineRequest
     {

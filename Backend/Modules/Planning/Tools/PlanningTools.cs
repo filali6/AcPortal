@@ -1,5 +1,7 @@
 using Backend.Data;
 using Backend.Modules.Auth.Models;
+using Backend.Modules.Projects.Services;
+using Backend.Modules.Sla.Models;
 using Backend.Modules.Tools.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.SemanticKernel;
@@ -10,18 +12,22 @@ namespace Backend.Modules.Planning.Tools;
 
 public class PlanningTools
 {
+    private const int MaxEstimatedDays = 365;
+
     private readonly AppDbContext _db;
     private readonly PluginRegistry _plugins;
+    private readonly ProjectStatusService _projectStatus;
 
-    public PlanningTools(AppDbContext db, PluginRegistry plugins)
+    public PlanningTools(AppDbContext db, PluginRegistry plugins, ProjectStatusService projectStatus)
     {
         _db = db;
         _plugins = plugins;
+        _projectStatus = projectStatus;
     }
 
     // Tool 1 — tout en un seul appel
     [KernelFunction("get_planning_context")]
-    [Description("Returns ALL data needed for planning in one call: eligible plugins with their team type, business leads, technical leads, business consultants, and technical consultants with their current workload.")]
+    [Description("Returns ALL data needed for planning in one call: eligible plugins with their team type, business leads, technical leads, business consultants, and technical consultants with their current workload (number of ACTIVE streams).")]
     public async Task<string> GetPlanningContextAsync()
     {
         var plugins = _plugins.GetAll()
@@ -37,59 +43,70 @@ public class PlanningTools
             })
             .ToList();
 
-        var bizLeads = await _db.Users
-            .Where(u => u.Role == GlobalRole.BusinessTeamLead)
-            .Select(u => new
-            {
-                id = u.Id,
-                name = u.FullName,
-                role = "BusinessTeamLead",
-                activeStreams = _db.Streams.Count(s => s.BusinessTeamLeadId == u.Id)
-            })
+        // Charge réelle : seulement les streams actifs (un stream terminé ne compte plus)
+        var load = await _projectStatus.GetActiveStreamCountByUserAsync();
+        int Load(Guid id) => load.TryGetValue(id, out var n) ? n : 0;
+
+        var users = await _db.Users
+            .AsNoTracking()
+            .Where(u => u.Role == GlobalRole.BusinessTeamLead
+                     || u.Role == GlobalRole.TechnicalTeamLead
+                     || u.Role == GlobalRole.Consultant)
+            .Select(u => new PersonRow(u.Id, u.FullName, u.Role, u.ConsultantType))
             .ToListAsync();
 
-        var techLeads = await _db.Users
-            .Where(u => u.Role == GlobalRole.TechnicalTeamLead)
-            .Select(u => new
-            {
-                id = u.Id,
-                name = u.FullName,
-                role = "TechnicalTeamLead",
-                activeStreams = _db.Streams.Count(s => s.TechnicalTeamLeadId == u.Id)
-            })
-            .ToListAsync();
-
-        var bizConsultants = await _db.Users
-            .Where(u => u.Role == GlobalRole.Consultant
-                     && u.ConsultantType == ConsultantType.Business)
-            .Select(u => new
-            {
-                id = u.Id,
-                name = u.FullName,
-                type = "Business",
-                activeStreams = _db.StreamMembers.Count(sm => sm.ConsultantId == u.Id)
-            })
-            .ToListAsync();
-
-        var techConsultants = await _db.Users
-            .Where(u => u.Role == GlobalRole.Consultant
-                     && u.ConsultantType == ConsultantType.Technical)
-            .Select(u => new
-            {
-                id = u.Id,
-                name = u.FullName,
-                type = "Technical",
-                activeStreams = _db.StreamMembers.Count(sm => sm.ConsultantId == u.Id)
-            })
-            .ToListAsync();
+        // Triés du moins chargé au plus chargé
+        object People(Func<PersonRow, bool> filter, string label) => users
+            .Where(u => filter(u))
+            .Select(u => new { id = u.Id, name = u.FullName, role = label, activeStreams = Load(u.Id) })
+            .OrderBy(u => u.activeStreams)
+            .ToList();
 
         return JsonSerializer.Serialize(new
         {
             plugins,
-            businessLeads = bizLeads,
-            technicalLeads = techLeads,
-            businessConsultants = bizConsultants,
-            technicalConsultants = techConsultants
+            businessLeads = People(u => u.Role == GlobalRole.BusinessTeamLead, "BusinessTeamLead"),
+            technicalLeads = People(u => u.Role == GlobalRole.TechnicalTeamLead, "TechnicalTeamLead"),
+            businessConsultants = People(u => u.Role == GlobalRole.Consultant
+                                           && u.ConsultantType == ConsultantType.Business, "BusinessConsultant"),
+            technicalConsultants = People(u => u.Role == GlobalRole.Consultant
+                                            && u.ConsultantType == ConsultantType.Technical, "TechnicalConsultant")
+        });
+    }
+
+    private record PersonRow(Guid Id, string FullName, GlobalRole Role, ConsultantType? ConsultantType);
+
+    // Tool 3 — SLA standard de l'entreprise (référence, pas une contrainte)
+    [KernelFunction("get_standard_sla")]
+    [Description("Returns the company's SLA rules (maximum calendar days) for tasks and streams, with their functional domain. Use them as a reference for durations, not as a hard limit.")]
+    public async Task<string> GetStandardSlaAsync()
+    {
+        var rules = await _db.SlaRules
+            .AsNoTracking()
+            .OrderBy(r => r.Type)
+            .ThenBy(r => r.FunctionalDomain)
+            .Select(r => new
+            {
+                type = r.Type.ToString(),
+                domain = r.FunctionalDomain,
+                name = r.Name,
+                description = r.Description,
+                slaDays = r.SlaDays
+            })
+            .ToListAsync();
+
+        if (!rules.Any())
+            return JsonSerializer.Serialize(new
+            {
+                rules,
+                note = "No SLA rule defined. Estimate durations from the FSD content only."
+            });
+
+        return JsonSerializer.Serialize(new
+        {
+            rules,
+            howToUse = "For a step: use the Task rule whose domain equals the plugin's domain; if none, use the Task rule with domain null (default). "
+                     + "For a stream: use the Stream rule with domain null (default)."
         });
     }
 
@@ -121,12 +138,31 @@ public class PlanningTools
                 var streamName = stream.TryGetProperty("name", out var n)
                     ? n.GetString() : $"Stream {index + 1}";
 
-                // Valide les plugins
+                // Valide les steps : plugin + estimatedDays
                 if (stream.TryGetProperty("steps", out var steps))
+                {
                     foreach (var step in steps.EnumerateArray())
-                        if (step.TryGetProperty("pluginId", out var pid))
-                            if (!eligiblePluginIds.Contains(pid.GetString() ?? ""))
-                                errors.Add($"Stream '{streamName}': plugin '{pid}' not eligible.");
+                    {
+                        var stepName = step.TryGetProperty("stepName", out var sn)
+                            ? sn.GetString() : "?";
+
+                        if (step.TryGetProperty("pluginId", out var pid)
+                            && !eligiblePluginIds.Contains(pid.GetString() ?? ""))
+                            errors.Add($"Stream '{streamName}': plugin '{pid}' not eligible.");
+
+                        if (!step.TryGetProperty("estimatedDays", out var ed)
+                            || ed.ValueKind != JsonValueKind.Number
+                            || !ed.TryGetInt32(out var days)
+                            || days <= 0)
+                        {
+                            errors.Add($"Stream '{streamName}', step '{stepName}': 'estimatedDays' is missing or not a positive integer.");
+                        }
+                        else if (days > MaxEstimatedDays)
+                        {
+                            errors.Add($"Stream '{streamName}', step '{stepName}': 'estimatedDays' ({days}) is unrealistic (max {MaxEstimatedDays}). Split the step or re-estimate.");
+                        }
+                    }
+                }
 
                 // Valide les consultants Business
                 if (stream.TryGetProperty("businessConsultantIds", out var bizCons))

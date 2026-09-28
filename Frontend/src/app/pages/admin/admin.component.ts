@@ -22,7 +22,7 @@ import { UtilsService } from '../../core/services/utils.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { BriefingCardComponent } from '../../core/components/briefing-card/briefing-card.component';
 import { MarkdownModule} from 'ngx-markdown';
-import { SlaService, SlaDashboard } from '../../core/services/sla.service';
+import { SlaService, SlaDashboard, WeeklyReport, WeeklyReportSummary, WeeklyKpis } from '../../core/services/sla.service';
 @Component({
   selector: 'app-admin',
   standalone: true,
@@ -92,9 +92,19 @@ export class AdminComponent implements OnInit {
   loadingSlaDashboard = false;
 
   // US77 — Rapport hebdomadaire SLA généré par l'agent IA
-  weeklyReport: any = null;
+   
+  weeklyReport: WeeklyReport | null = null;
+  reportHistory: WeeklyReportSummary[] = [];
+  showWeeklyReport = false;
   loadingWeeklyReport = false;
   generatingWeeklyReport = false;
+
+  readonly reportKpis: { key: keyof WeeklyKpis; label: string }[] = [
+    { key: 'overdueTasks', label: 'SLA.OVERDUE_TASKS' },
+    { key: 'atRiskTasks', label: 'SLA.AT_RISK_TASKS' },
+    { key: 'overdueStreams', label: 'SLA.OVERDUE_STREAMS' },
+    { key: 'atRiskStreams', label: 'SLA.AT_RISK_STREAMS' }
+  ];
 
   readonly FileText = FileText;
   readonly FolderOpen = FolderOpen;
@@ -486,10 +496,12 @@ computePortfolioGlobalStats(): void {
 
   // ===== SLA — US77 : Rapport hebdomadaire généré par l'agent IA =====
 
+    // ===== SLA — US77 : Rapport hebdomadaire (étape 6.2) =====
+
   loadLatestWeeklyReport(): void {
     this.loadingWeeklyReport = true;
     this.slaService.getLatestWeeklyReport().subscribe({
-      next: (r: any) => {
+      next: (r) => {
         this.weeklyReport = r;
         this.loadingWeeklyReport = false;
       },
@@ -499,14 +511,45 @@ computePortfolioGlobalStats(): void {
         this.loadingWeeklyReport = false;
       }
     });
+    this.loadReportHistory();
+  }
+
+  loadReportHistory(): void {
+    this.slaService.getWeeklyReportHistory().subscribe({
+      next: (h) => this.reportHistory = h || [],
+      error: () => this.reportHistory = []
+    });
+  }
+
+  // Choix d'un rapport dans l'historique
+  selectReport(id: string): void {
+    if (!id || id === this.weeklyReport?.id) return;
+    this.loadingWeeklyReport = true;
+    this.slaService.getWeeklyReport(id).subscribe({
+      next: (r) => {
+        this.weeklyReport = r;
+        this.showWeeklyReport = true;
+        this.loadingWeeklyReport = false;
+      },
+      error: () => {
+        this.toastService.show('Error loading report', 'error');
+        this.loadingWeeklyReport = false;
+      }
+    });
+  }
+
+  toggleWeeklyReport(): void {
+    this.showWeeklyReport = !this.showWeeklyReport;
   }
 
   generateWeeklyReport(): void {
     this.generatingWeeklyReport = true;
     this.slaService.generateWeeklyReport().subscribe({
-      next: (r: any) => {
+      next: (r) => {
         this.weeklyReport = r;
+        this.showWeeklyReport = true;
         this.generatingWeeklyReport = false;
+        this.loadReportHistory();
         this.toastService.show('Weekly SLA report generated!', 'success');
       },
       error: () => {
@@ -514,5 +557,35 @@ computePortfolioGlobalStats(): void {
         this.generatingWeeklyReport = false;
       }
     });
+  }
+
+  // Tendance vs semaine précédente (null = pas de rapport précédent)
+  private getKpiTrend(key: keyof WeeklyKpis): number | null {
+    const d = this.weeklyReport?.data;
+    if (!d?.previous) return null;
+    return d.kpis[key] - d.previous[key];
+  }
+
+  trendText(key: keyof WeeklyKpis): string {
+    const t = this.getKpiTrend(key);
+    if (t === null) return '';
+    if (t > 0) return `↑ ${t}`;
+    if (t < 0) return `↓ ${-t}`;
+    return '=';
+  }
+
+  // Pour ces indicateurs, plus = moins bien → hausse en rouge, baisse en vert
+  trendClass(key: keyof WeeklyKpis): string {
+    const t = this.getKpiTrend(key);
+    if (t === null || t === 0) return 'trend-flat';
+    return t > 0 ? 'trend-up' : 'trend-down';
+  }
+
+  getHealthIcon(health: string): string {
+    return health === 'Red' ? '🔴' : health === 'Orange' ? '🟠' : '🟢';
+  }
+    // Étape 5.3 — ouvrir Slack depuis le dashboard SLA
+  openExternalLink(url: string | undefined | null): void {
+    if (url) window.open(url, '_blank');
   }
 }
