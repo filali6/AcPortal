@@ -616,15 +616,15 @@
                 id="super-admin-sla-description">
         </div>
         <div class="form-group">
-            <label>{{ 'SLA.TYPE' | translate }} *</label>
-            <select [(ngModel)]="slaRuleForm.type" (ngModelChange)="onSlaTypeChange()" class="form-input">
+            <label for="super-admin-sla-type">{{ 'SLA.TYPE' | translate }} *</label>
+            <select id="super-admin-sla-type" [(ngModel)]="slaRuleForm.type" (ngModelChange)="onSlaTypeChange()" class="form-input">
                 <option value="Task">Task</option>
                 <option value="Stream">Stream</option>
             </select>
         </div>
         <div class="form-group" *ngIf="slaRuleForm.type === 'Task'">
-            <label>{{ 'SLA.DOMAIN' | translate }}</label>
-            <select [(ngModel)]="slaRuleForm.functionalDomain" class="form-input">
+            <label for="super-admin-sla-functional-domain">{{ 'SLA.DOMAIN' | translate }}</label>
+            <select id="super-admin-sla-functional-domain" [(ngModel)]="slaRuleForm.functionalDomain" class="form-input">
                 <option value="">— {{ 'SLA.DEFAULT' | translate }} —</option>
                 <option *ngFor="let d of slaDomains" [value]="d">{{ d }}</option>
             </select>

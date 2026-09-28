@@ -351,7 +351,8 @@
                 <div class="card-header">
                     <h2>{{ 'SLA.WEEKLY_REPORT_TITLE' | translate }}</h2>
                     <div class="row-actions">
-                        <select class="form-input report-history-select" *ngIf="reportHistory.length > 1"
+                        <label for="admin-report-history" class="sr-only">{{ 'SLA.HISTORY' | translate }}</label>
+                        <select id="admin-report-history" class="form-input report-history-select" *ngIf="reportHistory.length > 1"
                             [ngModel]="weeklyReport?.id" (ngModelChange)="selectReport($event)"
                             [title]="'SLA.HISTORY' | translate">
                             <option *ngFor="let r of reportHistory" [value]="r.id">
