@@ -298,21 +298,26 @@
     </ng-container>
 
     <!-- SLA RULES TAB (US59 / US60 / US61) -->
+    <!-- SLA RULES TAB (US59 / US60 / US61) -->
     <ng-container *ngIf="activeTabId === 'sla'">
         <div class="card">
             <div class="card-header">
                 <h2>{{ 'SLA.TITLE' | translate }} ({{ slaRules.length }})</h2>
-                <div class="row-actions">
-                    <button class="btn-small" (click)="applySlaRules()" [disabled]="applyingSlaRules">
-                        <lucide-icon [img]="RefreshCw" size="14"></lucide-icon>
-                        {{ applyingSlaRules ? ('COMMON.LOADING' | translate) : ('SLA.APPLY_RULES' | translate) }}
-                    </button>
-                    <button class="btn-primary" (click)="openCreateSlaRuleModal()">
-                        <lucide-icon [img]="Plus" size="14"></lucide-icon>
-                        {{ 'SLA.ADD_RULE' | translate }}
-                    </button>
-                </div>
+                <button class="btn-primary" (click)="openCreateSlaRuleModal()">
+                    <lucide-icon [img]="Plus" size="14"></lucide-icon>
+                    {{ 'SLA.ADD_RULE' | translate }}
+                </button>
             </div>
+    
+            <p class="sla-info">ℹ️ {{ 'SLA.AUTO_INFO' | translate }}</p>
+    
+            <div class="sla-alert" *ngIf="isMissingDefault('Task')">
+                ⚠ {{ 'SLA.MISSING_DEFAULT' | translate }} : Task
+            </div>
+            <div class="sla-alert" *ngIf="isMissingDefault('Stream')">
+                ⚠ {{ 'SLA.MISSING_DEFAULT' | translate }} : Stream
+            </div>
+    
             <div class="table-wrapper">
                 <table class="tasks-table">
                     <thead>
@@ -320,6 +325,7 @@
                             <th>{{ 'COMMON.NAME' | translate }}</th>
                             <th>{{ 'COMMON.DESCRIPTION' | translate }}</th>
                             <th>{{ 'SLA.TYPE' | translate }}</th>
+                            <th>{{ 'SLA.DOMAIN' | translate }}</th>
                             <th>{{ 'SLA.DAYS' | translate }}</th>
                             <th>{{ 'USERS.CREATED' | translate }}</th>
                             <th>{{ 'COMMON.ACTIONS' | translate }}</th>
@@ -330,19 +336,26 @@
                             <td class="task-title">{{ rule.name }}</td>
                             <td class="text-secondary">{{ rule.description || '—' }}</td>
                             <td>
-                                <span class="status-badge" [style.background]="rule.type === 0 ? '#dbeafe' : '#ede9fe'"
-                                    [style.color]="rule.type === 0 ? '#1d4ed8' : '#7c3aed'">
-                                    {{ getSlaTypeLabel(rule.type) }}
+                                <span class="status-badge"
+                                    [style.background]="rule.type === 'Stream' ? '#dbeafe' : '#ede9fe'"
+                                    [style.color]="rule.type === 'Stream' ? '#1d4ed8' : '#7c3aed'">
+                                    {{ rule.type }}
                                 </span>
+                            </td>
+                            <td>
+                                <span *ngIf="rule.isDefault" class="status-badge" style="background:#d1fae5; color:#047857">
+                                    ★ {{ 'SLA.DEFAULT' | translate }}
+                                </span>
+                                <span *ngIf="!rule.isDefault" class="text-secondary">{{ rule.functionalDomain }}</span>
                             </td>
                             <td class="text-secondary">{{ rule.slaDays }} j</td>
                             <td class="text-secondary">{{ rule.createdAt | date:'dd/MM/yyyy' }}</td>
                             <td>
                                 <div class="row-actions">
-                                    <button class="btn-small" (click)="openEditSlaRuleModal(rule)">{{ 'COMMON.EDIT' |
-                                        translate }}</button>
-                                    <button class="btn-delete" (click)="deleteSlaRule(rule)">{{ 'COMMON.DELETE' |
-                                        translate }}</button>
+                                    <button class="btn-small" (click)="openEditSlaRuleModal(rule)">
+                                        {{ 'COMMON.EDIT' | translate }}</button>
+                                    <button class="btn-delete" (click)="deleteSlaRule(rule)">
+                                        {{ 'COMMON.DELETE' | translate }}</button>
                                 </div>
                             </td>
                         </tr>
@@ -576,12 +589,13 @@
     </app-modal>
 
     <!-- MODAL SLA RULE (create + edit — US59/US60) -->
+    <!-- MODAL SLA RULE (create + edit — US59/US60) -->
     <app-modal *ngIf="showSlaRuleModal"
         [title]="(editingSlaRule ? ('SLA.EDIT_RULE' | translate) : ('SLA.ADD_RULE' | translate))" width="420px"
         (closed)="showSlaRuleModal = false">
         <div class="form-group">
             <label>{{ 'COMMON.NAME' | translate }} *</label>
-            <input type="text" [(ngModel)]="slaRuleForm.name" class="form-input" placeholder="Standard 7j">
+            <input type="text" [(ngModel)]="slaRuleForm.name" class="form-input" placeholder="Standard 5j">
         </div>
         <div class="form-group">
             <label>{{ 'COMMON.DESCRIPTION' | translate }}</label>
@@ -589,10 +603,18 @@
         </div>
         <div class="form-group">
             <label>{{ 'SLA.TYPE' | translate }} *</label>
-            <select [(ngModel)]="slaRuleForm.type" class="form-input">
-                <option [ngValue]="1">Task</option>
-                <option [ngValue]="0">Stream</option>
+            <select [(ngModel)]="slaRuleForm.type" (ngModelChange)="onSlaTypeChange()" class="form-input">
+                <option value="Task">Task</option>
+                <option value="Stream">Stream</option>
             </select>
+        </div>
+        <div class="form-group" *ngIf="slaRuleForm.type === 'Task'">
+            <label>{{ 'SLA.DOMAIN' | translate }}</label>
+            <select [(ngModel)]="slaRuleForm.functionalDomain" class="form-input">
+                <option value="">— {{ 'SLA.DEFAULT' | translate }} —</option>
+                <option *ngFor="let d of slaDomains" [value]="d">{{ d }}</option>
+            </select>
+            <p class="text-secondary" style="font-size:12px; margin-top:4px">{{ 'SLA.DOMAIN_HINT' | translate }}</p>
         </div>
         <div class="form-group">
             <label>{{ 'SLA.DAYS' | translate }} *</label>

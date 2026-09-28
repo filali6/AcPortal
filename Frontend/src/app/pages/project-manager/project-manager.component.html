@@ -271,7 +271,7 @@
                         </div>
                     </div>
 
-                    <!-- US24 : Liste des tâches du stream -->
+                    <!-- US24 : Liste des tâches du stream (+ étape 5.1 : date limite modifiable) -->
                     <div class="stream-tasks-section" *ngIf="stream.streamTasks?.length > 0">
                         <div class="stream-tasks-header" (click)="toggleStreamTasks(stream.id)">
                             <span class="stream-tasks-title">
@@ -292,6 +292,16 @@
                                 <span class="status-badge" [ngClass]="utils.getTaskStatusClass(task.status)">
                                     {{ utils.getTaskStatusLabel(task.status) }}
                                 </span>
+                                <span *ngIf="task.dueDate" class="date-chip"
+                                    [class.date-overdue]="isOverdue(task.dueDate) && task.status !== 2"
+                                    [class.date-soon]="isDueSoon(task.dueDate) && !isOverdue(task.dueDate) && task.status !== 2">
+                                    {{ task.dueDate | date:'dd/MM/yyyy' }}
+                                </span>
+                                <button class="btn-icon-sm" *ngIf="task.status !== 2"
+                                    (click)="openSetTaskDueDateModal(task)"
+                                    [title]="'PM.SET_TASK_DUE_DATE' | translate">
+                                    <lucide-icon [img]="Calendar" size="12"></lucide-icon>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -449,6 +459,23 @@
             </div>
         </app-modal>
 
+        <!-- MODAL SET TASK DUE DATE (étape 5.1) -->
+        <app-modal *ngIf="showSetTaskDueDateModal" [title]="'PM.SET_TASK_DUE_DATE' | translate" width="360px"
+            (closed)="closeSetTaskDueDateModal()">
+            <div class="form-group">
+                <label>{{ 'COMMON.DEADLINE' | translate }}</label>
+                <input type="date" [(ngModel)]="editingTaskDueDateValue" class="form-input">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-small" (click)="closeSetTaskDueDateModal()">{{ 'COMMON.CANCEL' | translate
+                    }}</button>
+                <button class="btn-primary" (click)="saveTaskDueDate()"
+                    [disabled]="!editingTaskDueDateValue || loading">
+                    {{ loading ? ('COMMON.LOADING' | translate) : ('COMMON.SAVE' | translate) }}
+                </button>
+            </div>
+        </app-modal>
+
         <!-- MODAL AI RISK INSIGHTS (US75/76) -->
         <app-modal *ngIf="showRiskModal" title="AI Risk Insights" width="560px" (closed)="showRiskModal = false">
             <div class="empty" *ngIf="loadingRiskAnalysis">
@@ -536,6 +563,7 @@
                                     [ngClass]="step.teamType === 'Technical' ? 'technical' : 'business'"
                                     style="font-size:10px; padding:2px 8px">{{ step.teamType }}</span>
                                 <span class="tool-badge">{{ step.pluginId }}</span>
+                                <span class="days-unit" *ngIf="step.estimatedDays">{{ step.estimatedDays }} j</span>
                             </div>
                         </div>
                     </div>
@@ -557,6 +585,14 @@
                         <span class="label">{{ 'PROJECTS.TITLE' | translate }}</span>
                         <span class="project-name">{{ getProjectName(tab.task?.projectId ?? '') }}</span>
                     </div>
+
+                    <!-- Étape 2 — Date de début du projet : commune aux deux flux,
+                         demandée avant même le choix Manuel / Agent IA. -->
+                    <div class="form-group">
+                        <label>{{ 'PM.START_DATE' | translate }} *</label>
+                        <input type="date" [(ngModel)]="tab.projectStartDate" class="form-input">
+                    </div>
+
                     <p class="choice-section-label">{{ 'PM.CHOOSE_PLANNING_METHOD' | translate }}</p>
                     <div class="planning-choice-grid">
                         <div class="planning-choice-card" [class.selected]="tab.selectedMode === 'manual'"
@@ -780,7 +816,7 @@
                         </div>
                     </div>
 
-                    <!-- FORMULAIRE IA - REVIEW -->
+                    <!-- FORMULAIRE IA - REVIEW (étape 5.1 : durées, dates, alertes SLA, charge) -->
                     <div class="selected-form-panel" *ngIf="tab.selectedMode === 'ai' && tab.aiSubStep === 'review'">
                         <div class="review-header-row">
                             <span class="review-label">{{ 'PM.PROPOSED_PLAN' | translate }}</span>
@@ -788,6 +824,8 @@
                         </div>
                         <div class="proposed-stream-card" *ngFor="let stream of tab.plan?.streams; let i = index"
                             [class.editing]="tab.editingStreamIndex === i">
+
+                            <!-- ===== MODE LECTURE ===== -->
                             <ng-container *ngIf="tab.editingStreamIndex !== i">
                                 <div class="proposed-stream-header">
                                     <h3>{{ stream.name }}</h3>
@@ -801,6 +839,25 @@
                                 <p class="text-secondary" style="font-size:13px; margin: 4px 0 10px">{{
                                     stream.description }}</p>
                                 <div class="proposed-rationale" *ngIf="stream.rationale">{{ stream.rationale }}</div>
+
+                                <!-- Durée, date de fin et alertes du stream -->
+                                <div class="stream-schedule-row">
+                                    <span class="stream-meta-badge">
+                                        {{ 'PM.STREAM_DURATION' | translate }} : {{ getStreamDuration(stream) || '—' }}
+                                        j
+                                    </span>
+                                    <span class="stream-meta-badge" *ngIf="getStreamEndDate(tabId, stream) as end">
+                                        {{ 'PM.ENDS_ON' | translate }} {{ end | date:'dd/MM/yyyy' }}
+                                    </span>
+                                    <span class="sla-badge danger" *ngIf="isStreamOverProject(tabId, stream)">
+                                        ⚠ {{ 'PM.EXCEEDS_PROJECT' | translate }}
+                                    </span>
+                                    <span class="sla-badge warn" *ngIf="isStreamOverSla(stream)">
+                                        ⚠ {{ 'PM.EXCEEDS_SLA' | translate }} ({{ getStreamSlaDays() }} j)
+                                    </span>
+                                </div>
+
+                                <!-- Équipes, avec la charge de chaque personne -->
                                 <div class="proposed-teams-row">
                                     <div class="proposed-team-block">
                                         <span class="team-type-label business">Business</span>
@@ -808,10 +865,18 @@
                                             <span class="proposed-member" *ngIf="stream.businessLeadId">
                                                 <span class="role-pill btl">BTL</span> {{
                                                 getLeadName(stream.businessLeadId) }}
+                                                <span class="load-badge"
+                                                    [class.high]="getWorkloadOf(stream.businessLeadId) >= 3">
+                                                    {{ getWorkloadOf(stream.businessLeadId) }} {{ 'PM.ACTIVE_STREAMS' |
+                                                    translate }}
+                                                </span>
                                             </span>
                                             <span class="proposed-member"
                                                 *ngFor="let cid of stream.businessConsultantIds">
                                                 <span class="role-pill dev">DEV</span> {{ getConsultantName(cid) }}
+                                                <span class="load-badge" [class.high]="getWorkloadOf(cid) >= 3">
+                                                    {{ getWorkloadOf(cid) }} {{ 'PM.ACTIVE_STREAMS' | translate }}
+                                                </span>
                                             </span>
                                         </div>
                                     </div>
@@ -821,25 +886,53 @@
                                             <span class="proposed-member" *ngIf="stream.technicalLeadId">
                                                 <span class="role-pill ttl">TTL</span> {{
                                                 getLeadName(stream.technicalLeadId) }}
+                                                <span class="load-badge"
+                                                    [class.high]="getWorkloadOf(stream.technicalLeadId) >= 3">
+                                                    {{ getWorkloadOf(stream.technicalLeadId) }} {{ 'PM.ACTIVE_STREAMS'
+                                                    | translate }}
+                                                </span>
                                             </span>
                                             <span class="proposed-member"
                                                 *ngFor="let cid of stream.technicalConsultantIds">
                                                 <span class="role-pill dev">DEV</span> {{ getConsultantName(cid) }}
+                                                <span class="load-badge" [class.high]="getWorkloadOf(cid) >= 3">
+                                                    {{ getWorkloadOf(cid) }} {{ 'PM.ACTIVE_STREAMS' | translate }}
+                                                </span>
                                             </span>
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Tâches : durée modifiable + date limite + alerte SLA + justification -->
                                 <div class="proposed-steps-list">
-                                    <div class="proposed-step-row" *ngFor="let step of stream.steps">
-                                        <span class="step-order-badge">{{ step.order }}</span>
-                                        <span class="step-name">{{ step.stepName }}</span>
-                                        <span class="team-type-label"
-                                            [ngClass]="step.teamType === 'Technical' ? 'technical' : 'business'"
-                                            style="font-size:10px; padding:2px 8px">{{ step.teamType }}</span>
-                                        <span class="tool-badge">{{ step.pluginId }}</span>
-                                    </div>
+                                    <ng-container *ngFor="let step of stream.steps">
+                                        <div class="proposed-step-row">
+                                            <span class="step-order-badge">{{ step.order }}</span>
+                                            <span class="step-name">{{ step.stepName }}</span>
+                                            <span class="team-type-label"
+                                                [ngClass]="step.teamType === 'Technical' ? 'technical' : 'business'"
+                                                style="font-size:10px; padding:2px 8px">{{ step.teamType }}</span>
+                                            <span class="tool-badge">{{ step.pluginId }}</span>
+                                            <input type="number" min="1" class="days-input"
+                                                [ngModel]="step.estimatedDays"
+                                                (ngModelChange)="updateStepDays(step, $event)"
+                                                [title]="'PM.EST_DAYS' | translate">
+                                            <span class="days-unit">j</span>
+                                            <span class="step-due" *ngIf="getStepDueDate(tabId, step) as due">
+                                                → {{ due | date:'dd/MM/yyyy' }}
+                                            </span>
+                                            <span class="sla-badge warn" *ngIf="isStepOverSla(step)">
+                                                ⚠ SLA {{ getTaskSlaDays(step.pluginId) }} j
+                                            </span>
+                                        </div>
+                                        <div class="step-rationale" *ngIf="step.durationRationale">
+                                            💬 {{ step.durationRationale }}
+                                        </div>
+                                    </ng-container>
                                 </div>
                             </ng-container>
+
+                            <!-- ===== MODE ÉDITION ===== -->
                             <ng-container *ngIf="tab.editingStreamIndex === i">
                                 <div class="edit-stream-header">
                                     <span class="team-type-label business" style="font-size:11px">Editing stream</span>
@@ -854,13 +947,16 @@
                                         (ngModelChange)="updateStreamName(tabId, i, $event)" class="form-input">
                                 </div>
 
-                                <!-- US70 : édition des leads et consultants de la proposition IA -->
+                                <!-- US70 : édition des leads et consultants, avec leur charge -->
                                 <div class="form-group">
                                     <label>{{ 'PM.BIZ_LEAD' | translate }}</label>
                                     <select class="form-input" [ngModel]="stream.businessLeadId"
                                         (ngModelChange)="updateStreamLead(tabId, i, $event, 'business')">
                                         <option value="">{{ 'PORTFOLIOS.SELECT_PLACEHOLDER' | translate }}</option>
-                                        <option *ngFor="let u of bizLeads" [value]="u.id">{{ u.fullName }}</option>
+                                        <option *ngFor="let u of bizLeads" [value]="u.id">
+                                            {{ u.fullName }} ({{ getWorkloadOf(u.id) }} {{ 'PM.ACTIVE_STREAMS' |
+                                            translate }})
+                                        </option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -868,7 +964,10 @@
                                     <select class="form-input" [ngModel]="stream.technicalLeadId"
                                         (ngModelChange)="updateStreamLead(tabId, i, $event, 'technical')">
                                         <option value="">{{ 'PORTFOLIOS.SELECT_PLACEHOLDER' | translate }}</option>
-                                        <option *ngFor="let u of techLeads" [value]="u.id">{{ u.fullName }}</option>
+                                        <option *ngFor="let u of techLeads" [value]="u.id">
+                                            {{ u.fullName }} ({{ getWorkloadOf(u.id) }} {{ 'PM.ACTIVE_STREAMS' |
+                                            translate }})
+                                        </option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -879,7 +978,8 @@
                                             <input type="checkbox"
                                                 [checked]="isStreamConsultantSelected(tabId, i, c.id, 'business')"
                                                 (change)="toggleStreamConsultant(tabId, i, c.id, 'business')">
-                                            {{ c.fullName }}
+                                            {{ c.fullName }} ({{ getWorkloadOf(c.id) }} {{ 'PM.ACTIVE_STREAMS' |
+                                            translate }})
                                         </label>
                                     </div>
                                 </div>
@@ -891,7 +991,8 @@
                                             <input type="checkbox"
                                                 [checked]="isStreamConsultantSelected(tabId, i, c.id, 'technical')"
                                                 (change)="toggleStreamConsultant(tabId, i, c.id, 'technical')">
-                                            {{ c.fullName }}
+                                            {{ c.fullName }} ({{ getWorkloadOf(c.id) }} {{ 'PM.ACTIVE_STREAMS' |
+                                            translate }})
                                         </label>
                                     </div>
                                 </div>
@@ -926,7 +1027,7 @@
                         </div>
                     </div>
 
-                    <!-- IA - DONE -->
+                    <!-- IA - DONE (+ étape 5.1 : avertissements renvoyés par le backend) -->
                     <div class="selected-form-panel ai-done-state"
                         *ngIf="tab.selectedMode === 'ai' && tab.aiSubStep === 'done'">
                         <div class="ai-done-icon">
@@ -934,6 +1035,14 @@
                         </div>
                         <h2>{{ 'PM.PLAN_APPROVED' | translate }}</h2>
                         <p class="text-secondary">{{ 'PM.STREAMS_BEING_CREATED' | translate }}</p>
+                        <div class="warn-list" *ngIf="tab.approvalWarnings?.length">
+                            <strong>⚠ {{ 'PM.APPROVAL_WARNINGS' | translate }}</strong>
+                            <ul>
+                                <li *ngFor="let w of tab.approvalWarnings">{{ w }}</li>
+                            </ul>
+                            <button class="btn-primary" (click)="endTask(tabId)">{{ 'COMMON.CLOSE' | translate
+                                }}</button>
+                        </div>
                     </div>
 
                 </div>

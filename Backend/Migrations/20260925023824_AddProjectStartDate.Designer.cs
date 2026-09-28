@@ -3,6 +3,7 @@ using System;
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260925023824_AddProjectStartDate")]
+    partial class AddProjectStartDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -349,9 +352,6 @@ namespace Backend.Migrations
                     b.Property<Guid?>("DependsOnStepId")
                         .HasColumnType("uuid");
 
-                    b.Property<int?>("EstimatedDays")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("LastCommitAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -506,9 +506,6 @@ namespace Backend.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<string>("FunctionalDomain")
-                        .HasColumnType("text");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -540,23 +537,14 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("DataJson")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("GeneratedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsManual")
-                        .HasColumnType("boolean");
 
                     b.Property<int>("OverdueStreamsCount")
                         .HasColumnType("integer");
 
                     b.Property<int>("OverdueTasksCount")
                         .HasColumnType("integer");
-
-                    b.Property<DateTime>("WeekStart")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 

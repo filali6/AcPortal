@@ -26,49 +26,6 @@ public class ProjectStepsController : ControllerBase
  
     [HttpPost]
     [Authorize(Roles = "BusinessTeamLead,TechnicalTeamLead,HeadOfCDS")]
-    // public async Task<IActionResult> CreateSteps([FromBody] CreateStepsRequest request)
-    // {
-
-    //     foreach (var stepDto in request.Steps)
-    //     {
-    //         var step = new ProjectStep
-    //         {
-    //             ProjectId = request.ProjectId,
-    //             StepName = stepDto.StepName,
-    //             ToolName = stepDto.ToolName,
-    //             Order = stepDto.Order,
-    //             CanBeParallel = stepDto.CanBeParallel,
-    //             DependsOnStepId = stepDto.DependsOnStepId,
-    //             CreatedAt = DateTime.UtcNow
-    //         };
-    //         _db.ProjectSteps.Add(step);
-    //     }
-
-
-    //     var payload = JsonSerializer.Serialize(new
-    //     {
-    //         eventType = "StepsDéfinis",
-    //         projectId = request.ProjectId
-    //     });
-
-    //     _db.OutboxMessages.Add(new OutboxMessage
-    //     {
-    //         Topic = $"project.{request.ProjectId}",
-    //         Payload = payload,
-    //         CreatedAt = DateTime.UtcNow,
-    //         IsProcessed = false,
-    //         Retries = 0
-    //     });
-
-    //     await _db.SaveChangesAsync();
-
-    //     return Ok(new
-    //     {
-    //         message = "Steps créés avec succès — tâches en cours de génération",
-    //         projectId = request.ProjectId,
-    //         stepsCount = request.Steps.Count
-    //     });
-    // }
     public async Task<IActionResult> CreateSteps([FromBody] CreateStepsRequest request)
     {
         var createdSteps = new Dictionary<string, Guid>();
