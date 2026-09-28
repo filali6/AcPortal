@@ -3,6 +3,7 @@ using Backend.Modules.AI.Services;
 using Backend.Modules.Auth.Models;
 using Backend.Modules.Planning.Services;
 using Backend.Modules.Planning.Tools;
+using Backend.Modules.Projects.Services;
 using Backend.Modules.Tools.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -48,7 +49,7 @@ public class FsdPlanningServiceTests
     private static FsdPlanningService CreateService(Kernel kernel, IConfiguration? config = null)
     {
         using var db = CreateDb();
-        var tools = new PlanningTools(db, new PluginRegistry(db));
+        var tools = new PlanningTools(db, new PluginRegistry(db), new ProjectStatusService(db));
         var resolvedConfig = config ?? CreateConfig();
         var invocationHelper = new KernelInvocationHelper(resolvedConfig, NullLogger<KernelInvocationHelper>.Instance);
         return new FsdPlanningService(kernel, db, tools, resolvedConfig, invocationHelper, NullLogger<FsdPlanningService>.Instance);

@@ -3,7 +3,10 @@ using Backend.Modules.Auth.Models;
 using Backend.Modules.Events.Handlers;
 using Backend.Modules.Events.Models;
 using Backend.Modules.Projects.Models;
+using Backend.Modules.Projects.Services;
+using Backend.Modules.Sla.Services;
 using Backend.Modules.Tasks.Models;
+using Backend.Modules.Tools.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -23,7 +26,11 @@ public class CreateTasksFromStepsHandlerTests : IDisposable
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _db = new AppDbContext(options);
-        _handler = new CreateTasksFromStepsHandler(_db, NullLogger<CreateTasksFromStepsHandler>.Instance);
+        var slaChecker = new SlaCheckerService(
+            _db, new PluginRegistry(_db), new ProjectStatusService(_db),
+            NullLogger<SlaCheckerService>.Instance);
+        _handler = new CreateTasksFromStepsHandler(
+            _db, NullLogger<CreateTasksFromStepsHandler>.Instance, slaChecker);
     }
 
    public void Dispose()

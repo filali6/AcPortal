@@ -2,8 +2,10 @@ using Backend.Data;
 using Backend.Modules.Sla.Services;
 
 using Backend.Modules.Projects.Models;
+using Backend.Modules.Projects.Services;
 using Backend.Modules.Sla.Models;
 using Backend.Modules.Tasks.Models;
+using Backend.Modules.Tools.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -21,7 +23,9 @@ public class SlaCheckerServiceTests : IDisposable
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _db = new AppDbContext(options);
-        _service = new SlaCheckerService(_db, NullLogger<SlaCheckerService>.Instance);
+        _service = new SlaCheckerService(
+            _db, new PluginRegistry(_db), new ProjectStatusService(_db),
+            NullLogger<SlaCheckerService>.Instance);
     }
 
    public void Dispose()
@@ -107,7 +111,7 @@ public class SlaCheckerServiceTests : IDisposable
         _db.AcpTasks.Add(task);
         await _db.SaveChangesAsync();
 
-        await _service.ApplySlaRulesToTasksAsync();
+        await _service.ApplySlaRulesAsync();
 
         var reloaded = await _db.AcpTasks.FindAsync(task.Id);
         reloaded!.DueDate.Should().BeNull();
@@ -128,7 +132,7 @@ public class SlaCheckerServiceTests : IDisposable
         _db.AcpTasks.Add(task);
         await _db.SaveChangesAsync();
 
-        await _service.ApplySlaRulesToTasksAsync();
+        await _service.ApplySlaRulesAsync();
 
         var reloaded = await _db.AcpTasks.FindAsync(task.Id);
         reloaded!.SlaRuleId.Should().Be(shortRule.Id);
@@ -145,7 +149,7 @@ public class SlaCheckerServiceTests : IDisposable
         _db.AcpTasks.AddRange(alreadyDue, doneTask);
         await _db.SaveChangesAsync();
 
-        await _service.ApplySlaRulesToTasksAsync();
+        await _service.ApplySlaRulesAsync();
 
         (await _db.AcpTasks.FindAsync(doneTask.Id))!.DueDate.Should().BeNull();
         (await _db.AcpTasks.FindAsync(alreadyDue.Id))!.SlaRuleId.Should().BeNull();

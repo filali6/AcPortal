@@ -4,10 +4,12 @@ using Backend.Modules.AI.Services;
 using Backend.Modules.Auth.Models;
 using Backend.Modules.Notifications.Services;
 using Backend.Modules.Projects.Models;
+using Backend.Modules.Projects.Services;
 using Backend.Modules.Sla.Models;
 using Backend.Modules.Sla.Services;
 using Backend.Modules.Sla.Tools;
 using Backend.Modules.Tasks.Models;
+using Backend.Modules.Tools.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -69,7 +71,9 @@ public class SlaAgentServiceTests : IDisposable
 
     private SlaAgentService CreateService(Kernel kernel, IConfiguration? config = null)
     {
-        var slaChecker = new SlaCheckerService(_db, NullLogger<SlaCheckerService>.Instance);
+        var slaChecker = new SlaCheckerService(
+            _db, new PluginRegistry(_db), new ProjectStatusService(_db),
+            NullLogger<SlaCheckerService>.Instance);
         var tools = new SlaAgentTools(_db, slaChecker);
         var invocationHelper = new KernelInvocationHelper(config ?? CreateConfig(), NullLogger<KernelInvocationHelper>.Instance);
         return new SlaAgentService(
@@ -191,7 +195,7 @@ public class SlaAgentServiceTests : IDisposable
 
         var report = await service.GenerateWeeklyReportAsync();
 
-        report.Content.Should().Be("*Report generation failed this week — please retry manually.*");
+        report.Content.Should().Contain("AI analysis failed this week").And.Contain("retry manually");
         (await _db.SlaWeeklyReports.FindAsync(report.Id)).Should().NotBeNull();
     }
 }
