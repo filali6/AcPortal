@@ -463,8 +463,8 @@
         <app-modal *ngIf="showSetTaskDueDateModal" [title]="'PM.SET_TASK_DUE_DATE' | translate" width="360px"
             (closed)="closeSetTaskDueDateModal()">
             <div class="form-group">
-                <label>{{ 'COMMON.DEADLINE' | translate }}</label>
-                <input type="date" [(ngModel)]="editingTaskDueDateValue" class="form-input">
+                <label for="pm-task-deadline">{{ 'COMMON.DEADLINE' | translate }}</label>
+                <input type="date" [(ngModel)]="editingTaskDueDateValue" class="form-input" id="pm-task-deadline">
             </div>
             <div class="modal-footer">
                 <button class="btn-small" (click)="closeSetTaskDueDateModal()">{{ 'COMMON.CANCEL' | translate
@@ -589,8 +589,9 @@
                     <!-- Étape 2 — Date de début du projet : commune aux deux flux,
                          demandée avant même le choix Manuel / Agent IA. -->
                     <div class="form-group">
-                        <label>{{ 'PM.START_DATE' | translate }} *</label>
-                        <input type="date" [(ngModel)]="tab.projectStartDate" class="form-input">
+                        <label [attr.for]="'pm-project-start-date-' + tabId">{{ 'PM.START_DATE' | translate }} *</label>
+                        <input type="date" [(ngModel)]="tab.projectStartDate" class="form-input"
+                            [id]="'pm-project-start-date-' + tabId">
                     </div>
 
                     <p class="choice-section-label">{{ 'PM.CHOOSE_PLANNING_METHOD' | translate }}</p>
@@ -905,7 +906,7 @@
 
                                 <!-- Tâches : durée modifiable + date limite + alerte SLA + justification -->
                                 <div class="proposed-steps-list">
-                                    <ng-container *ngFor="let step of stream.steps">
+                                    <ng-container *ngFor="let step of stream.steps; let j = index">
                                         <div class="proposed-step-row">
                                             <span class="step-order-badge">{{ step.order }}</span>
                                             <span class="step-name">{{ step.stepName }}</span>
@@ -913,10 +914,13 @@
                                                 [ngClass]="step.teamType === 'Technical' ? 'technical' : 'business'"
                                                 style="font-size:10px; padding:2px 8px">{{ step.teamType }}</span>
                                             <span class="tool-badge">{{ step.pluginId }}</span>
+                                            <label [attr.for]="'pm-step-days-' + tabId + '-' + i + '-' + j"
+                                                class="sr-only">Estimated days for {{ step.stepName }}</label>
                                             <input type="number" min="1" class="days-input"
                                                 [ngModel]="step.estimatedDays"
                                                 (ngModelChange)="updateStepDays(step, $event)"
-                                                [title]="'PM.EST_DAYS' | translate">
+                                                [title]="'PM.EST_DAYS' | translate"
+                                                [id]="'pm-step-days-' + tabId + '-' + i + '-' + j">
                                             <span class="days-unit">j</span>
                                             <span class="step-due" *ngIf="getStepDueDate(tabId, step) as due">
                                                 → {{ due | date:'dd/MM/yyyy' }}
