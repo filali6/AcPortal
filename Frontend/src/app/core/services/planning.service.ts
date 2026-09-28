@@ -41,4 +41,7 @@ export class PlanningService {
   approveStreamSteps(streamId: string, steps?: any[]): Observable<any> {
     return this.http.post(`${this.apiUrl}/planning/streams/${streamId}/approve-steps`, { steps });
   }
+    getWorkload(): Observable<Record<string, number>> {
+    return this.http.get<Record<string, number>>(`${this.apiUrl}/planning/workload`);
+  }
 }

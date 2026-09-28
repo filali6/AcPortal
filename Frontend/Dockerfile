@@ -14,6 +14,11 @@ FROM nginx:1.27-alpine AS final
 COPY --from=build /src/dist/frontend/browser /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Dire à nginx d'écrire son PID dans /tmp (accessible sans root)
+# et retirer la directive "user" (inutile en non-root)
+RUN sed -i 's|^pid .*|pid /tmp/nginx.pid;|' /etc/nginx/nginx.conf && \
+    sed -i '/^user /d' /etc/nginx/nginx.conf
+
 # Utilise l'utilisateur "nginx" déjà présent dans l'image officielle
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx && \

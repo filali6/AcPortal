@@ -42,8 +42,8 @@ export class ProjectManagerComponent implements OnInit, OnDestroy {
   filterStatus = 'all';
 
   showPlanHistoryModal = false;
-planHistory: any[] = [];
-selectedHistoryPlan: any = null;
+  planHistory: any[] = [];
+  selectedHistoryPlan: any = null;
 
   openTabs: { [tabId: string]: {
     task: any,
@@ -51,6 +51,9 @@ selectedHistoryPlan: any = null;
     aiSubStep: 'upload' | 'review' | 'done',
     streamName: string,
     streamDueDate: string,
+    // Étape 2 — date de début du projet, commune aux deux flux (manuel / agent IA),
+    // saisie une seule fois avant le choix du mode de planification.
+    projectStartDate: string,
     selectedBizLeadId: string,
     selectedTechLeadId: string,
     businessTeamConsultants: string[],
@@ -61,8 +64,9 @@ selectedHistoryPlan: any = null;
     editingStreamIndex:number|null,
     plan: any,
     refineMessage: string,
-    chatHistory: { role: string, content: string }[]
-    
+    chatHistory: { role: string, content: string }[],
+    // Étape 5.1 — avertissements renvoyés par le backend à l'approbation du plan
+    approvalWarnings: string[]
   }} = {};
 
   openDrop: string | null = null;
@@ -92,6 +96,16 @@ selectedHistoryPlan: any = null;
   showRiskModal = false;
   loadingRiskAnalysis = false;
   riskAnalysis: { atRiskTasks: { taskId: string; title: string; reason: string }[]; recommendations: string[] } | null = null;
+
+  // Étape 5.1 — références pour les badges SLA et la charge
+  slaRules: any[] = [];
+  pluginDomains: Record<string, string> = {};
+  workload: Record<string, number> = {};
+
+  // Étape 5.1 — modifier la date limite d'une tâche
+  showSetTaskDueDateModal = false;
+  editingTaskDueDateId = '';
+  editingTaskDueDateValue = '';
 
   private donutChart: Chart | null = null;
   private barChart: Chart | null = null;
@@ -164,6 +178,7 @@ selectedHistoryPlan: any = null;
     this.usersService.getAll().subscribe({
       next: (users) => this.consultants = users.filter((u: any) => u.role === 'Consultant')
     });
+    this.loadPlanningReferences();
   }
 
   refreshTasks(): void {
@@ -228,6 +243,7 @@ selectedHistoryPlan: any = null;
         aiSubStep: 'upload',
         streamName: '',
         streamDueDate: '',
+        projectStartDate: '',
         selectedBizLeadId: '',
         selectedTechLeadId: '',
         businessTeamConsultants: [],
@@ -238,7 +254,8 @@ selectedHistoryPlan: any = null;
         plan: null,
         editingStreamIndex: null,
         refineMessage: '',
-        chatHistory: []
+        chatHistory: [],
+        approvalWarnings: []
       };
     }
     this.tabsService.openTab({
@@ -254,9 +271,26 @@ selectedHistoryPlan: any = null;
 
   // ===== PLANNING MODE =====
 
+  // Étape 2 — la date de début doit être renseignée avant de choisir un mode de
+  // planification (manuel ou agent IA). Une fois choisie, elle est sauvegardée
+  // immédiatement côté backend, peu importe le flux suivi ensuite.
   selectPlanningMode(tabId: string, mode: 'manual' | 'ai'): void {
     const tab = this.openTabs[tabId];
-    if (tab) tab.selectedMode = mode;
+    if (!tab) return;
+
+    if (!tab.projectStartDate) {
+      this.toastService.show('Please set the project start date first', 'error');
+      return;
+    }
+
+    tab.selectedMode = mode;
+
+    const projectId = tab.task?.projectId;
+    if (projectId) {
+      this.projectsService.setStartDate(projectId, tab.projectStartDate).subscribe({
+        error: () => this.toastService.show('Error saving start date', 'error')
+      });
+    }
   }
 
   // ===== FLUX MANUEL =====
@@ -364,8 +398,9 @@ selectedHistoryPlan: any = null;
       next: (res: any) => {
         tab.proposalId = res.proposalId;
         tab.plan = res.plan;
-        tab.aiSubStep = 'review'; // ← correct
+        tab.aiSubStep = 'review';
         this.generatingPlan = false;
+        this.loadPlanningReferences(); // charge à jour pour les badges
       },
       error: () => {
         this.toastService.show('AI planning failed. Please try again.', 'error');
@@ -374,7 +409,7 @@ selectedHistoryPlan: any = null;
     });
   }
 
- sendRefineMessage(tabId: string): void {
+  sendRefineMessage(tabId: string): void {
     const tab = this.openTabs[tabId];
     if (!tab || !tab.refineMessage.trim() || !tab.proposalId) return;
 
@@ -384,39 +419,39 @@ selectedHistoryPlan: any = null;
     this.refiningPlan = true;
 
     this.planningService.refine(tab.proposalId, message, tab.plan).subscribe({
-        next: (res: any) => {
-            tab.plan = res.plan;
-            const count = res.plan?.streams?.length || 0;
-            tab.chatHistory.push({
-                role: 'assistant',
-                content: `Plan updated — ${count} stream${count > 1 ? 's' : ''}.`
-            });
-            this.refiningPlan = false;
-        },
-        error: () => {
-            this.toastService.show('Refinement failed. Please try again.', 'error');
-            tab.chatHistory.push({ role: 'assistant', content: 'Failed to update. Please try again.' });
-            this.refiningPlan = false;
-        }
+      next: (res: any) => {
+        tab.plan = res.plan;
+        const count = res.plan?.streams?.length || 0;
+        tab.chatHistory.push({
+          role: 'assistant',
+          content: `Plan updated — ${count} stream${count > 1 ? 's' : ''}.`
+        });
+        this.refiningPlan = false;
+      },
+      error: () => {
+        this.toastService.show('Refinement failed. Please try again.', 'error');
+        tab.chatHistory.push({ role: 'assistant', content: 'Failed to update. Please try again.' });
+        this.refiningPlan = false;
+      }
     });
-}
+  }
 
   approvePlan(tabId: string): void {
     const tab = this.openTabs[tabId];
     if (!tab || !tab.proposalId) return;
 
     this.approvingPlan = true;
-    this.planningService.approve(tab.proposalId,tab.plan).subscribe({
-      next: () => {
+    this.planningService.approve(tab.proposalId, tab.plan).subscribe({
+      next: (res: any) => {
         this.toastService.show('Plan approved! Streams are being created.', 'success');
         this.approvingPlan = false;
-        tab.aiSubStep = 'done'; // ← correct
+        tab.aiSubStep = 'done';
+        tab.approvalWarnings = res?.warnings || [];
 
-        this.tasksService.updateStatus(tab.task.id, 2).subscribe(() => {
-          this.refreshTasks();
-        });
+        this.tasksService.updateStatus(tab.task.id, 2).subscribe(() => this.refreshTasks());
 
-        setTimeout(() => this.endTask(tabId), 2000);
+        // S'il y a des avertissements, le PM les lit et ferme lui-même l'onglet
+        if (!tab.approvalWarnings.length) setTimeout(() => this.endTask(tabId), 2000);
       },
       error: () => {
         this.toastService.show('Approval failed. Please try again.', 'error');
@@ -435,13 +470,13 @@ selectedHistoryPlan: any = null;
       next: () => {
         this.toastService.show('Proposal rejected. You can submit a new FSD.', 'success');
         this.loading = false;
-        // Reset du flux IA pour permettre une nouvelle soumission
         tab.aiSubStep = 'upload';
         tab.plan = null;
         tab.proposalId = null;
         tab.file = null;
         tab.chatHistory = [];
         tab.editingStreamIndex = null;
+        tab.approvalWarnings = [];
       },
       error: () => {
         this.toastService.show('Error rejecting proposal', 'error');
@@ -632,7 +667,6 @@ selectedHistoryPlan: any = null;
     if (this.openDrop === key) this.openDrop = null;
   }
 
-
   // ===== Édition inline des streams du plan IA =====
 
   startEditStream(tabId: string, index: number): void {
@@ -693,39 +727,42 @@ selectedHistoryPlan: any = null;
   getConsultantName(consultantId: string): string {
     return this.consultants.find((c: any) => c.id === consultantId)?.fullName || '—';
   }
+
   openPlanHistoryModal(): void {
-  if (!this.selectedProjectDetail) return;
-  this.planningService.getByProject(this.selectedProjectDetail.id).subscribe({
-    next: (proposals: any[]) => {
-      this.planHistory = proposals;
-      this.selectedHistoryPlan = null;
-      this.showPlanHistoryModal = true;
-    }
-  });
-}
-
-viewHistoryPlan(proposal: any): void {
-  this.selectedHistoryPlan = proposal;
-}
-isOverdue(date: string): boolean {
-  return new Date(date) < new Date();
-}
-
-isDueSoon(date: string): boolean {
-  const diff = new Date(date).getTime() - new Date().getTime();
-  return diff > 0 && diff < 7 * 24 * 60 * 60 * 1000; // 7 jours
-}
-toggleStreamTasks(streamId: string): void {
-  if (this.openStreamTasks.has(streamId)) {
-    this.openStreamTasks.delete(streamId);
-  } else {
-    this.openStreamTasks.add(streamId);
+    if (!this.selectedProjectDetail) return;
+    this.planningService.getByProject(this.selectedProjectDetail.id).subscribe({
+      next: (proposals: any[]) => {
+        this.planHistory = proposals;
+        this.selectedHistoryPlan = null;
+        this.showPlanHistoryModal = true;
+      }
+    });
   }
-}
 
-isStreamTasksOpen(streamId: string): boolean {
-  return this.openStreamTasks.has(streamId);
-}
+  viewHistoryPlan(proposal: any): void {
+    this.selectedHistoryPlan = proposal;
+  }
+
+  isOverdue(date: string): boolean {
+    return new Date(date) < new Date();
+  }
+
+  isDueSoon(date: string): boolean {
+    const diff = new Date(date).getTime() - new Date().getTime();
+    return diff > 0 && diff < 7 * 24 * 60 * 60 * 1000; // 7 jours
+  }
+
+  toggleStreamTasks(streamId: string): void {
+    if (this.openStreamTasks.has(streamId)) {
+      this.openStreamTasks.delete(streamId);
+    } else {
+      this.openStreamTasks.add(streamId);
+    }
+  }
+
+  isStreamTasksOpen(streamId: string): boolean {
+    return this.openStreamTasks.has(streamId);
+  }
 
   // ===== SLA — US63 : Définir la date limite (DueDate) d'un stream =====
 
@@ -775,6 +812,130 @@ isStreamTasksOpen(streamId: string): boolean {
         this.toastService.show('AI risk analysis failed. Please try again.', 'error');
         this.loadingRiskAnalysis = false;
         this.showRiskModal = false;
+      }
+    });
+  }
+
+  // ===== Étape 5.1 — Durées, dates, SLA et charge dans l'écran de review =====
+
+  loadPlanningReferences(): void {
+    this.slaService.getRules().subscribe({ next: (r: any[]) => this.slaRules = r || [] });
+    this.slaService.getPluginDomains().subscribe({
+      next: (res: any) => {
+        this.pluginDomains = {};
+        (res?.plugins || []).forEach((p: any) =>
+          this.pluginDomains[(p.pluginId || '').toLowerCase()] = p.domain);
+      }
+    });
+    this.planningService.getWorkload().subscribe({ next: (w: any) => this.workload = w || {} });
+  }
+
+  getWorkloadOf(userId: string): number {
+    return this.workload[userId] ?? 0;
+  }
+
+  // Règle Task : celle du domaine du plugin, sinon la règle par défaut (même logique que le backend)
+  getTaskSlaDays(pluginId: string): number | null {
+    const domain = this.pluginDomains[(pluginId || '').toLowerCase()]?.toLowerCase();
+    const taskRules = this.slaRules.filter(r => r.type === 'Task');
+    const specific = domain
+      ? taskRules.find(r => r.functionalDomain?.toLowerCase() === domain)
+      : undefined;
+    return (specific ?? this.getDefaultRule(taskRules))?.slaDays ?? null;
+  }
+
+  getStreamSlaDays(): number | null {
+    return this.getDefaultRule(this.slaRules.filter(r => r.type === 'Stream'))?.slaDays ?? null;
+  }
+
+  private getDefaultRule(rules: any[]): any {
+    return rules.filter(r => !r.functionalDomain).sort((a, b) => a.slaDays - b.slaDays)[0];
+  }
+
+  // Durée d'un stream = sa tâche la plus longue (tâches indépendantes, en parallèle)
+  getStreamDuration(stream: any): number {
+    return Math.max(0, ...(stream.steps || []).map((s: any) => +s.estimatedDays || 0));
+  }
+
+  // Départ = aujourd'hui, ou la date de début du projet si elle est dans le futur
+  private getScheduleOrigin(tabId: string): Date {
+    const now = new Date();
+    const startStr = this.openTabs[tabId]?.projectStartDate;
+    const start = startStr ? new Date(startStr) : null;
+    return start && start > now ? start : now;
+  }
+
+  getStreamEndDate(tabId: string, stream: any): Date | null {
+    const days = this.getStreamDuration(stream);
+    if (!days) return null;
+    const end = this.getScheduleOrigin(tabId);
+    end.setDate(end.getDate() + days);
+    return end;
+  }
+
+  // Date limite d'une tâche = départ + sa durée (même calcul que le backend)
+  getStepDueDate(tabId: string, step: any): Date | null {
+    const days = +step.estimatedDays;
+    if (!days || days <= 0) return null;
+    const due = this.getScheduleOrigin(tabId);
+    due.setDate(due.getDate() + days);
+    return due;
+  }
+
+  getProjectTargetDate(tabId: string): string | null {
+    const projectId = this.openTabs[tabId]?.task?.projectId;
+    return this.projects.find(p => p.id === projectId)?.targetDate ?? null;
+  }
+
+  isStreamOverProject(tabId: string, stream: any): boolean {
+    const end = this.getStreamEndDate(tabId, stream);
+    const target = this.getProjectTargetDate(tabId);
+    if (!end || !target) return false;
+    return end.toISOString().substring(0, 10) > target.substring(0, 10);
+  }
+
+  isStreamOverSla(stream: any): boolean {
+    const sla = this.getStreamSlaDays();
+    return sla !== null && this.getStreamDuration(stream) > sla;
+  }
+
+  isStepOverSla(step: any): boolean {
+    const sla = this.getTaskSlaDays(step.pluginId);
+    return sla !== null && +step.estimatedDays > sla;
+  }
+
+  updateStepDays(step: any, value: any): void {
+    const days = Math.round(+value);
+    step.estimatedDays = days > 0 ? days : null;
+  }
+
+  // ===== Étape 5.1 — Modifier la date limite d'une tâche (après approbation) =====
+
+  openSetTaskDueDateModal(task: any): void {
+    this.editingTaskDueDateId = task.id;
+    this.editingTaskDueDateValue = task.dueDate ? task.dueDate.substring(0, 10) : '';
+    this.showSetTaskDueDateModal = true;
+  }
+
+  closeSetTaskDueDateModal(): void {
+    this.showSetTaskDueDateModal = false;
+    this.editingTaskDueDateId = '';
+    this.editingTaskDueDateValue = '';
+  }
+
+  saveTaskDueDate(): void {
+    if (!this.editingTaskDueDateId || !this.editingTaskDueDateValue) return;
+    this.loading = true;
+    this.slaService.setTaskDueDate(this.editingTaskDueDateId, this.editingTaskDueDateValue).subscribe({
+      next: () => {
+        this.toastService.show('Task due date updated!', 'success');
+        this.loading = false;
+        this.closeSetTaskDueDateModal();
+        this.refreshProjectDetail();
+      },
+      error: () => {
+        this.toastService.show('Error updating due date', 'error');
+        this.loading = false;
       }
     });
   }

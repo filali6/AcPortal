@@ -17,8 +17,7 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<AcpEvent> AcpEvents => Set<AcpEvent>();
-    public DbSet<AcpTask> AcpTasks => Set<AcpTask>();
-    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<AcpTask> AcpTasks => Set<AcpTask>(); 
     public DbSet<User> Users => Set<User>();
 
     public DbSet<Portfolio> Portfolios => Set<Portfolio>();
@@ -195,20 +194,6 @@ public class AppDbContext : DbContext
                 entity.Property(c => c.Mentions)
                     .HasColumnType("jsonb");
             });
-
-
-        // // Ajouter dans OnModelCreating
-        // modelBuilder.Entity<AcpTask>()
-        //     .Property(t => t.SlaStatus)
-        //     .HasConversion<string>();
-
-        // modelBuilder.Entity<Backend.Modules.Projects.Models.Stream>()
-        //     .Property(s => s.SlaStatus)
-        //     .HasConversion<string>();
-
-        // //modelBuilder.Entity<SlaRule>()
-        //     .HasIndex(r => r.TaskType)
-        //     .IsUnique();
 
     }
     

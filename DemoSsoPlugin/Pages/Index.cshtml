@@ -1,0 +1,33 @@
+﻿@page
+@model DemoSsoPlugin.Pages.IndexModel
+@{
+    ViewData["Title"] = "Bienvenue";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GUI</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+
+<body class="landing-body">
+    <div class="landing-screen">
+        <div class="landing-logo">
+            <span class="logo-dot"></span>
+        </div>
+        <h1 class="landing-title">Bienvenue</h1>
+        <p class="landing-subtitle">Connexion sécurisée en cours...</p>
+    </div>
+
+    <script>
+            setTimeout(function () {
+                window.location.href = '@Model.RedirectTarget';
+            }, 2000);
+    </script>
+</body>
+
+</html>

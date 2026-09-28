@@ -123,6 +123,21 @@ public class ProjectsController : ControllerBase
         }, id, project.Name);
         return Ok(project);
     }
+ 
+    [HttpPatch("{id:guid}/start-date")]
+    [Authorize(Roles = "ProjectManager")]
+    public async Task<IActionResult> SetStartDate(Guid id, [FromBody] SetStartDateRequest request)
+    {
+        var project = await _db.Projects.FindAsync(id);
+        if (project == null) return NotFound();
+
+        project.StartDate = request.StartDate.HasValue
+    ? DateTime.SpecifyKind(request.StartDate.Value.Date, DateTimeKind.Utc)
+    : null;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Start date updated", project.Id, project.StartDate });
+    }
 
 
     // [HttpPatch("{id:guid}/assign")]
@@ -186,6 +201,7 @@ public class ProjectsController : ControllerBase
                 p.Name,
                 p.Description,
                 p.CreatedAt,
+                p.StartDate,
                 p.TargetDate,
                 p.PortfolioId,
                 p.ProjectManagerId,
@@ -256,6 +272,7 @@ public class ProjectsController : ControllerBase
             project.Name,
             project.Description,
             project.CreatedAt,
+            project.StartDate,
             project.TargetDate,
             portfolio = project.Portfolio == null ? null : new
             {
@@ -355,4 +372,8 @@ public class UpdateProjectRequest
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public DateTime? TargetDate { get; set; }
+}
+public class SetStartDateRequest
+{
+    public DateTime? StartDate { get; set; }
 }

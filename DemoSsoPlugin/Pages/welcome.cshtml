@@ -1,0 +1,16 @@
+@page
+@model DemoSsoPlugin.Pages.WelcomeModel
+@{
+    ViewData["Title"] = "Bienvenue";
+}
+
+<section class="welcome-hero">
+    <div class="welcome-icon">✓</div>
+    <h1>Bienvenue, @Model.DisplayName</h1>
+    <p class="welcome-message">
+        Vous êtes connecté avec succès.
+    </p>
+    <p class="welcome-hint">
+        Vous pouvez commencer vos tâches. N'oubliez pas de les sauvegarder régulièrement.
+    </p>
+</section>

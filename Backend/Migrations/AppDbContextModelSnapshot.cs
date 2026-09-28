@@ -319,6 +319,9 @@ namespace Backend.Migrations
                     b.Property<Guid?>("ProjectManagerId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("TargetDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -345,6 +348,9 @@ namespace Backend.Migrations
 
                     b.Property<Guid?>("DependsOnStepId")
                         .HasColumnType("uuid");
+
+                    b.Property<int?>("EstimatedDays")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("LastCommitAt")
                         .HasColumnType("timestamp with time zone");
@@ -500,6 +506,9 @@ namespace Backend.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<string>("FunctionalDomain")
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -531,14 +540,23 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("DataJson")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("GeneratedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsManual")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("OverdueStreamsCount")
                         .HasColumnType("integer");
 
                     b.Property<int>("OverdueTasksCount")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime>("WeekStart")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 

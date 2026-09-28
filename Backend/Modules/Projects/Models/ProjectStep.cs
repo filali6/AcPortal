@@ -22,5 +22,6 @@ public class ProjectStep
     public ICollection<StepConfigFile> ConfigFiles { get; set; } = new List<StepConfigFile>();
 
     public TeamType? TeamType { get; set; }
+    public int? EstimatedDays { get; set; }
 
 }

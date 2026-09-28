@@ -15,4 +15,5 @@ public class StepDto
     //public Guid? DependsOnStepId { get; set; }
     public string? DependsOnStepId { get; set; }
     public Guid? StreamId { get; set; }
+    public int? EstimatedDays { get; set; }
 }

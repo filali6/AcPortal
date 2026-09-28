@@ -21,4 +21,7 @@ public class SlaRule
     public SlaRuleType Type { get; set; } = SlaRuleType.Task;
     public int SlaDays { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+   
+    public string? FunctionalDomain { get; set; }
 }

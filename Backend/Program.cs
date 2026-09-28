@@ -94,6 +94,7 @@ builder.Services.AddScoped<SlaAgentService>();
 builder.Services.AddHostedService<SlaWeeklyReportJob>();
 builder.Services.AddScoped<KernelInvocationHelper>();
 builder.Services.AddScoped<SlaAgentTools>();
+builder.Services.AddScoped<ProjectStatusService>();
 
 
 builder.Services.AddMemoryCache();
