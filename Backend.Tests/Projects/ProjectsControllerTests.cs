@@ -42,7 +42,7 @@ public class ProjectsControllerTests : IDisposable
         }).Build();
         var eventPublisher = new EventPublisher(new DaprClientBuilder().Build(), NullLogger<EventPublisher>.Instance, config);
         // Only exercised on the (untested) Create success path, so a null pubsub client is safe here.
-        var streamingService = new StreamingSubscriptionService(null!, new ServiceCollection().BuildServiceProvider(), NullLogger<StreamingSubscriptionService>.Instance);
+        var streamingService = new StreamingSubscriptionService(null!, new DaprClientBuilder().Build(), new ServiceCollection().BuildServiceProvider(), NullLogger<StreamingSubscriptionService>.Instance);
         var contractsService = new ContractsService(_db, NullLogger<ContractsService>.Instance, Mock.Of<IWebHostEnvironment>());
 
         _controller = new ProjectsController(projectsService, _db, eventPublisher, streamingService, contractsService, NullLogger<ProjectsController>.Instance);
