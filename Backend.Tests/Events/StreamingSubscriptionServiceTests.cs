@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
+using Dapr.Client;
+using System.Collections.Concurrent;
 
 namespace Backend.Tests.Events;
 
@@ -18,14 +20,14 @@ public class StreamingSubscriptionServiceTests
     private static StreamingSubscriptionService CreateService()
     {
         var services = new ServiceCollection().BuildServiceProvider();
-        return new StreamingSubscriptionService(null!, services, NullLogger<StreamingSubscriptionService>.Instance);
+        return new StreamingSubscriptionService(null!, new DaprClientBuilder().Build(), services, NullLogger<StreamingSubscriptionService>.Instance);
     }
 
     private static void MarkTopicReady(StreamingSubscriptionService service, string topic)
     {
         var field = typeof(StreamingSubscriptionService).GetField("_readyTopics", BindingFlags.NonPublic | BindingFlags.Instance)!;
-        var readyTopics = (HashSet<string>)field.GetValue(service)!;
-        readyTopics.Add(topic);
+        var readyTopics = (System.Collections.Concurrent.ConcurrentDictionary<string, byte>)field.GetValue(service)!;
+        readyTopics[topic] = 0;
     }
 
     [Fact]

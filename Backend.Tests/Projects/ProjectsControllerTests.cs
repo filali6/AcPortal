@@ -42,7 +42,7 @@ public class ProjectsControllerTests : IDisposable
         }).Build();
         var eventPublisher = new EventPublisher(new DaprClientBuilder().Build(), NullLogger<EventPublisher>.Instance, config);
         // Only exercised on the (untested) Create success path, so a null pubsub client is safe here.
-        var streamingService = new StreamingSubscriptionService(null!, new ServiceCollection().BuildServiceProvider(), NullLogger<StreamingSubscriptionService>.Instance);
+        var streamingService = new StreamingSubscriptionService(null!, new DaprClientBuilder().Build(), new ServiceCollection().BuildServiceProvider(), NullLogger<StreamingSubscriptionService>.Instance);
         var contractsService = new ContractsService(_db, NullLogger<ContractsService>.Instance, Mock.Of<IWebHostEnvironment>());
 
         _controller = new ProjectsController(projectsService, _db, eventPublisher, streamingService, contractsService, NullLogger<ProjectsController>.Instance);
@@ -221,13 +221,42 @@ public class ProjectsControllerTests : IDisposable
     [Fact]
     public async Task GetStats_ReturnsCounts()
     {
-        _db.Projects.Add(new Project { Name = "P" });
+        var project = new Project { Name = "P" };
+        _db.Projects.Add(project);
+        _db.Streams.Add(new Stream { Name = "S", Project = project });
         _db.Contracts.Add(new Contract { ClientName = "C" });
         await _db.SaveChangesAsync();
 
         var result = await _controller.GetStats();
 
+        var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+        var payload = System.Text.Json.JsonSerializer.SerializeToDocument(ok.Value);
+        payload.RootElement.GetProperty("total").GetInt32().Should().Be(1);
+        payload.RootElement.GetProperty("inProgress").GetInt32().Should().Be(1);
+        payload.RootElement.GetProperty("contracts").GetInt32().Should().Be(1);
+    }
+
+    [Fact]
+    public async Task SetStartDate_WhenProjectExists_StoresUtcDateAtMidnight()
+    {
+        var project = new Project { Name = "P" };
+        _db.Projects.Add(project);
+        await _db.SaveChangesAsync();
+        var startDate = new DateTime(2026, 9, 28, 17, 45, 0, DateTimeKind.Unspecified);
+
+        var result = await _controller.SetStartDate(project.Id, new SetStartDateRequest { StartDate = startDate });
+
         result.Should().BeOfType<OkObjectResult>();
+        var savedDate = (await _db.Projects.FindAsync(project.Id))!.StartDate;
+        savedDate.Should().Be(new DateTime(2026, 9, 28, 0, 0, 0, DateTimeKind.Utc));
+    }
+
+    [Fact]
+    public async Task SetStartDate_WhenProjectIsMissing_ReturnsNotFound()
+    {
+        var result = await _controller.SetStartDate(Guid.NewGuid(), new SetStartDateRequest());
+
+        result.Should().BeOfType<NotFoundResult>();
     }
 
     [Fact]

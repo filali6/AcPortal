@@ -3,6 +3,7 @@ using Backend.Data;
 using Backend.Modules.Auth.Models;
 using Backend.Modules.Planning.Tools;
 using Backend.Modules.Projects.Models;
+using Backend.Modules.Projects.Services;
 using Backend.Modules.Tools.Models;
 using Backend.Modules.Tools.Services;
 using FluentAssertions;
@@ -34,7 +35,7 @@ public class PlanningToolsTests
             new PluginDefinition { Id = "no-domain-tool", Name = "No Domain Tool", IsActive = true, Url = "http://x", FunctionalDomain = null });
         await db.SaveChangesAsync();
 
-        var tools = new PlanningTools(db, new PluginRegistry(db));
+        var tools = new PlanningTools(db, new PluginRegistry(db), new ProjectStatusService(db));
 
         // Act
         var json = await tools.GetPlanningContextAsync();
@@ -69,7 +70,7 @@ public class PlanningToolsTests
         db.StreamMembers.Add(new StreamMember { StreamId = stream.Id, ConsultantId = bizConsultant.Id, TeamType = TeamType.Business });
         await db.SaveChangesAsync();
 
-        var tools = new PlanningTools(db, new PluginRegistry(db));
+        var tools = new PlanningTools(db, new PluginRegistry(db), new ProjectStatusService(db));
 
         // Act
         var json = await tools.GetPlanningContextAsync();
@@ -104,7 +105,7 @@ public class PlanningToolsTests
         db.Users.AddRange(lead, consultant);
         await db.SaveChangesAsync();
 
-        var tools = new PlanningTools(db, new PluginRegistry(db));
+        var tools = new PlanningTools(db, new PluginRegistry(db), new ProjectStatusService(db));
 
         var proposal = JsonSerializer.Serialize(new
         {
@@ -115,7 +116,7 @@ public class PlanningToolsTests
                     name = "Stream 1",
                     businessLeadId = lead.Id.ToString(),
                     businessConsultantIds = new[] { consultant.Id.ToString() },
-                    steps = new[] { new { stepName = "Step 1", pluginId = "plugin-1" } }
+                    steps = new[] { new { stepName = "Step 1", pluginId = "plugin-1", estimatedDays = 3 } }
                 }
             }
         });
@@ -134,13 +135,13 @@ public class PlanningToolsTests
     {
         // Arrange
         await using var db = CreateDb();
-        var tools = new PlanningTools(db, new PluginRegistry(db));
+        var tools = new PlanningTools(db, new PluginRegistry(db), new ProjectStatusService(db));
 
         var proposal = JsonSerializer.Serialize(new
         {
             streams = new[]
             {
-                new { name = "Stream 1", steps = new[] { new { stepName = "Step 1", pluginId = "unknown-plugin" } } }
+                new { name = "Stream 1", steps = new[] { new { stepName = "Step 1", pluginId = "unknown-plugin", estimatedDays = 3 } } }
             }
         });
 
@@ -159,7 +160,7 @@ public class PlanningToolsTests
     {
         // Arrange
         await using var db = CreateDb();
-        var tools = new PlanningTools(db, new PluginRegistry(db));
+        var tools = new PlanningTools(db, new PluginRegistry(db), new ProjectStatusService(db));
         var unknownId = Guid.NewGuid().ToString();
 
         var proposal = JsonSerializer.Serialize(new
@@ -191,7 +192,7 @@ public class PlanningToolsTests
     {
         // Arrange
         await using var db = CreateDb();
-        var tools = new PlanningTools(db, new PluginRegistry(db));
+        var tools = new PlanningTools(db, new PluginRegistry(db), new ProjectStatusService(db));
         var unknownId = Guid.NewGuid().ToString();
 
         var proposal = JsonSerializer.Serialize(new
@@ -218,7 +219,7 @@ public class PlanningToolsTests
     {
         // Arrange
         await using var db = CreateDb();
-        var tools = new PlanningTools(db, new PluginRegistry(db));
+        var tools = new PlanningTools(db, new PluginRegistry(db), new ProjectStatusService(db));
 
         // Act
         var json = await tools.ValidateProposalAsync("{ not valid json");
